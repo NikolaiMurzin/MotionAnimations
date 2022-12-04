@@ -40,6 +40,9 @@ public:
 	FMovieSceneChannelHandle ChannelHandle;
 	FName ChannelType;
 
+	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged);
+	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
+
 	void OnGlobalTimeChanged();
 
 private:

@@ -70,8 +70,8 @@ void SMain::SetSequencer()
 	if (seq != nullptr)
 	{
 		Sequencer = seq;
-		auto OnGlobalTimeChangedDelegate = Sequencer->OnGlobalTimeChanged();
-		OnGlobalTimeChangedDelegate.AddRaw(this, &SMain::OnGlobalTimeChanged);
+		OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
+		OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
 	};
 }
 

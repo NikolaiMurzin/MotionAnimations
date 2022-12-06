@@ -9,9 +9,10 @@
 class FMouseAnimationsCommands : public TCommands<FMouseAnimationsCommands>
 {
 public:
-
 	FMouseAnimationsCommands()
-		: TCommands<FMouseAnimationsCommands>(TEXT("MouseAnimations"), NSLOCTEXT("Contexts", "MouseAnimations", "MouseAnimations Plugin"), NAME_None, FMouseAnimationsStyle::GetStyleSetName())
+		: TCommands<FMouseAnimationsCommands>(TEXT("MouseAnimations"),
+			  NSLOCTEXT("Contexts", "MouseAnimations", "MouseAnimations Plugin"), NAME_None,
+			  FMouseAnimationsStyle::GetStyleSetName())
 	{
 	}
 
@@ -19,5 +20,5 @@ public:
 	virtual void RegisterCommands() override;
 
 public:
-	TSharedPtr< FUICommandInfo > OpenPluginWindow;
+	TSharedPtr<FUICommandInfo> OpenPluginWindow;
 };

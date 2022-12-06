@@ -73,8 +73,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		{
 			valueToSet += def.GetValue();
 			FloatChannel->SetDefault((float) valueToSet);
-			float f = 0;
-			FloatChannel->Evaluate(InTime, f);
 		}
 		else
 		{
@@ -97,8 +95,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		{
 			DoubleChannel->SetDefault(valueToSet);
 		}
-		float f = 0;
-		FloatChannel->Evaluate(InTime, f);
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")
 	{

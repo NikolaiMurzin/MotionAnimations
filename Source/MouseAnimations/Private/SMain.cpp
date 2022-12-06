@@ -42,6 +42,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SMain::Construct(const FArguments& InArgs)
 {
 	DefaultScale = 0.10;
+	RefreshSequence();
 
 	ChildSlot[SNew(SHorizontalBox) +
 			  SHorizontalBox::Slot()[SNew(SButton)
@@ -61,22 +62,11 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 FReply SMain::OnRefreshSequencer()
 {
-	Sequence = GetLevelSequenceFromWorld();
 	RefreshSequencer();
 	return FReply::Handled();
 }
 
 void SMain::RefreshSequencer()
-{
-	ISequencer* seq = GetSequencerFromSelectedSequence();
-	if (seq != nullptr)
-	{
-		Sequencer = seq;
-		OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
-		OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
-	};
-}
-ISequencer* SMain::GetSequencerFromSelectedSequence()
 {
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(Sequence, true);
@@ -85,15 +75,15 @@ ISequencer* SMain::GetSequencerFromSelectedSequence()
 	{
 		// Get current Sequencer
 		ISequencer* seq = LevelSequenceEditor->GetSequencer().Get();
-		return seq;
+		if (seq != nullptr)
+		{
+			Sequencer = seq;
+			OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
+			OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
+		};
 	}
-	return nullptr;
-};
-ISequencer* SMain::GetSequencer()
-{
-	return Sequencer;
-};
-ULevelSequence* SMain::GetLevelSequenceFromWorld() const
+}
+void SMain::RefreshSequence()
 {
 	UWorld* world = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport)->World();
 	ULevel* level = world->GetCurrentLevel();
@@ -103,11 +93,10 @@ ULevelSequence* SMain::GetLevelSequenceFromWorld() const
 		{
 			ALevelSequenceActor* SequenceActor = Cast<ALevelSequenceActor>(Actor);
 			SequenceActor->GetSequencePlayer();
-			ULevelSequence* sequence = SequenceActor->GetSequence();
-			return sequence;
+			Sequence = SequenceActor->GetSequence();
+			break;
 		};
 	}
-	throw std::logic_error{"Didn't find any sequence!"};
 }
 
 FReply SMain::OnRefreshBindings()
@@ -115,6 +104,17 @@ FReply SMain::OnRefreshBindings()
 	RefreshMotionHandlers();
 	return FReply::Handled();
 };
+void SMain::RefreshMotionHandlers()
+{
+	TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
+	Sequencer->GetSelectedKeyAreas(KeyAreas);
+	MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
+	for (const IKeyArea* KeyArea : KeyAreas)
+	{
+		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, 1, X));
+		MotionHandlerPtrs->Add(motionHandler);
+	}
+}
 FReply SMain::OnToggleRecording()
 {
 	if (IsTestAnimations)
@@ -161,25 +161,17 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 		}
 	}
 }
-void SMain::RefreshMotionHandlers()
-{
-	TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
-	Sequencer->GetSelectedKeyAreas(KeyAreas);
-	MotionHandlerPtrs = TArray<TSharedPtr<MotionHandler>>();
-	for (const IKeyArea* KeyArea : KeyAreas)
-	{
-		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, 1, X));
-		MotionHandlerPtrs.Add(motionHandler);
-	}
-}
 void SMain::ExecuteMotionHandlers()
 {
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
 		FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-		for (TSharedPtr<MotionHandler> motionHandler : MotionHandlerPtrs)
+		if (MotionHandlerPtrs->Num() > 0)
 		{
-			motionHandler->SetKey(currentFrame, FVector2D(0, 0));
+			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			{
+				motionHandler->SetKey(currentFrame, FVector2D(0, 0));
+			}
 		}
 	}
 	else
@@ -187,12 +179,14 @@ void SMain::ExecuteMotionHandlers()
 		FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 		FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 		FVector2D vectorChange = PreviousPosition - currentPosition;
-		for (TSharedPtr<MotionHandler> motionHandler : MotionHandlerPtrs)
+		if (MotionHandlerPtrs->Num() > 0)
 		{
-			motionHandler->SetKey(currentFrame, vectorChange);
+			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			{
+				motionHandler->SetKey(currentFrame, vectorChange);
+			}
 		}
 	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();
-	Sequencer->ForceEvaluate();
 }
 

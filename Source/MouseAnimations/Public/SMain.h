@@ -29,10 +29,8 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
-	ULevelSequence* GetLevelSequenceFromWorld() const;
+	void RefreshSequence();
 
-	ISequencer* GetSequencer();
-	ISequencer* GetSequencerFromSelectedSequence();
 	void RefreshSequencer();
 	FReply OnRefreshSequencer();
 
@@ -56,7 +54,7 @@ public:
 	bool IsTestAnimations;
 	FReply OnToggleTestAnimations();
 
-	TArray<TSharedPtr<MotionHandler>> MotionHandlerPtrs;
+	TSharedPtr<TArray<TSharedPtr<MotionHandler>>> MotionHandlerPtrs;
 	void RefreshMotionHandlers();
 	void ExecuteMotionHandlers();
 

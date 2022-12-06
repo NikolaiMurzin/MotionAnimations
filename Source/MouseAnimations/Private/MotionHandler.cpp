@@ -72,11 +72,27 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		if (def.IsSet())
 		{
 			valueToSet += def.GetValue();
-			FloatChannel->SetDefault((float) valueToSet);
+
+			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
+			frames.Add(InTime);
+			TArray<FMovieSceneFloatValue> values = TArray<FMovieSceneFloatValue>();
+			values.Add(FMovieSceneFloatValue(valueToSet));
+
+			FloatChannel->Set(frames, values);
+
+			float test = 0;
+			FloatChannel->Evaluate(InTime, test);
 		}
 		else
 		{
-			FloatChannel->SetDefault((float) valueToSet);
+			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
+			frames.Add(InTime);
+			TArray<FMovieSceneFloatValue> values = TArray<FMovieSceneFloatValue>();
+			values.Add(FMovieSceneFloatValue(valueToSet));
+			FloatChannel->Set(frames, values);
+
+			float test = 0;
+			FloatChannel->Evaluate(InTime, test);
 		}
 	}
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
@@ -89,11 +105,27 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		{
 			valueToSet += def.GetValue();
 
-			DoubleChannel->SetDefault(valueToSet);
+			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
+			frames.Add(InTime);
+			TArray<FMovieSceneDoubleValue> values = TArray<FMovieSceneDoubleValue>();
+			values.Add(FMovieSceneDoubleValue(valueToSet));
+
+			DoubleChannel->Set(frames, values);
+
+			double test = 0;
+			DoubleChannel->Evaluate(InTime, test);
 		}
 		else
 		{
-			DoubleChannel->SetDefault(valueToSet);
+			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
+			frames.Add(InTime);
+			TArray<FMovieSceneDoubleValue> values = TArray<FMovieSceneDoubleValue>();
+			values.Add(FMovieSceneDoubleValue(valueToSet));
+
+			DoubleChannel->Set(frames, values);
+
+			double test = 0;
+			DoubleChannel->Evaluate(InTime, test);
 		}
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")

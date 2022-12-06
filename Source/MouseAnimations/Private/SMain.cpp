@@ -163,27 +163,26 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 }
 void SMain::ExecuteMotionHandlers()
 {
+	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.CeilToFrame();
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
-		FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 		if (MotionHandlerPtrs->Num() > 0)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->SetKey(currentFrame, FVector2D(0, 0));
+				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
 			}
 		}
 	}
 	else
 	{
-		FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 		FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 		FVector2D vectorChange = PreviousPosition - currentPosition;
 		if (MotionHandlerPtrs->Num() > 0)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->SetKey(currentFrame, vectorChange);
+				motionHandler->SetKey(nextFrame, vectorChange);
 			}
 		}
 	}

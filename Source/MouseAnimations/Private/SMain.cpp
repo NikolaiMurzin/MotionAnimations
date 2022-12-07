@@ -25,6 +25,7 @@
 #include "MotionHandler.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
+#include "MovieSceneSection.h"
 #include "STreeViewSequencer.h"
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
@@ -38,10 +39,9 @@
 #include <string>
 #include <typeinfo>
 
-BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
-void SMain::Construct(const FArguments& InArgs)
+BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
-	DefaultScale = 0.10;
+	DefaultScale = 0.01;
 	RefreshSequence();
 
 	ChildSlot[SNew(SHorizontalBox) +
@@ -111,7 +111,7 @@ void SMain::RefreshMotionHandlers()
 	MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
 	for (const IKeyArea* KeyArea : KeyAreas)
 	{
-		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, 1, X));
+		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer, X));
 		MotionHandlerPtrs->Add(motionHandler);
 	}
 }
@@ -163,7 +163,10 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 }
 void SMain::ExecuteMotionHandlers()
 {
-	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.CeilToFrame();
+	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged %d!"), nextFrame.Value);
+	UE_LOG(LogTemp, Warning, TEXT("OnLocallTimeChanged %d!"), Sequencer->GetLocalTime().Time.GetFrame().Value);
+	UE_LOG(LogTemp, Warning, TEXT("LocalLooxindexx %d!"), Sequencer->GetLocalLoopIndex());
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
 		if (MotionHandlerPtrs->Num() > 0)

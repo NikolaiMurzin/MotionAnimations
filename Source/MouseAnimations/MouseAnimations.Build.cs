@@ -17,7 +17,6 @@ public class MouseAnimations : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				// ... add other private include paths required here ...
 			}
 			);
 			
@@ -25,8 +24,7 @@ public class MouseAnimations : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
-
+				"Core"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -48,7 +46,7 @@ public class MouseAnimations : ModuleRules
 				"LevelSequenceEditor",
 				"AssetRegistry",
 				"Sequencer",
-				"MovieScene",
+				"MovieScene"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

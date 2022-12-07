@@ -7,17 +7,25 @@
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneIntegerChannel.h"
 #include "CoreFwd.h"
+#include "Editor.h"
 #include "Editor/Sequencer/Public/IKeyArea.h"
+#include "Editor/Sequencer/Public/SequencerChannelTraits.h"
 #include "Internationalization/Text.h"
 #include "UObject/NameTypes.h"
 
 #include <stdexcept>
 
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, Mode SetValueMode_)
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, Mode SetValueMode_)
 {
+	Sequencer = Sequencer_;
+
 	Scale = DefaultScale_;
 
 	KeyArea = KeyArea_;
+
+	PreviousValue = 0;
+
+	IsFirstUpdate = true;
 
 	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
 
@@ -44,6 +52,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, Mod
 }
 void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 {
+	InTime.Value = InTime.Value + 1000;
 	double valueToSet = 0;
 	if (SetValueMode == X)
 	{
@@ -68,31 +77,18 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	{
 		valueToSet = valueToSet * Scale;
 		valueToSet = (float) valueToSet;
-		TOptional<float> def = FloatChannel->GetDefault();
-		if (def.IsSet())
+		TMovieSceneChannelData<FMovieSceneFloatValue> ChannelData = FloatChannel->GetData();
+		if (!IsFirstUpdate)
 		{
-			valueToSet += def.GetValue();
-
-			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
-			frames.Add(InTime);
-			TArray<FMovieSceneFloatValue> values = TArray<FMovieSceneFloatValue>();
-			values.Add(FMovieSceneFloatValue(valueToSet));
-
-			FloatChannel->Set(frames, values);
-
-			float test = 0;
-			FloatChannel->Evaluate(InTime, test);
+			ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue((float) PreviousValue + valueToSet));
 		}
 		else
 		{
-			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
-			frames.Add(InTime);
-			TArray<FMovieSceneFloatValue> values = TArray<FMovieSceneFloatValue>();
-			values.Add(FMovieSceneFloatValue(valueToSet));
-			FloatChannel->Set(frames, values);
-
-			float test = 0;
-			FloatChannel->Evaluate(InTime, test);
+			ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue((float) valueToSet));
+			float evalResult;
+			InTime--;
+			FloatChannel->Evaluate(InTime, evalResult);
+			PreviousValue = (double) evalResult;
 		}
 	}
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
@@ -100,50 +96,44 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		DoubleChannel = Channel.Cast<FMovieSceneDoubleChannel>().Get();
 		valueToSet = valueToSet * Scale;
 		valueToSet = (double) valueToSet;
-		TOptional<double> def = DoubleChannel->GetDefault();
-		if (def.IsSet())
+		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
+		if (!IsFirstUpdate)
 		{
-			valueToSet += def.GetValue();
-
-			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
-			frames.Add(InTime);
-			TArray<FMovieSceneDoubleValue> values = TArray<FMovieSceneDoubleValue>();
-			values.Add(FMovieSceneDoubleValue(valueToSet));
-
-			DoubleChannel->Set(frames, values);
-
-			double test = 0;
-			DoubleChannel->Evaluate(InTime, test);
+			valueToSet += PreviousValue;
+			ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
+			PreviousValue = valueToSet;
 		}
 		else
 		{
-			TArray<FFrameNumber> frames = TArray<FFrameNumber>();
-			frames.Add(InTime);
-			TArray<FMovieSceneDoubleValue> values = TArray<FMovieSceneDoubleValue>();
-			values.Add(FMovieSceneDoubleValue(valueToSet));
-
-			DoubleChannel->Set(frames, values);
-
-			double test = 0;
-			DoubleChannel->Evaluate(InTime, test);
+			ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
+			IsFirstUpdate = false;
+			InTime--;
+			DoubleChannel->Evaluate(InTime, PreviousValue);
 		}
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")
 	{
 		BoolChannel = Channel.Cast<FMovieSceneBoolChannel>().Get();
+		/* not implemented for now */
 	}
 	else if (ChannelTypeName == "MovieSceneIntegerChannel")
 	{
+		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
 		valueToSet = valueToSet * Scale;
-		TOptional<int32> def = IntegerChannel->GetDefault();
-		if (def.IsSet())
+		valueToSet = (int32) valueToSet;
+		TMovieSceneChannelData<int> ChannelData = IntegerChannel->GetData();
+		if (!IsFirstUpdate)
 		{
-			valueToSet += def.GetValue();
-			IntegerChannel->SetDefault((int32) valueToSet);
+			ChannelData.UpdateOrAddKey(InTime, (int32) PreviousValue + valueToSet);
 		}
 		else
 		{
-			IntegerChannel->SetDefault((int32) valueToSet);
+			ChannelData.UpdateOrAddKey(InTime, (int32) valueToSet);
+			IsFirstUpdate = false;
+			int32 evalResult;
+			InTime--;
+			IntegerChannel->Evaluate(InTime, evalResult);
+			PreviousValue = (double) evalResult;
 		}
 	}
 }

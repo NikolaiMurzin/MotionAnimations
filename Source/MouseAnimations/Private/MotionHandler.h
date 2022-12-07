@@ -23,13 +23,16 @@ class MotionHandler
 {
 public:
 	double Scale;
+	double PreviousValue;
+	bool IsFirstUpdate;
 	Mode SetValueMode;
 	FName ChannelTypeName;
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
-	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, Mode SetValueMode_ = X);
+	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, Mode SetValueMode_ = X);
 
 private:
 	const IKeyArea* KeyArea;
+	ISequencer* Sequencer;
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneBoolChannel* BoolChannel;

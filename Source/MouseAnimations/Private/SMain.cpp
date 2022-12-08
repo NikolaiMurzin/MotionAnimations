@@ -30,7 +30,9 @@
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Templates/SharedPointer.h"
+#include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -41,22 +43,38 @@
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
-	DefaultScale = 0.01;
-	RefreshSequence();
+	RefreshSequences();
+	SelectedSequence = Sequences[0];
 
-	ChildSlot[SNew(SHorizontalBox) +
-			  SHorizontalBox::Slot()[SNew(SButton)
-										 .Text(FText::FromString("refresh Sequencer"))
-										 .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshSequencer))] +
-			  SHorizontalBox::Slot()[SNew(SButton)
-										 .Text(FText::FromString("refresh Bindings"))
-										 .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshBindings))] +
-			  SHorizontalBox::Slot()[SNew(SButton)
-										 .Text(FText::FromString("start / stop recording"))
-										 .OnClicked(FOnClicked::CreateSP(this, &SMain::OnToggleRecording))] +
-			  SHorizontalBox::Slot()[SNew(SButton)
-										 .Text(FText::FromString("start / stop test animations"))
-										 .OnClicked(FOnClicked::CreateSP(this, &SMain::OnToggleTestAnimations))]];
+	ChildSlot[SNew(SVerticalBox) +
+			  SVerticalBox::Slot()[SNew(SHorizontalBox) +
+								   SHorizontalBox::Slot()[SNew(SButton)
+															  .Text(FText::FromString("refresh Sequencer"))
+															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshSequencer))] +
+								   SHorizontalBox::Slot()[SNew(SButton)
+															  .Text(FText::FromString("refresh Bindings"))
+															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshBindings))] +
+								   SHorizontalBox::Slot()[SNew(SButton)
+															  .Text(FText::FromString("start / stop recording"))
+															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnToggleRecording))] +
+								   SHorizontalBox::Slot()[SNew(SButton)
+															  .Text(FText::FromString("start / stop test animations"))
+															  .OnClicked(
+																  FOnClicked::CreateSP(this, &SMain::OnToggleTestAnimations))]] +
+			  SVerticalBox::Slot()[SAssignNew(DefaultScaleBox, SSpinBox<double>)] +
+			  SVerticalBox::Slot()
+				  [SNew(SHorizontalBox) +
+					  SHorizontalBox::Slot()
+						  [SNew(SButton).Text(FText::FromString("X")).OnClicked(FOnClicked::CreateSP(this, &SMain::SelectX))] +
+					  SHorizontalBox::Slot()[SNew(SButton)
+												 .Text(FText::FromString("XInverted"))
+												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectXInverted))] +
+					  SHorizontalBox::Slot()
+						  [SNew(SButton).Text(FText::FromString("Y")).OnClicked(FOnClicked::CreateSP(this, &SMain::SelectY))] +
+					  SHorizontalBox::Slot()[SNew(SButton)
+												 .Text(FText::FromString("YInverted"))
+												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectYInverted))]]];
+	DefaultScaleBox->SetValue(0.1);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -69,7 +87,7 @@ FReply SMain::OnRefreshSequencer()
 void SMain::RefreshSequencer()
 {
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
-	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(Sequence, true);
+	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, true);
 	ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
 	if (LevelSequenceEditor != nullptr)
 	{
@@ -83,7 +101,7 @@ void SMain::RefreshSequencer()
 		};
 	}
 }
-void SMain::RefreshSequence()
+void SMain::RefreshSequences()
 {
 	UWorld* world = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport)->World();
 	ULevel* level = world->GetCurrentLevel();
@@ -93,7 +111,8 @@ void SMain::RefreshSequence()
 		{
 			ALevelSequenceActor* SequenceActor = Cast<ALevelSequenceActor>(Actor);
 			SequenceActor->GetSequencePlayer();
-			Sequence = SequenceActor->GetSequence();
+			ULevelSequence* Sequence = SequenceActor->GetSequence();
+			Sequences.Add(Sequence);
 			break;
 		};
 	}
@@ -111,7 +130,8 @@ void SMain::RefreshMotionHandlers()
 	MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
 	for (const IKeyArea* KeyArea : KeyAreas)
 	{
-		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer, X));
+		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(
+			new MotionHandler(KeyArea, DefaultScaleBox->GetValue(), Sequencer, SelectedSequence->GetMovieScene()));
 		MotionHandlerPtrs->Add(motionHandler);
 	}
 }
@@ -136,6 +156,7 @@ FReply SMain::OnToggleTestAnimations()
 void SMain::OnGlobalTimeChanged()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged!"));
+	UE_LOG(LogTemp, Warning, TEXT("Default value scale is %f!"), DefaultScaleBox->GetValue());
 	if (IsRecordedStarted)
 	{
 		ExecuteMotionHandlers();
@@ -173,7 +194,7 @@ void SMain::ExecuteMotionHandlers()
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
+				motionHandler->SetKey(nextFrame, FVector2D(0, 0), SelectedMode);
 			}
 		}
 	}
@@ -185,10 +206,29 @@ void SMain::ExecuteMotionHandlers()
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->SetKey(nextFrame, vectorChange);
+				motionHandler->SetKey(nextFrame, vectorChange, SelectedMode);
 			}
 		}
 	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 }
-
+FReply SMain::SelectX()
+{
+	SelectedMode = X;
+	return FReply::Handled();
+}
+FReply SMain::SelectXInverted()
+{
+	SelectedMode = XInverted;
+	return FReply::Handled();
+}
+FReply SMain::SelectY()
+{
+	SelectedMode = Y;
+	return FReply::Handled();
+}
+FReply SMain::SelectYInverted()
+{
+	SelectedMode = YInverted;
+	return FReply::Handled();
+}

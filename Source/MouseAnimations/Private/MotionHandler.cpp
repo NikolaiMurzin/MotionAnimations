@@ -11,11 +11,12 @@
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/SequencerChannelTraits.h"
 #include "Internationalization/Text.h"
+#include "SequencerWidgets/Public/ITimeSlider.h"
 #include "UObject/NameTypes.h"
 
 #include <stdexcept>
 
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, Mode SetValueMode_)
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_)
 {
 	Sequencer = Sequencer_;
 
@@ -26,6 +27,10 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	PreviousValue = 0;
 
 	IsFirstUpdate = true;
+
+	MovieScene = MovieScene_;
+
+	InitKeys();
 
 	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
 
@@ -47,26 +52,24 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	{
 		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
 	}
-
-	SetValueMode = SetValueMode_;
 }
-void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
+void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode)
 {
 	InTime.Value = InTime.Value + 1000;
 	double valueToSet = 0;
-	if (SetValueMode == X)
+	if (Mode == X)
 	{
 		valueToSet = InputVector.X;
 	}
-	else if (SetValueMode == XInverted)
+	else if (Mode == XInverted)
 	{
 		valueToSet = InputVector.X * -1;
 	}
-	else if (SetValueMode == Y)
+	else if (Mode == Y)
 	{
 		valueToSet = InputVector.Y;
 	}
-	else if (SetValueMode == YInverted)
+	else if (Mode == YInverted)
 	{
 		valueToSet = InputVector.Y * -1;
 	}
@@ -136,4 +139,11 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			PreviousValue = (double) evalResult;
 		}
 	}
+}
+void MotionHandler::InitKeys()
+{
+	TRange<FFrameNumber> playbackRange = MovieScene->GetPlaybackRange();
+	FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+	UE_LOG(LogTemp, Warning, TEXT("high value is %d lower value is %d"), highValue.Value, lowerValue.Value);
 }

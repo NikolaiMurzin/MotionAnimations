@@ -25,14 +25,15 @@ public:
 	double Scale;
 	double PreviousValue;
 	bool IsFirstUpdate;
-	Mode SetValueMode;
 	FName ChannelTypeName;
-	void SetKey(FFrameNumber InTime, FVector2D InputVector);
-	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, Mode SetValueMode_ = X);
+	void SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode);
+	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_);
+	void InitKeys();
 
 private:
 	const IKeyArea* KeyArea;
 	ISequencer* Sequencer;
+	UMovieScene* MovieScene;
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneBoolChannel* BoolChannel;

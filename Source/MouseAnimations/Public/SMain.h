@@ -13,6 +13,7 @@
 #include "MotionHandler.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
+#include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
@@ -29,7 +30,7 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
-	void RefreshSequence();
+	void RefreshSequences();
 
 	void RefreshSequencer();
 	FReply OnRefreshSequencer();
@@ -44,12 +45,18 @@ public:
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
 	void OnGlobalTimeChanged();
 
-	double DefaultScale;
+	TSharedPtr<SSpinBox<double>> DefaultScaleBox;
 	FVector2D PreviousPosition;
 	double PositionX;
 	double PositionY;
 	FReply OnToggleRecording();
 	bool IsRecordedStarted;
+
+	Mode SelectedMode;
+	FReply SelectX();
+	FReply SelectXInverted();
+	FReply SelectY();
+	FReply SelectYInverted();
 
 	bool IsTestAnimations;
 	FReply OnToggleTestAnimations();
@@ -63,6 +70,7 @@ public:
 	void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 
 private:
-	ULevelSequence* Sequence;
+	TArray<ULevelSequence*> Sequences;
+	ULevelSequence* SelectedSequence;
 	ISequencer* Sequencer;
 };

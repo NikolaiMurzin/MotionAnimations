@@ -7,7 +7,10 @@
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneIntegerChannel.h"
 #include "CoreFwd.h"
+#include "Editor/MovieSceneTools/Public/TrackEditors/SpawnTrackEditor.h"
 #include "Editor/Sequencer/Public/IKeyArea.h"
+#include "Editor/Sequencer/Public/ISequencerTrackEditor.h"
+#include "Editor/Sequencer/Public/SequencerAddKeyOperation.h"
 #include "Misc/FrameNumber.h"
 #include "Sequencer/Public/ISequencer.h"
 #include "UObject/NameTypes.h"
@@ -27,13 +30,20 @@ public:
 	bool IsFirstUpdate;
 	FName ChannelTypeName;
 	void SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode);
-	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_);
+	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
+		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_);
 	void InitKeys();
 
-private:
 	const IKeyArea* KeyArea;
+
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
+	FGuid ObjectFGuid;
+	UMovieSceneTrack* MovieSceneTrack;
+
+private:
+	void UpdateUI(FFrameNumber InTime);
+
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneBoolChannel* BoolChannel;

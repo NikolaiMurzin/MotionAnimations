@@ -16,17 +16,21 @@
 #include "Delegates/DelegateCombinations.h"
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencer.h"
+#include "Editor/Sequencer/Public/SequencerKeyParams.h"
 #include "Framework/SlateDelegates.h"
 #include "ILevelSequenceEditorToolkit.h"
 #include "Input/Reply.h"
 #include "LevelSequence.h"
 #include "Logging/LogMacros.h"
+#include "Logging/LogVerbosity.h"
 #include "Misc/QualifiedFrameTime.h"
 #include "MotionHandler.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
 #include "MovieSceneSection.h"
 #include "STreeViewSequencer.h"
+#include "Sequencer/Public/SequencerAddKeyOperation.h"
+#include "SequencerAddKeyOperation.h"
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Templates/SharedPointer.h"
@@ -75,6 +79,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 												 .Text(FText::FromString("YInverted"))
 												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectYInverted))]]];
 	DefaultScaleBox->SetValue(0.1);
+	SelectedMode = X;
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -87,7 +92,7 @@ FReply SMain::OnRefreshSequencer()
 void SMain::RefreshSequencer()
 {
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
-	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, true);
+	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
 	ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
 	if (LevelSequenceEditor != nullptr)
 	{
@@ -127,11 +132,22 @@ void SMain::RefreshMotionHandlers()
 {
 	TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 	Sequencer->GetSelectedKeyAreas(KeyAreas);
+	TArray<FGuid> SelectedObjects = TArray<FGuid>();
+	Sequencer->GetSelectedObjects(SelectedObjects);
+	TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
+	Sequencer->GetSelectedTracks(SelectedTracks);
+	UE_LOG(LogTemp, Warning, TEXT("Selected tracks number: %d"), SelectedTracks.Num());
+	/* UMovieSceneControlRigParameterTrack* controlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]);
+	if (IsValid(controlRigTrack))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
+	} */
+
 	MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
 	for (const IKeyArea* KeyArea : KeyAreas)
 	{
-		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(
-			new MotionHandler(KeyArea, DefaultScaleBox->GetValue(), Sequencer, SelectedSequence->GetMovieScene()));
+		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScaleBox->GetValue(),
+			Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
 		MotionHandlerPtrs->Add(motionHandler);
 	}
 }
@@ -159,7 +175,7 @@ void SMain::OnGlobalTimeChanged()
 	UE_LOG(LogTemp, Warning, TEXT("Default value scale is %f!"), DefaultScaleBox->GetValue());
 	if (IsRecordedStarted)
 	{
-		ExecuteMotionHandlers();
+		ExecuteMotionHandlers(false);
 	}
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -173,8 +189,7 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 		if (timeFromLatest >= desiredDeltaTime)
 		{
 			std::cout << "pass";
-			ExecuteMotionHandlers();
-			TimeFromLatestTestExecution = InCurrentTime;
+			ExecuteMotionHandlers(true);
 		}
 		else
 		{
@@ -182,12 +197,17 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 		}
 	}
 }
-void SMain::ExecuteMotionHandlers()
+void SMain::ExecuteMotionHandlers(bool isInTickMode)
 {
 	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged %d!"), nextFrame.Value);
 	UE_LOG(LogTemp, Warning, TEXT("OnLocallTimeChanged %d!"), Sequencer->GetLocalTime().Time.GetFrame().Value);
 	UE_LOG(LogTemp, Warning, TEXT("LocalLooxindexx %d!"), Sequencer->GetLocalLoopIndex());
+	if (!isInTickMode)
+	{
+		nextFrame.Value += 1000;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged %d!"), nextFrame.Value);
+	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
 		if (MotionHandlerPtrs->Num() > 0)
@@ -215,6 +235,7 @@ void SMain::ExecuteMotionHandlers()
 FReply SMain::SelectX()
 {
 	SelectedMode = X;
+
 	return FReply::Handled();
 }
 FReply SMain::SelectXInverted()

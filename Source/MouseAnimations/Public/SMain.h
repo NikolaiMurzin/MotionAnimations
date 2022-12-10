@@ -13,6 +13,7 @@
 #include "MotionHandler.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
+#include "Templates/SharedPointerInternals.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -63,7 +64,7 @@ public:
 
 	TSharedPtr<TArray<TSharedPtr<MotionHandler>>> MotionHandlerPtrs;
 	void RefreshMotionHandlers();
-	void ExecuteMotionHandlers();
+	void ExecuteMotionHandlers(bool isInTickMode);
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;

@@ -15,7 +15,9 @@
 #include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/ControlRig.h"
 #include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "RigVMCore/RigVM.h"
+#include "RigVMCore/RigVMExternalVariable.h"
 #include "Runtime/RigVM/Public/RigVMCore/RigVM.h"
+#include "Runtime/RigVM/Public/RigVMCore/RigVMExternalVariable.h"
 #include "Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "Sequencer/MovieSceneControlRigSpaceChannel.h"
 #include "SequencerAddKeyOperation.h"
@@ -26,6 +28,7 @@
 #include "Units/RigUnitContext.h"
 
 #include <stdexcept>
+#include <string>
 
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_)
@@ -39,6 +42,17 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 
 	ObjectFGuid = ObjectFGuid_;
 	MovieSceneTrack = MovieSceneTrack_;
+
+	MovieSceneControlRigParameterTrack = Cast<UMovieSceneControlRigParameterTrack>(MovieSceneTrack);
+	if (IsValid(MovieSceneControlRigParameterTrack))
+	{
+		TArray<FName> currentControlSelectionArr = MovieSceneControlRigParameterTrack->GetControlRig()->CurrentControlSelection();
+		if (currentControlSelectionArr.Num() > 0)
+		{
+			currentControlSelection = currentControlSelectionArr[0];
+			UE_LOG(LogTemp, Warning, TEXT("current control selection is %s"), *currentControlSelection.ToString())
+		}
+	}
 
 	InitKeys();
 
@@ -91,6 +105,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 	{
 		UE_LOG(LogTemp, Warning, TEXT("float triggered"))
 		FloatChannel = Channel.Cast<FMovieSceneFloatChannel>().Get();
+		UE_LOG(LogTemp, Warning, TEXT("Scale value is %f"), Scale);
 		valueToSet = valueToSet * Scale;
 		valueToSet = (float) valueToSet;
 		TMovieSceneChannelData<FMovieSceneFloatValue> ChannelData = FloatChannel->GetData();
@@ -109,10 +124,10 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			PreviousValue = (double) prevValue;
 			IsFirstUpdate = false;
 		}
-		FloatChannel->PostEditChange();
 	}
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
 	{
+		UE_LOG(LogTemp, Warning, TEXT("double triggered"))
 		DoubleChannel = Channel.Cast<FMovieSceneDoubleChannel>().Get();
 		valueToSet = valueToSet * Scale;
 		valueToSet = (double) valueToSet;
@@ -130,7 +145,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			InTime--;
 			DoubleChannel->Evaluate(InTime, PreviousValue);
 		}
-		DoubleChannel->PostEditChange();
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")
 	{
@@ -139,6 +153,8 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 	}
 	else if (ChannelTypeName == "MovieSceneIntegerChannel")
 	{
+		UE_LOG(LogTemp, Warning, TEXT("integer triggered"))
+
 		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
 		valueToSet = valueToSet * Scale;
 		valueToSet = (int32) valueToSet;
@@ -156,7 +172,22 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			IntegerChannel->Evaluate(InTime, evalResult);
 			PreviousValue = (double) evalResult;
 		}
-		IntegerChannel->PostEditChange();
+	}
+
+	if (IsValid(MovieSceneControlRigParameterTrack))
+	{
+		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
+		FRigControlElement* controlElement = controlRig->FindControl(currentControlSelection);
+
+		UE_LOG(LogTemp, Warning, TEXT("Control element name is %s"), *controlElement->GetDisplayName().ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Control element type is %d"), controlElement->Settings.ControlType);
+		float valueOfChannel = 0;
+		FloatChannel->Evaluate(InTime, valueOfChannel);
+		controlRig->SetControlValue(currentControlSelection, valueOfChannel, true, FRigControlModifiedContext(), true, true);
+		auto value = controlRig->GetControlValue(currentControlSelection); /* FloatStorage */
+
+		TArray<FRigVMExternalVariable> arr = controlRig->GetPublicVariables();
+		UE_LOG(LogTemp, Warning, TEXT("get value of control rig"));
 	}
 
 	/*UpdateUI(InTime);*/
@@ -182,52 +213,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 	UE_LOG(LogTemp, Warning, TEXT("channel name is %s"), *Channel.GetMetaData()->Name.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("channel display text is %s"), *Channel.GetMetaData()->DisplayText.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("channel metadata group is %s"), *Channel.GetMetaData()->Group.ToString());
-
-	UMovieSceneControlRigParameterTrack* ControlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(MovieSceneTrack);
-	if (IsValid(ControlRigTrack))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("it's control rig track! %s"), *ControlRigTrack->GetTrackName().ToString());
-		UControlRig* controlRig = ControlRigTrack->GetControlRig();
-
-		controlRig->RequestInit();
-		controlRig->RequestSetup();
-		controlRig->Execute(EControlRigState::Update, FName("Update"));
-		controlRig->Evaluate_AnyThread();
-
-		UE_LOG(LogTemp, Warning, TEXT("category is %s"), *controlRig->GetCategory().ToString());
-		TArray<FName> currentControlSelection = controlRig->CurrentControlSelection();
-		for (FName name : currentControlSelection)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("fname control rig %s"), *name.ToString());
-			FRigControlValue value = controlRig->GetControlValue(name);
-			float val = value.Get<float>();
-			UE_LOG(LogTemp, Warning, TEXT("value of control rig is %f"), val);
-			float valueOfChannel = 0;
-			FloatChannel->Evaluate(InTime, valueOfChannel);
-			UE_LOG(LogTemp, Warning, TEXT("value of channel is %f"), valueOfChannel);
-			value.Set<float>(valueOfChannel);
-			controlRig->SetControlValue(name, valueOfChannel, true, FRigControlModifiedContext(), true, true);
-			UE_LOG(
-				LogTemp, Warning, TEXT("value after change with full path is %f"), controlRig->GetControlValue(name).Get<float>());
-			UE_LOG(LogTemp, Warning, TEXT("value after change with short path is %f"), value.Get<float>());
-			value.Set(valueOfChannel);
-			controlRig->SetControlValue(name, valueOfChannel, true, FRigControlModifiedContext(), true, true);
-			UE_LOG(LogTemp, Warning, TEXT("value after change with short path 2nd is %f"), value.Get<float>());
-			UE_LOG(LogTemp, Warning, TEXT("value after change with full path 2nd is %f"),
-				controlRig->GetControlValue(name).Get<float>());
-			controlRig->SetControlValue(name, valueOfChannel, true, FRigControlModifiedContext(), true, true);
-			UE_LOG(LogTemp, Warning, TEXT("value after change with short path 3nd is %f"), value.Get<float>());
-			UE_LOG(LogTemp, Warning, TEXT("value after change with full path 3nd is %f"),
-				controlRig->GetControlValue(name).Get<float>());
-		}
-		for (FRigVMExternalVariable var : controlRig->GetPublicVariables())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("public variable name is %s"), *var.Name.ToString());
-		}
-		controlRig->SetManipulationEnabled(true);
-		UE_LOG(
-			LogTemp, Warning, TEXT("Control rig manipulation enabled %S"), (controlRig->ManipulationEnabled() ? "true" : "false"));
-	}
 }
 void MotionHandler::InitKeys()
 {
@@ -237,7 +222,30 @@ void MotionHandler::InitKeys()
 	/* todo list */
 }
 
-void MotionHandler::UpdateUI(FFrameNumber InTime)
+double MotionHandler::GetValueFromTime(FFrameNumber InTime)
+{
+	if (ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		float result = 0;
+		FloatChannel->Evaluate(InTime, result);
+		return result;
+	}
+	if (ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		double result = 0;
+		DoubleChannel->Evaluate(InTime, result);
+		return result;
+	}
+	if (ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		int32 result = 0;
+		IntegerChannel->Evaluate(InTime, result);
+		return result;
+	}
+	return double(0);
+}
+
+/*void MotionHandler::UpdateUI(FFrameNumber InTime)
 {
 	TSharedRef<ISequencerTrackEditor> SequencerEditor = FSpawnTrackEditor::CreateTrackEditor(TSharedRef<ISequencer>(Sequencer));
 
@@ -248,4 +256,5 @@ void MotionHandler::UpdateUI(FFrameNumber InTime)
 	TArrayView<TSharedRef<IKeyArea>> ar = TArrayView<TSharedRef<IKeyArea>>(ka);
 
 	FAddKeyOperation::FromKeyAreas(&*SequencerEditor, ar).Commit(InTime, *Sequencer);
-}
+}*/
+

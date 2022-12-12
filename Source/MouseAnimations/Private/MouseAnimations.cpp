@@ -1,15 +1,16 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MouseAnimations.h"
-#include "MouseAnimationsStyle.h"
-#include "MouseAnimationsCommands.h"
-#include "SMouseAnimationsMenu.h"
+
 #include "LevelEditor.h"
+#include "MouseAnimationsCommands.h"
+#include "MouseAnimationsStyle.h"
+#include "SMain.h"
+#include "SMouseAnimationsMenu.h"
+#include "ToolMenus.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "ToolMenus.h"
-#include "SMain.h"
 
 static const FName MouseAnimationsTabName("MouseAnimations");
 
@@ -18,22 +19,22 @@ static const FName MouseAnimationsTabName("MouseAnimations");
 void FMouseAnimationsModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	
+
 	FMouseAnimationsStyle::Initialize();
 	FMouseAnimationsStyle::ReloadTextures();
 
 	FMouseAnimationsCommands::Register();
-	
+
 	PluginCommands = MakeShareable(new FUICommandList);
 
-	PluginCommands->MapAction(
-		FMouseAnimationsCommands::Get().OpenPluginWindow,
-		FExecuteAction::CreateRaw(this, &FMouseAnimationsModule::PluginButtonClicked),
-		FCanExecuteAction());
+	PluginCommands->MapAction(FMouseAnimationsCommands::Get().OpenPluginWindow,
+		FExecuteAction::CreateRaw(this, &FMouseAnimationsModule::PluginButtonClicked), FCanExecuteAction());
 
-	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FMouseAnimationsModule::RegisterMenus));
-	
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(MouseAnimationsTabName, FOnSpawnTab::CreateRaw(this, &FMouseAnimationsModule::OnSpawnPluginTab))
+	UToolMenus::RegisterStartupCallback(
+		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FMouseAnimationsModule::RegisterMenus));
+
+	FGlobalTabmanager::Get()
+		->RegisterNomadTabSpawner(MouseAnimationsTabName, FOnSpawnTab::CreateRaw(this, &FMouseAnimationsModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FMouseAnimationsTabTitle", "MouseAnimations"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 }
@@ -56,19 +57,9 @@ void FMouseAnimationsModule::ShutdownModule()
 
 TSharedRef<SDockTab> FMouseAnimationsModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	FText WidgetText = FText::Format(
-		LOCTEXT("WindowWidgetText", "Add code to {0} in {1} to override this window's contents"),
-		FText::FromString(TEXT("FMouseAnimationsModule::OnSpawnPluginTab")),
-		FText::FromString(TEXT("MouseAnimations.cpp"))
-		);
-
-
-	return SNew(SDockTab)
-		.TabRole(ETabRole::NomadTab)
-		[
-			// Put your tab content here!
-			SNew(SMain)
-		];
+	return SNew(SDockTab).TabRole(ETabRole::NomadTab)[
+		// Put your tab content here!
+		SNew(SMain)];
 }
 
 void FMouseAnimationsModule::PluginButtonClicked()
@@ -94,7 +85,8 @@ void FMouseAnimationsModule::RegisterMenus()
 		{
 			FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Settings");
 			{
-				FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FMouseAnimationsCommands::Get().OpenPluginWindow));
+				FToolMenuEntry& Entry =
+					Section.AddEntry(FToolMenuEntry::InitToolBarButton(FMouseAnimationsCommands::Get().OpenPluginWindow));
 				Entry.SetCommandList(PluginCommands);
 			}
 		}
@@ -102,5 +94,5 @@ void FMouseAnimationsModule::RegisterMenus()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FMouseAnimationsModule, MouseAnimations)

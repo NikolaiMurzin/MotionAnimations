@@ -12,6 +12,7 @@
 #include "Editor/Sequencer/Public/ISequencerTrackEditor.h"
 #include "Editor/Sequencer/Public/SequencerAddKeyOperation.h"
 #include "Misc/FrameNumber.h"
+#include "Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "Sequencer/Public/ISequencer.h"
 #include "UObject/NameTypes.h"
 
@@ -34,12 +35,16 @@ public:
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_);
 	void InitKeys();
 
+	double GetValueFromTime(FFrameNumber InTime);
+
 	const IKeyArea* KeyArea;
 
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
 	FGuid ObjectFGuid;
 	UMovieSceneTrack* MovieSceneTrack;
+	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack;
+	FName currentControlSelection;
 
 private:
 	void UpdateUI(FFrameNumber InTime);

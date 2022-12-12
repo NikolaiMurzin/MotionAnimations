@@ -6,8 +6,11 @@
 #include "Containers/Array.h"
 #include "CoreFwd.h"
 #include "CoreMinimal.h"
+#include "Delegates/DelegateCombinations.h"
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencer.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Input/Events.h"
 #include "LevelSequence.h"
 #include "LevelSequenceActor.h"
 #include "MotionHandler.h"
@@ -38,6 +41,11 @@ public:
 
 	FReply OnRefreshBindings();
 
+	FReply OnToggleRecording();
+	bool IsRecordedStarted;
+
+	FText GetIsToggledRecording() const;
+
 	void SetChannelHandleFromSelectedKeys();
 	FMovieSceneChannelHandle ChannelHandle;
 	FName ChannelType;
@@ -45,13 +53,21 @@ public:
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
 	void OnGlobalTimeChanged();
+	DECLARE_MULTICAST_DELEGATE(FOnStopEvent);
+	FOnStopEvent* OnStopEvent;
+	void OnStopPlay();
+	DECLARE_MULTICAST_DELEGATE(FOnPlayEvent);
+	FOnPlayEvent* OnPlayEvent;
+	bool IsStarted;
+	void OnStartPlay();
+
+	FSlateApplication::FOnApplicationPreInputKeyDownListener* OnKeyDownEvent;
+	void OnKeyDownGlobal(const FKeyEvent& event);
 
 	TSharedPtr<SSpinBox<double>> DefaultScaleBox;
 	FVector2D PreviousPosition;
 	double PositionX;
 	double PositionY;
-	FReply OnToggleRecording();
-	bool IsRecordedStarted;
 
 	Mode SelectedMode;
 	FReply SelectX();
@@ -65,6 +81,8 @@ public:
 	TSharedPtr<TArray<TSharedPtr<MotionHandler>>> MotionHandlerPtrs;
 	void RefreshMotionHandlers();
 	void ExecuteMotionHandlers(bool isInTickMode);
+
+	double GetValueFromTime(FFrameNumber InTime);
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;

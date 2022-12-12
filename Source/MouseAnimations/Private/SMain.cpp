@@ -17,6 +17,7 @@
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencer.h"
 #include "Editor/Sequencer/Public/SequencerKeyParams.h"
+#include "Engine/EngineTypes.h"
 #include "Framework/SlateDelegates.h"
 #include "ILevelSequenceEditorToolkit.h"
 #include "Input/Reply.h"
@@ -47,8 +48,12 @@
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
+	IsStarted = false;
 	RefreshSequences();
 	SelectedSequence = Sequences[0];
+	FSlateApplication& app = FSlateApplication::Get();
+	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
+	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
 
 	ChildSlot[SNew(SVerticalBox) +
 			  SVerticalBox::Slot()[SNew(SHorizontalBox) +
@@ -59,7 +64,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 															  .Text(FText::FromString("refresh Bindings"))
 															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshBindings))] +
 								   SHorizontalBox::Slot()[SNew(SButton)
-															  .Text(FText::FromString("start / stop recording"))
+															  .Text(this, &SMain::GetIsToggledRecording)
 															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnToggleRecording))] +
 								   SHorizontalBox::Slot()[SNew(SButton)
 															  .Text(FText::FromString("start / stop test animations"))
@@ -103,6 +108,10 @@ void SMain::RefreshSequencer()
 			Sequencer = seq;
 			OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
 			OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
+			OnPlayEvent = &(Sequencer->OnPlayEvent());
+			OnPlayEvent->AddRaw(this, &SMain::OnStartPlay);
+			OnStopEvent = &(Sequencer->OnStopEvent());
+			OnStopEvent->AddRaw(this, &SMain::OnStopPlay);
 		};
 	}
 }
@@ -136,7 +145,6 @@ void SMain::RefreshMotionHandlers()
 	Sequencer->GetSelectedObjects(SelectedObjects);
 	TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
 	Sequencer->GetSelectedTracks(SelectedTracks);
-	UE_LOG(LogTemp, Warning, TEXT("Selected tracks number: %d"), SelectedTracks.Num());
 	/* UMovieSceneControlRigParameterTrack* controlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]);
 	if (IsValid(controlRigTrack))
 	{
@@ -150,15 +158,6 @@ void SMain::RefreshMotionHandlers()
 			Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
 		MotionHandlerPtrs->Add(motionHandler);
 	}
-}
-FReply SMain::OnToggleRecording()
-{
-	if (IsTestAnimations)
-	{
-		return FReply::Handled();
-	}
-	IsRecordedStarted = !IsRecordedStarted;
-	return FReply::Handled();
 }
 FReply SMain::OnToggleTestAnimations()
 {
@@ -182,31 +181,23 @@ void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, 
 {
 	if (IsTestAnimations)
 	{
-		float desiredDeltaTime = 1 / fps;
-		float timeFromLatest = (float) (InCurrentTime - TimeFromLatestTestExecution);
-		FVector2D cursorPos = FSlateApplication::Get().GetCursorPos();
+		if (IsStarted)
+		{
+			float desiredDeltaTime = 1 / (fps * 3);
+			float timeFromLatest = (float) (InCurrentTime - TimeFromLatestTestExecution);
+			FVector2D cursorPos = FSlateApplication::Get().GetCursorPos();
 
-		if (timeFromLatest >= desiredDeltaTime)
-		{
-			std::cout << "pass";
-			ExecuteMotionHandlers(true);
-		}
-		else
-		{
-			std::cout << "skipped ";
+			if (timeFromLatest >= desiredDeltaTime)
+			{
+				ExecuteMotionHandlers(true);
+			}
 		}
 	}
 }
 void SMain::ExecuteMotionHandlers(bool isInTickMode)
 {
 	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	UE_LOG(LogTemp, Warning, TEXT("OnLocallTimeChanged %d!"), Sequencer->GetLocalTime().Time.GetFrame().Value);
-	UE_LOG(LogTemp, Warning, TEXT("LocalLooxindexx %d!"), Sequencer->GetLocalLoopIndex());
-	if (!isInTickMode)
-	{
-		nextFrame.Value += 1000;
-	}
-	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged %d!"), nextFrame.Value);
+	nextFrame.Value += 1000;
 	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
@@ -214,6 +205,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
+				motionHandler->Scale = DefaultScaleBox->GetValue();
 				motionHandler->SetKey(nextFrame, FVector2D(0, 0), SelectedMode);
 			}
 		}
@@ -226,6 +218,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
+				motionHandler->Scale = DefaultScaleBox->GetValue();
 				motionHandler->SetKey(nextFrame, vectorChange, SelectedMode);
 			}
 		}
@@ -252,4 +245,110 @@ FReply SMain::SelectYInverted()
 {
 	SelectedMode = YInverted;
 	return FReply::Handled();
+}
+void SMain::OnStartPlay()
+{
+	UE_LOG(LogTemp, Warning, TEXT("on start play"));
+	IsStarted = true;
+}
+void SMain::OnStopPlay()
+{
+	UE_LOG(LogTemp, Warning, TEXT("on stop play"));
+	IsStarted = false;
+}
+void SMain::OnKeyDownGlobal(const FKeyEvent& event)
+{
+	FKey key = event.GetKey();
+	if (key.ToString() == "R")
+	{
+		OnToggleRecording();
+	}
+	if (key.ToString() == "T")
+	{
+		OnToggleTestAnimations();
+	}
+	if (key.ToString() == "Q")
+	{
+		RefreshSequencer();
+	}
+	if (key.ToString() == "W")
+	{
+		RefreshMotionHandlers();
+	}
+	if (key.ToString() == "E")
+	{
+		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		{
+			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+
+			PreviousPosition = FSlateApplication::Get().GetCursorPos();
+			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			{
+				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
+			}
+			Sequencer->Pause();
+			Sequencer->SetGlobalTime(lowerValue);
+			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+			params.Frame = highValue;
+			Sequencer->PlayTo(params);
+		}
+	}
+	if (key.ToString() == "D")
+	{
+		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		{
+			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+
+			PreviousPosition = FSlateApplication::Get().GetCursorPos();
+			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			{
+				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
+			}
+			Sequencer->Pause();
+			Sequencer->SetGlobalTime(lowerValue);
+			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+			params.Frame = highValue;
+		}
+	}
+	if (key.ToString() == "Z")
+	{
+		SelectX();
+	}
+	else if (key.ToString() == "X")
+	{
+		SelectXInverted();
+	}
+	else if (key.ToString() == "C")
+	{
+		SelectY();
+	}
+	else if (key.ToString() == "V")
+	{
+		SelectYInverted();
+	}
+}
+FReply SMain::OnToggleRecording()
+{
+	if (IsTestAnimations)
+	{
+		return FReply::Handled();
+	}
+	IsRecordedStarted = !IsRecordedStarted;
+	PreviousPosition = FSlateApplication::Get().GetCursorPos(); /* get mouse current pos and set /./ &*/
+	return FReply::Handled();
+}
+FText SMain::GetIsToggledRecording() const
+{
+	if (IsRecordedStarted)
+	{
+		return FText::FromString("Stop recording");
+	}
+	else
+	{
+		return FText::FromString("Start recording");
+	}
 }

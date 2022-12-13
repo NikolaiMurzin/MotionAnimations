@@ -96,25 +96,26 @@ FReply SMain::OnRefreshSequencer()
 
 void SMain::RefreshSequencer()
 {
-	if (SelectedSequence == nullptr)
-		return;
-	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
-	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
-	ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
-	if (LevelSequenceEditor != nullptr)
+	if (SelectedSequence != nullptr)
 	{
-		// Get current Sequencer
-		ISequencer* seq = LevelSequenceEditor->GetSequencer().Get();
-		if (seq != nullptr)
+		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
+		ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
+		if (LevelSequenceEditor != nullptr)
 		{
-			Sequencer = seq;
-			OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
-			OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
-			OnPlayEvent = &(Sequencer->OnPlayEvent());
-			OnPlayEvent->AddRaw(this, &SMain::OnStartPlay);
-			OnStopEvent = &(Sequencer->OnStopEvent());
-			OnStopEvent->AddRaw(this, &SMain::OnStopPlay);
-		};
+			// Get current Sequencer
+			ISequencer* seq = LevelSequenceEditor->GetSequencer().Get();
+			if (seq != nullptr)
+			{
+				Sequencer = seq;
+				OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
+				OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
+				OnPlayEvent = &(Sequencer->OnPlayEvent());
+				OnPlayEvent->AddRaw(this, &SMain::OnStartPlay);
+				OnStopEvent = &(Sequencer->OnStopEvent());
+				OnStopEvent->AddRaw(this, &SMain::OnStopPlay);
+			};
+		}
 	}
 }
 void SMain::RefreshSequences()
@@ -141,26 +142,27 @@ FReply SMain::OnRefreshBindings()
 };
 void SMain::RefreshMotionHandlers()
 {
-	if (Sequencer == nullptr)
-		return;
-	TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
-	Sequencer->GetSelectedKeyAreas(KeyAreas);
-	TArray<FGuid> SelectedObjects = TArray<FGuid>();
-	Sequencer->GetSelectedObjects(SelectedObjects);
-	TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
-	Sequencer->GetSelectedTracks(SelectedTracks);
-	/* UMovieSceneControlRigParameterTrack* controlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]);
-	if (IsValid(controlRigTrack))
+	if (Sequencer != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
-	} */
+		TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
+		Sequencer->GetSelectedKeyAreas(KeyAreas);
+		TArray<FGuid> SelectedObjects = TArray<FGuid>();
+		Sequencer->GetSelectedObjects(SelectedObjects);
+		TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
+		Sequencer->GetSelectedTracks(SelectedTracks);
+		/* UMovieSceneControlRigParameterTrack* controlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]);
+		if (IsValid(controlRigTrack))
+		{
+		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
+		} */
 
-	MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
-	for (const IKeyArea* KeyArea : KeyAreas)
-	{
-		TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScaleBox->GetValue(),
-			Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
-		MotionHandlerPtrs->Add(motionHandler);
+		MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
+		for (const IKeyArea* KeyArea : KeyAreas)
+		{
+			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea,
+				DefaultScaleBox->GetValue(), Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
+			MotionHandlerPtrs->Add(motionHandler);
+		}
 	}
 }
 FReply SMain::OnToggleTestAnimations()

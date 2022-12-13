@@ -35,6 +35,9 @@ public:
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_);
 	void InitKeys();
 
+	void DeleteAllKeysFrom(FFrameNumber InTime);
+	void DeleteKeysWithin(TRange<FFrameNumber> InRange);
+
 	double GetValueFromTime(FFrameNumber InTime);
 
 	const IKeyArea* KeyArea;
@@ -48,6 +51,8 @@ public:
 
 private:
 	void UpdateUI(FFrameNumber InTime);
+
+	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 
 	int32 channelIndex;
 	FMovieSceneFloatChannel* FloatChannel;

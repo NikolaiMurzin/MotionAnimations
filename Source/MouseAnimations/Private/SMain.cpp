@@ -1,4 +1,3 @@
-
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SMain.h"
@@ -290,13 +289,19 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 
+			Sequencer->Pause();
+			Sequencer->SetGlobalTime(lowerValue);
+
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
+
+				FFrameNumber DeleteKeysFrom = lowerValue;
+				DeleteKeysFrom.Value += 3000;
+				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, highValue));
 			}
-			Sequencer->Pause();
-			Sequencer->SetGlobalTime(lowerValue);
+
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
 			Sequencer->PlayTo(params);

@@ -129,6 +129,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 		TMovieSceneChannelData<FMovieSceneFloatValue> ChannelData = FloatChannel->GetData();
 		if (!IsFirstUpdate)
 		{
+			ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(PreviousValue));
 			valueToSet += PreviousValue;
 			ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
 			PreviousValue = valueToSet;
@@ -142,6 +143,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			PreviousValue = (double) prevValue;
 			IsFirstUpdate = false;
 		}
+		SyncControlRigWithChannelValue(InTime);
 	}
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
 	{
@@ -152,6 +154,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
 		if (!IsFirstUpdate)
 		{
+			ChannelData.UpdateOrAddKey(InTime - 1000, FMovieSceneDoubleValue(PreviousValue));
 			valueToSet += PreviousValue;
 			ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
 			PreviousValue = valueToSet;
@@ -180,6 +183,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 		if (!IsFirstUpdate)
 		{
 			ChannelData.UpdateOrAddKey(InTime, (int32) PreviousValue + valueToSet);
+			PreviousValue = valueToSet;
 		}
 		else
 		{
@@ -191,7 +195,10 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			PreviousValue = (double) evalResult;
 		}
 	}
-
+}
+void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
+{
+	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
 		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
@@ -398,37 +405,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			}
 			controlRig->SetControlValue(currentControlSelection, vec, true, FRigControlModifiedContext(), true, true);
 		}
-		else
-		{
-			/* float valueOfChannel = 0;
-			FloatChannel->Evaluate(InTime, valueOfChannel);
-			controlRig->SetControlValue(currentControlSelection, valueOfChannel, true, FRigControlModifiedContext(), true, true); */
-		}
 	}
-
-	/*UpdateUI(InTime);*/
-	/*(IKeyArea* KeyArea_ = const_cast<IKeyArea*>(KeyArea);
-	FFrameNumber frameNumber = InTime;
-	frameNumber.Value = InTime.Value + 1000;
-	FKeyHandle keyHandle = KeyArea_->AddOrUpdateKey(frameNumber, ObjectFGuid, *Sequencer);*/
-
-	/*IKeyArea* KeyArea_ = const_cast<IKeyArea*>(KeyArea);
-	TSharedRef<ISequencerTrackEditor> SequencerEditor =
-		FSpawnTrackEditor::CreateTrackEditor(TSharedRef<ISequencer, ESPMode::ThreadSafe>(&*Sequencer));
-	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
-	keyAreas.Add(TSharedRef<IKeyArea>(KeyArea_));
-	UE::Sequencer::FAddKeyOperation operation =
-		UE::Sequencer::FAddKeyOperation::FromKeyAreas(&*SequencerEditor, TArrayView<TSharedRef<IKeyArea>>(keyAreas));
-	std::cout << "some text";
-	ISequencer& Sequencerr = *Sequencer;
-	std::cout << "some text";
-	operation.Commit(InTime, Sequencerr); */
-
-	UE_LOG(LogTemp, Warning, TEXT("key area name is %s"), *KeyArea->GetName().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("channel index is %d"), Channel.GetChannelIndex());
-	UE_LOG(LogTemp, Warning, TEXT("channel.GetMetadata()->Name is %s"), *Channel.GetMetaData()->Name.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("channel display text is %s"), *Channel.GetMetaData()->DisplayText.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("channel metadata group is %s"), *Channel.GetMetaData()->Group.ToString());
 }
 void MotionHandler::InitKeys()
 {
@@ -437,7 +414,6 @@ void MotionHandler::InitKeys()
 	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 	/* todo list */
 }
-
 double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 {
 	if (ChannelTypeName == "MovieSceneFloatChannel")
@@ -460,17 +436,38 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 	}
 	return double(0);
 }
-
-/*void MotionHandler::UpdateUI(FFrameNumber InTime)
+void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 {
-	TSharedRef<ISequencerTrackEditor> SequencerEditor = FSpawnTrackEditor::CreateTrackEditor(TSharedRef<ISequencer>(Sequencer));
-
-	using namespace UE::Sequencer;
-
-	TArray<TSharedRef<IKeyArea>> ka = TArray<TSharedRef<IKeyArea>>();
-	ka.Add(TSharedRef<IKeyArea>(const_cast<IKeyArea*>(KeyArea)));
-	TArrayView<TSharedRef<IKeyArea>> ar = TArrayView<TSharedRef<IKeyArea>>(ka);
-
-	FAddKeyOperation::FromKeyAreas(&*SequencerEditor, ar).Commit(InTime, *Sequencer);
-}*/
-
+	TArray<FKeyHandle> KeyHandles = TArray<FKeyHandle>();
+	TArray<FFrameNumber> frames = TArray<FFrameNumber>();
+	if (ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		FloatChannel->GetKeys(InRange, &frames, &KeyHandles);
+		FloatChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
+	}
+	else if (ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		DoubleChannel->GetKeys(InRange, &frames, &KeyHandles);
+		DoubleChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
+	}
+	else if (ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		IntegerChannel->GetKeys(InRange, &frames, &KeyHandles);
+		IntegerChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
+	}
+}
+void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
+{
+	if (ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		FloatChannel->DeleteKeysFrom(InTime, false);
+	}
+	else if (ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		DoubleChannel->DeleteKeysFrom(InTime, false);
+	}
+	else if (ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		IntegerChannel->DeleteKeysFrom(InTime, false);
+	}
+}

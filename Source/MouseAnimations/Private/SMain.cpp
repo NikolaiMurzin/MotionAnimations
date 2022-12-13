@@ -96,6 +96,8 @@ FReply SMain::OnRefreshSequencer()
 
 void SMain::RefreshSequencer()
 {
+	if (SelectedSequence == nullptr)
+		return;
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 	IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
 	ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
@@ -139,6 +141,8 @@ FReply SMain::OnRefreshBindings()
 };
 void SMain::RefreshMotionHandlers()
 {
+	if (Sequencer == nullptr)
+		return;
 	TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 	Sequencer->GetSelectedKeyAreas(KeyAreas);
 	TArray<FGuid> SelectedObjects = TArray<FGuid>();
@@ -280,6 +284,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
 			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 

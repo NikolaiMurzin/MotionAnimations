@@ -49,6 +49,7 @@ public:
 private:
 	void UpdateUI(FFrameNumber InTime);
 
+	int32 channelIndex;
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneBoolChannel* BoolChannel;

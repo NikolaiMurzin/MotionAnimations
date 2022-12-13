@@ -205,7 +205,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->Scale = DefaultScaleBox->GetValue();
+				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
 				motionHandler->SetKey(nextFrame, FVector2D(0, 0), SelectedMode);
 			}
 		}
@@ -218,7 +218,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
-				motionHandler->Scale = DefaultScaleBox->GetValue();
+				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
 				motionHandler->SetKey(nextFrame, vectorChange, SelectedMode);
 			}
 		}

@@ -7,6 +7,7 @@
 #include "ControlRig.h"
 #include "CoreFwd.h"
 #include "Editor.h"
+#include "EulerTransform.h"
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "Internationalization/Text.h"
@@ -80,11 +81,21 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	{
 		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
 	}
-
-	UMovieSceneSection* section = KeyArea->GetOwningSection();
-	FMovieSceneChannelProxy& proxy = section->GetChannelProxy();
-	channelIndex = proxy.FindIndex(ChannelTypeName, Channel.Get());
-	UE_LOG(LogTemp, Warning, TEXT("Channel index is %d"), channelIndex);
+}
+FVector GetVectorFromString(FString input)
+{
+	FString firstString = *input.Left(11).Right(8);
+	FString secondString = *input.Right(10).Left(8);
+	if (secondString[0] == '=')
+	{
+		secondString = *input.Right(9).Left(8);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("first string is  %s"), *firstString);
+	UE_LOG(LogTemp, Warning, TEXT("second string  is  %s"), *secondString);
+	FVector output = FVector();
+	output.X = FCString::Atof(*firstString);
+	output.Y = FCString::Atof(*secondString);
+	return output;
 }
 void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode)
 {
@@ -190,6 +201,8 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 		UE_LOG(LogTemp, Warning, TEXT("Control element type is %d"), controlElement->Settings.ControlType);
 		ERigControlType controlType = controlElement->Settings.ControlType;
 		FRigControlValue controlValue = controlRig->GetControlValue(currentControlSelection);
+		FRigControlValue controlValueMin = controlElement->Settings.MinimumValue;
+		FRigControlValue controlValueMax = controlElement->Settings.MaximumValue;
 		float valueOfChannel = 0;
 		FloatChannel->Evaluate(InTime, valueOfChannel);
 		FString ChannelDisplayText = Channel.GetMetaData()->DisplayText.ToString();
@@ -199,64 +212,76 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 		}
 		else if (controlType == ERigControlType::EulerTransform)
 		{
-			FEulerTransform eValue = controlValue.GetAsTransform(ERigControlType::EulerTransform, ERigControlAxis::X);
-			FVector location = eValue.GetLocation();
-			UE::Math::TQuat<double> rotation = eValue.GetRotation();
-			FVector scale = eValue.GetScale3D();
+			FEulerTransform eulerValue = controlValue.GetAsTransform(ERigControlType::EulerTransform, ERigControlAxis::X);
+			UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+			FRotator rotator = rotation.Rotator();
+			UE_LOG(LogTemp, Warning, TEXT("rotator is %s"), *rotator.ToString());
+			FVector location = eulerValue.GetLocation();
+			FVector scale = eulerValue.GetScale3D();
+
+			UE_LOG(LogTemp, Warning, TEXT("Trying to set value of channel %f"), valueOfChannel);
+
 			UE_LOG(LogTemp, Warning, TEXT("it's euler transform"));
+
+			/* ue log max and min values todo */
 			if (ChannelDisplayText == "Location.X")
 			{
 				location.X = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Y")
 			{
 				location.Y = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Z")
 			{
 				location.Z = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
-				rotation.X = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Roll = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
-				rotation.Y = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Pitch = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
-				rotation.Z = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Yaw = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Scale.X")
 			{
 				scale.X = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Y")
 			{
 				scale.Y = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Z")
 			{
 				scale.Z = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
-			controlRig->SetControlValue(currentControlSelection, eValue, true, FRigControlModifiedContext(), true, true);
+			eulerValue.FromFTransform(eulerValue);
+			controlRig->SetControlValue(currentControlSelection, eulerValue, true, FRigControlModifiedContext(), true, true);
 		}
 		else if (controlType == ERigControlType::TransformNoScale)
 		{
 			FTransformNoScale nValue = controlValue.GetAsTransform(ERigControlType::TransformNoScale, ERigControlAxis::X);
 			FVector location = nValue.Location;
 			UE::Math::TQuat<double> rotation = nValue.Rotation;
-			UE_LOG(LogTemp, Warning, TEXT("it's transform no scale"))
+			FRotator rotator = rotation.Rotator();
+			UE_LOG(LogTemp, Warning, TEXT("it's transform no scale"));
 			if (ChannelDisplayText == "Location.X")
 			{
 				location.X = valueOfChannel;
@@ -274,100 +299,101 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
-				rotation.X = valueOfChannel;
+				rotator.Roll = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
-				rotation.Y = valueOfChannel;
+				rotator.Pitch = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
-				rotation.Z = valueOfChannel;
+				rotator.Yaw = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
 			}
 		}
 		else if (controlType == ERigControlType::Transform)
 		{
-			FTransform eValue = controlValue.GetAsTransform(ERigControlType::Transform, ERigControlAxis::X);
-			UE_LOG(LogTemp, Warning, TEXT("It's transform is %s"), *eValue.ToString());
-			FVector location = eValue.GetLocation();
-			UE::Math::TQuat<double> rotation = eValue.GetRotation();
-			FVector scale = eValue.GetScale3D();
+			FTransform eulerValue = controlValue.GetAsTransform(ERigControlType::Transform, ERigControlAxis::X);
+			UE_LOG(LogTemp, Warning, TEXT("It's transform is %s"), *eulerValue.ToString());
+			FVector location = eulerValue.GetLocation();
+			UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+			FVector scale = eulerValue.GetScale3D();
+			FRotator rotator = rotation.Rotator();
 			if (ChannelDisplayText == "Location.X")
 			{
 				location.X = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Y")
 			{
 				location.Y = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Z")
 			{
 				location.Z = valueOfChannel;
-				eValue.SetLocation(location);
+				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
-				rotation.X = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Roll = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
-				rotation.Y = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Pitch = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
-				rotation.Z = valueOfChannel;
-				eValue.SetRotation(rotation);
+				rotator.Yaw = valueOfChannel;
+				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
+				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Scale.X")
 			{
 				scale.X = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Y")
 			{
 				scale.Y = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Z")
 			{
 				scale.Z = valueOfChannel;
-				eValue.SetScale3D(scale);
+				eulerValue.SetScale3D(scale);
 			}
-			controlRig->SetControlValue(currentControlSelection, eValue, true, FRigControlModifiedContext(), true, true);
+			controlRig->SetControlValue(currentControlSelection, eulerValue, true, FRigControlModifiedContext(), true, true);
 		}
 		else if (controlType == ERigControlType::Vector2D)
 		{
-			FString eValue = controlValue.ToString<FVector2D>();
+			FString eulerValue = controlValue.ToString<FVector2D>();
 			UE_LOG(LogTemp, Warning, TEXT("It's Vector2D:  %s"), *controlValue.ToString<FVector2D>());
-			FString firstString = *eValue.Left(11).Right(8);
-			FString secondString = *eValue.Right(10).Left(8);
-			if (secondString[0] == '=')
-			{
-				secondString = *eValue.Right(9).Left(8);
-			}
-			UE_LOG(LogTemp, Warning, TEXT("first string is  %s"), *firstString);
-			UE_LOG(LogTemp, Warning, TEXT("second string  is  %s"), *secondString);
-			float first = FCString::Atof(*firstString);
-			float second = FCString::Atof(*secondString);
-			UE_LOG(LogTemp, Warning, TEXT("first is  %f"), first);
-			UE_LOG(LogTemp, Warning, TEXT("second is  %f"), second);
-			UE_LOG(LogTemp, Warning, TEXT("value of channel is  %f"), valueOfChannel);
+			UE_LOG(LogTemp, Warning, TEXT("It's Vector2D min :  %s"), *controlValueMin.ToString<FVector2D>());
+			UE_LOG(LogTemp, Warning, TEXT("It's Vector2D max :  %s"), *controlValueMax.ToString<FVector2D>());
+
+			FVector currentValue = GetVectorFromString(*eulerValue);
+			FVector minValue = GetVectorFromString(*controlValueMin.ToString<FVector2D>());
+			FVector maxValue = GetVectorFromString(*controlValueMax.ToString<FVector2D>());
+
 			FVector2D vec = FVector2D();
 			if (ChannelDisplayText == "X")
 			{
 				vec.X = float(valueOfChannel);
-				vec.Y = float(second);
+				vec.Y = float(currentValue.Y);
 			}
 			else if (ChannelDisplayText == "Y")
 			{
-				vec.X = float(first);
+				vec.X = float(currentValue.X);
 				vec.Y = float(valueOfChannel);
 			}
 			controlRig->SetControlValue(currentControlSelection, vec, true, FRigControlModifiedContext(), true, true);

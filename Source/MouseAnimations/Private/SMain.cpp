@@ -83,7 +83,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 												 .Text(FText::FromString("YInverted"))
 												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectYInverted))]]];
 	DefaultScaleBox->SetValue(0.1);
-	SelectedMode = X;
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -158,14 +157,15 @@ void SMain::RefreshMotionHandlers()
 		MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
-			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea,
-				DefaultScaleBox->GetValue(), Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
+			TSharedPtr<MotionHandler> motionHandler =
+				TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScaleBox->GetValue(), Sequencer,
+					SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], Mode::X));
 
-			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(), FVector2D(0, 0),
-				SelectedMode);	  // need to add two keys for enabling recording motions
+			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
+				FVector2D(0, 0));	 // need to add two keys for enabling recording motions
 			FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
 			frame.Value += 1000;
-			motionHandler->SetKey(frame, FVector2D(0, 0), SelectedMode);
+			motionHandler->SetKey(frame, FVector2D(0, 0));
 
 			MotionHandlerPtrs->Add(motionHandler);
 		}
@@ -218,7 +218,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
 				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
-				motionHandler->SetKey(nextFrame, FVector2D(0, 0), SelectedMode);
+				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
 			}
 		}
 	}
@@ -231,7 +231,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
 				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
-				motionHandler->SetKey(nextFrame, vectorChange, SelectedMode);
+				motionHandler->SetKey(nextFrame, vectorChange);
 			}
 		}
 	}
@@ -239,23 +239,34 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 }
 FReply SMain::SelectX()
 {
-	SelectedMode = X;
-
+	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	{
+		motionHandler->Mode = Mode::X;
+	}
 	return FReply::Handled();
 }
 FReply SMain::SelectXInverted()
 {
-	SelectedMode = XInverted;
+	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	{
+		motionHandler->Mode = Mode::XInverted;
+	}
 	return FReply::Handled();
 }
 FReply SMain::SelectY()
 {
-	SelectedMode = Y;
+	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	{
+		motionHandler->Mode = Mode::Y;
+	}
 	return FReply::Handled();
 }
 FReply SMain::SelectYInverted()
 {
-	SelectedMode = YInverted;
+	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	{
+		motionHandler->Mode = Mode::YInverted;
+	}
 	return FReply::Handled();
 }
 void SMain::OnStartPlay()

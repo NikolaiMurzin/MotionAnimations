@@ -34,7 +34,7 @@
 #include <string>
 
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
-	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_)
+	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	Scale = DefaultScale_;
@@ -42,6 +42,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	PreviousValue = 0;
 	IsFirstUpdate = true;
 	MovieScene = MovieScene_;
+	Mode = Mode_;
 
 	ObjectFGuid = ObjectFGuid_;
 	MovieSceneTrack = MovieSceneTrack_;
@@ -97,7 +98,7 @@ FVector GetVectorFromString(FString input)
 	output.Y = FCString::Atof(*secondString);
 	return output;
 }
-void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode)
+void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 {
 	double valueToSet = 0;
 	if (Mode == X)
@@ -487,7 +488,7 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 	float value = GetValueFromTime(highValue);
 	UE_LOG(LogTemp, Warning, TEXT("high value key value is %d  "), value);
 
-	SetKey(highValue, FVector2D(0, 0), Mode::X);
+	SetKey(highValue, FVector2D(0, 0));
 
 	UE_LOG(LogTemp, Warning, TEXT("upwer value us %d"), highValue.Value);
 	InRange.SetUpperBoundValue(highValue);

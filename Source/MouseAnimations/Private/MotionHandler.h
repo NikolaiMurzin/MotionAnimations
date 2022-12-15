@@ -30,9 +30,11 @@ public:
 	double PreviousValue;
 	bool IsFirstUpdate;
 	FName ChannelTypeName;
-	void SetKey(FFrameNumber InTime, FVector2D InputVector, Mode Mode);
+	enum Mode Mode;
+
+	void SetKey(FFrameNumber InTime, FVector2D InputVector);
 	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
-		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_);
+		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_ = Mode::X);
 	void InitKeys();
 
 	void DeleteAllKeysFrom(FFrameNumber InTime);

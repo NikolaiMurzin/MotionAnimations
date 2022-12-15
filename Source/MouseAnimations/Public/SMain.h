@@ -69,7 +69,6 @@ public:
 	double PositionX;
 	double PositionY;
 
-	Mode SelectedMode;
 	FReply SelectX();
 	FReply SelectXInverted();
 	FReply SelectY();

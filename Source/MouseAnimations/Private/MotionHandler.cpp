@@ -471,3 +471,37 @@ void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
 		IntegerChannel->DeleteKeysFrom(InTime, false);
 	}
 }
+void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
+{
+	FKeyDataOptimizationParams params = FKeyDataOptimizationParams();
+	params.bAutoSetInterpolation = true;
+	params.Range = InRange;
+	params.Tolerance = 0.2;
+	params.DisplayRate = FFrameRate();
+	params.DisplayRate.Numerator = 24;
+	params.DisplayRate.Denominator = 1;
+
+	FFrameNumber highValue = InRange.GetUpperBoundValue();
+	highValue.Value += 1000;
+
+	float value = GetValueFromTime(highValue);
+	UE_LOG(LogTemp, Warning, TEXT("high value key value is %d  "), value);
+
+	SetKey(highValue, FVector2D(0, 0), Mode::X);
+
+	UE_LOG(LogTemp, Warning, TEXT("upwer value us %d"), highValue.Value);
+	InRange.SetUpperBoundValue(highValue);
+
+	if (ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		FloatChannel->Optimize(params);
+	}
+	else if (ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		DoubleChannel->Optimize(params);
+	}
+	else if (ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		IntegerChannel->Optimize(params);
+	}
+}

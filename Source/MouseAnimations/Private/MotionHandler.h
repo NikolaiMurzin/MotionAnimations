@@ -42,6 +42,8 @@ public:
 
 	const IKeyArea* KeyArea;
 
+	void Optimize(TRange<FFrameNumber> InRange);
+
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
 	FGuid ObjectFGuid;

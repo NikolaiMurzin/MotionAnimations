@@ -160,6 +160,13 @@ void SMain::RefreshMotionHandlers()
 		{
 			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea,
 				DefaultScaleBox->GetValue(), Sequencer, SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0]));
+
+			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(), FVector2D(0, 0),
+				SelectedMode);	  // need to add two keys for enabling recording motions
+			FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
+			frame.Value += 1000;
+			motionHandler->SetKey(frame, FVector2D(0, 0), SelectedMode);
+
 			MotionHandlerPtrs->Add(motionHandler);
 		}
 	}
@@ -284,6 +291,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
+			IsRecordedStarted = true;
+
 			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
 
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
@@ -311,6 +320,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
+			IsRecordedStarted = false;
+
 			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
@@ -318,6 +329,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
 			{
+				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 			}
 			Sequencer->Pause();

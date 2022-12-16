@@ -10,9 +10,9 @@ FMotionHandlerData::FMotionHandlerData()
 {
 	IsValidData = false;
 }
-FMotionHandlerData::FMotionHandlerData(FString FileData)
+FMotionHandlerData::FMotionHandlerData(FString FilePath)
 {
-	FString FilePath = "";
+	FString FileData = "";
 	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("DID NOT FIND FILE"));
@@ -27,4 +27,20 @@ FMotionHandlerData::FMotionHandlerData(FString FileData)
 		UE_LOG(LogTemp, Warning, TEXT("CONVERTED"));
 		IsValidData = true;
 	}
+}
+FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FString TrackName_, int32 SectionRowIndex_,
+	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_)
+{
+	Scale = Scale_;
+	ObjectFGuid = ObjectFGuid_;
+	TrackName = TrackName_;
+	SectionRowIndex = SectionRowIndex_;
+	ChannelTypeName = ChannelTypeName_;
+	ChannelIndex = ChannelIndex_;
+	SelectedMode = Mode_;
+	Save();
+}
+bool FMotionHandlerData::Save()
+{
+	return true;
 }

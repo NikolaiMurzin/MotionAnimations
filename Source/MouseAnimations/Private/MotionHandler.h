@@ -17,27 +17,16 @@
 #include "Sequencer/Public/ISequencer.h"
 #include "UObject/NameTypes.h"
 
-enum Mode : uint8
-{
-	X,
-	XInverted,
-	Y,
-	YInverted,
-};
 class MotionHandler
 {
 public:
-	double Scale;
 	double PreviousValue;
 	bool IsFirstUpdate;
-	FName ChannelTypeName;
-	enum Mode Mode;
 
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
 	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
-		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_ = Mode::X);
-	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data);	  // when construct from json
-																									  //
+		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, FMotionHandlerData::Mode Mode_ = FMotionHandlerData::Mode::X);
+	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data_);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);
 	void CastChannel();
 
@@ -56,17 +45,16 @@ public:
 
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
-	FGuid ObjectFGuid;
 	UMovieSceneTrack* MovieSceneTrack;
 	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack;
-	FName currentControlSelection;
+
+	FMotionHandlerData Data;
 
 private:
 	void UpdateUI(FFrameNumber InTime);
 
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 
-	int32 ChannelIndex;
 	FMovieSceneChannelHandle ChannelHandle;
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;

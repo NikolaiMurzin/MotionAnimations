@@ -23,8 +23,10 @@
 #include "LevelSequence.h"
 #include "Logging/LogMacros.h"
 #include "Logging/LogVerbosity.h"
+#include "Misc/Paths.h"
 #include "Misc/QualifiedFrameTime.h"
 #include "MotionHandler.h"
+#include "MotionHandlerData.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
 #include "MovieSceneSection.h"
@@ -66,7 +68,6 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	FString objectFGuid = Item->ObjectFGuid.ToString();
 	FString trackName = Item->MovieSceneTrack->GetName();
 	FString movieSceneName = Item->MovieScene->GetName();
 	FString keyAreaName = Item->KeyArea->GetName().ToString();
@@ -80,9 +81,9 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
 		.Content()[SNew(STextBlock)
-					   .Text(FText::FromString(objectFGuid + ", " + trackName + ", " + movieSceneName + ", " + keyAreaName + ", " +
-											   channelName + ", " + channelDisplayText + ", " + group + ", " + sortOrder + ", " +
-											   sectionName + ", " + rowIndexSection))];
+					   .Text(FText::FromString(Item->Data.ObjectFGuid.ToString() + ", " + trackName + ", " + movieSceneName + ", " +
+											   keyAreaName + ", " + channelName + ", " + channelDisplayText + ", " + group + ", " +
+											   sortOrder + ", " + sectionName + ", " + rowIndexSection))];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -158,7 +159,7 @@ void SMain::RefreshMotionHandlers()
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
 			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer,
-				SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], Mode::X));
+				SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], FMotionHandlerData::Mode::X));
 
 			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
 				FVector2D(0, 0));	 // need to add two keys for enabling recording motions
@@ -214,7 +215,6 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
-				motionHandler->Scale = DefaultScale;
 				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
 			}
 		}
@@ -227,7 +227,6 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 		{
 			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
-				motionHandler->Scale = DefaultScale;
 				motionHandler->SetKey(nextFrame, vectorChange);
 			}
 		}
@@ -238,7 +237,7 @@ FReply SMain::SelectX()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Mode = Mode::X;
+		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::X;
 	}
 	return FReply::Handled();
 }
@@ -246,7 +245,7 @@ FReply SMain::SelectXInverted()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Mode = Mode::XInverted;
+		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::XInverted;
 	}
 	return FReply::Handled();
 }
@@ -254,7 +253,7 @@ FReply SMain::SelectY()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Mode = Mode::Y;
+		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::Y;
 	}
 	return FReply::Handled();
 }
@@ -262,7 +261,7 @@ FReply SMain::SelectYInverted()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Mode = Mode::YInverted;
+		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::YInverted;
 	}
 	return FReply::Handled();
 }

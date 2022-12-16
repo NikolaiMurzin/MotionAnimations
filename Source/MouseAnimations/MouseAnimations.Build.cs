@@ -60,7 +60,9 @@ public class MouseAnimations : ModuleRules
 				"MovieScene",
         "MovieSceneTools",
         "ControlRig",
-        "RigVM"
+        "RigVM",
+        "Json",
+        "JsonUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

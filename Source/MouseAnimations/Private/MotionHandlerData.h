@@ -16,6 +16,7 @@ USTRUCT()
 struct FMotionHandlerData
 {
 	GENERATED_BODY()
+
 public:
 	double Scale;
 	FGuid ObjectFGuid;
@@ -23,4 +24,8 @@ public:
 	int32 SectionRowIndex;
 	FString ChannelTypeName;
 	int32 ChannelIndex;
+	bool IsValidData;
+
+	FMotionHandlerData();
+	FMotionHandlerData(FString FileData);
 };

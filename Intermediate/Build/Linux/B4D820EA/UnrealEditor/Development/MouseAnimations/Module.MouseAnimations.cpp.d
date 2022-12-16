@@ -2380,6 +2380,21 @@
   ThirdParty/Unix/LibCxx/include/c++/v1/stdexcept \
   ThirdParty/Unix/LibCxx/include/c++/v1/string \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.cpp \
+  Runtime/JsonUtilities/Public/JsonObjectConverter.h \
+  Runtime/Json/Public/Serialization/JsonTypes.h \
+  Runtime/Json/Public/Dom/JsonObject.h Runtime/Json/Public/JsonGlobals.h \
+  Runtime/Json/Public/Dom/JsonValue.h \
+  Runtime/Json/Public/Serialization/JsonReader.h \
+  Runtime/Core/Public/Serialization/BufferReader.h \
+  Runtime/Json/Public/Serialization/JsonSerializer.h \
+  Runtime/Json/Public/Serialization/JsonWriter.h \
+  Runtime/Json/Public/Policies/PrettyJsonPrintPolicy.h \
+  Runtime/Core/Public/Serialization/MemoryWriter.h \
+  Runtime/JsonUtilities/Public/JsonObjectWrapper.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/JsonUtilities/JsonObjectWrapper.generated.h \
+  Runtime/Core/Public/Misc/FileHelper.h \
+  Runtime/Core/Public/Containers/StringView.h \
+  Runtime/Core/Public/HAL/FileManager.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimations.h \
   Runtime/Core/Public/Modules/ModuleManager.h \
@@ -2467,7 +2482,6 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ToolMenus/ToolMenuSection.generated.h \
   Runtime/Slate/Public/Framework/MultiBox/ToolMenuBase.h \
   Runtime/Core/Public/Misc/NamePermissionList.h \
-  Runtime/Core/Public/Containers/StringView.h \
   Runtime/Core/Public/Delegates/Delegate.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Slate/ToolMenuBase.generated.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ToolMenus/ToolMenu.generated.h \
@@ -2487,10 +2501,6 @@
   Runtime/Projects/Public/Interfaces/IPluginManager.h \
   Runtime/Projects/Public/PluginDescriptor.h \
   Runtime/Projects/Public/ModuleDescriptor.h \
-  Runtime/Json/Public/Serialization/JsonWriter.h \
-  Runtime/Json/Public/Serialization/JsonTypes.h \
-  Runtime/Json/Public/Policies/PrettyJsonPrintPolicy.h \
-  Runtime/Core/Public/Serialization/MemoryWriter.h \
   Runtime/Projects/Public/CustomBuildSteps.h \
   Runtime/Projects/Public/LocalizationDescriptor.h \
   Runtime/Projects/Public/PluginReferenceDescriptor.h \

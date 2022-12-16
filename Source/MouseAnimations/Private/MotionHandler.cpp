@@ -33,6 +33,9 @@
 #include <stdexcept>
 #include <string>
 
+MotionHandler::MotionHandler()
+{
+}
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_)
 {
@@ -48,6 +51,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	MovieSceneTrack = MovieSceneTrack_;
 
 	MovieSceneControlRigParameterTrack = Cast<UMovieSceneControlRigParameterTrack>(MovieSceneTrack);
+
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
 		TArray<FName> currentControlSelectionArr = MovieSceneControlRigParameterTrack->GetControlRig()->CurrentControlSelection();
@@ -57,8 +61,6 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 			UE_LOG(LogTemp, Warning, TEXT("current control selection is %s"), *currentControlSelection.ToString())
 		}
 	}
-
-	InitKeys();
 
 	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
 

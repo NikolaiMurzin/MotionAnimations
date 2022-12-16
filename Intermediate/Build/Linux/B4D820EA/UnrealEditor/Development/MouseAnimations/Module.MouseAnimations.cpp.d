@@ -2507,6 +2507,15 @@
   Runtime/Slate/Public/Widgets/Views/STableViewBase.h \
   Runtime/Slate/Public/SlateOptMacros.h \
   Editor/UnrealEd/Public/Subsystems/AssetEditorSubsystem.h \
+  Runtime/Slate/Public/Widgets/Layout/SScrollBox.h \
+  Runtime/SlateCore/Public/SlotBase.h \
+  Runtime/SlateCore/Public/Layout/Geometry.h \
+  Runtime/SlateCore/Public/Input/NavigationReply.h \
+  Runtime/SlateCore/Public/Widgets/SPanel.h \
+  Runtime/SlateCore/Public/Layout/Children.h \
+  Runtime/Slate/Public/Widgets/Layout/SScrollBar.h \
+  Runtime/Slate/Public/Framework/Layout/InertialScrollManager.h \
+  Runtime/Slate/Public/Framework/Layout/Overscroll.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/iostream \
   ThirdParty/Unix/LibCxx/include/c++/v1/typeinfo \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/SMouseAnimationsMenu.cpp \

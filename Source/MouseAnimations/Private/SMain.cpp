@@ -37,6 +37,7 @@
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SSpinBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -50,41 +51,25 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	IsStarted = false;
 	RefreshSequences();
 	SelectedSequence = Sequences[0];
+	RefreshSequencer();
+
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
 
-	ChildSlot[SNew(SVerticalBox) +
-			  SVerticalBox::Slot()[SNew(SHorizontalBox) +
-								   SHorizontalBox::Slot()[SNew(SButton)
-															  .Text(FText::FromString("refresh Sequencer"))
-															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshSequencer))] +
-								   SHorizontalBox::Slot()[SNew(SButton)
-															  .Text(FText::FromString("refresh Bindings"))
-															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnRefreshBindings))] +
-								   SHorizontalBox::Slot()[SNew(SButton)
-															  .Text(this, &SMain::GetIsToggledRecording)
-															  .OnClicked(FOnClicked::CreateSP(this, &SMain::OnToggleRecording))] +
-								   SHorizontalBox::Slot()[SNew(SButton)
-															  .Text(FText::FromString("start / stop test animations"))
-															  .OnClicked(
-																  FOnClicked::CreateSP(this, &SMain::OnToggleTestAnimations))]] +
-			  SVerticalBox::Slot()[SAssignNew(DefaultScaleBox, SSpinBox<double>)] +
-			  SVerticalBox::Slot()
-				  [SNew(SHorizontalBox) +
-					  SHorizontalBox::Slot()
-						  [SNew(SButton).Text(FText::FromString("X")).OnClicked(FOnClicked::CreateSP(this, &SMain::SelectX))] +
-					  SHorizontalBox::Slot()[SNew(SButton)
-												 .Text(FText::FromString("XInverted"))
-												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectXInverted))] +
-					  SHorizontalBox::Slot()
-						  [SNew(SButton).Text(FText::FromString("Y")).OnClicked(FOnClicked::CreateSP(this, &SMain::SelectY))] +
-					  SHorizontalBox::Slot()[SNew(SButton)
-												 .Text(FText::FromString("YInverted"))
-												 .OnClicked(FOnClicked::CreateSP(this, &SMain::SelectYInverted))]]];
-	DefaultScaleBox->SetValue(0.1);
+	ChildSlot[SNew(SScrollBox) + SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
+														.ItemHeight(24)
+														.ListItemsSource(&MotionHandlers)
+														.OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
+TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
+		.Padding(2.0f)
+		.Content()[SNew(STextBlock).Text(FText::FromString("Some text"))];
+}
 
 FReply SMain::OnRefreshSequencer()
 {
@@ -154,12 +139,13 @@ void SMain::RefreshMotionHandlers()
 		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
 		} */
 
-		MotionHandlerPtrs = TSharedPtr<TArray<TSharedPtr<MotionHandler>>>(new TArray<TSharedPtr<MotionHandler>>());
+		MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+		ListViewWidget->SetListItemsSource(MotionHandlers);
+		ListViewWidget->RequestListRefresh();
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
-			TSharedPtr<MotionHandler> motionHandler =
-				TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScaleBox->GetValue(), Sequencer,
-					SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], Mode::X));
+			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer,
+				SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], Mode::X));
 
 			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
 				FVector2D(0, 0));	 // need to add two keys for enabling recording motions
@@ -167,7 +153,7 @@ void SMain::RefreshMotionHandlers()
 			frame.Value += 1000;
 			motionHandler->SetKey(frame, FVector2D(0, 0));
 
-			MotionHandlerPtrs->Add(motionHandler);
+			MotionHandlers.Add(motionHandler);
 		}
 	}
 }
@@ -182,8 +168,6 @@ FReply SMain::OnToggleTestAnimations()
 }
 void SMain::OnGlobalTimeChanged()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnGlobalTimeChanged!"));
-	UE_LOG(LogTemp, Warning, TEXT("Default value scale is %f!"), DefaultScaleBox->GetValue());
 	if (IsRecordedStarted)
 	{
 		ExecuteMotionHandlers(false);
@@ -213,11 +197,11 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
 	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
 	{
-		if (MotionHandlerPtrs->Num() > 0)
+		if (MotionHandlers.Num() > 0)
 		{
-			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
-				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
+				motionHandler->Scale = DefaultScale;
 				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
 			}
 		}
@@ -226,11 +210,11 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 	{
 		FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 		FVector2D vectorChange = PreviousPosition - currentPosition;
-		if (MotionHandlerPtrs->Num() > 0)
+		if (MotionHandlers.Num() > 0)
 		{
-			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
-				motionHandler->Scale = (DefaultScaleBox->GetValue()) * 0.1;
+				motionHandler->Scale = DefaultScale;
 				motionHandler->SetKey(nextFrame, vectorChange);
 			}
 		}
@@ -239,7 +223,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 }
 FReply SMain::SelectX()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
 		motionHandler->Mode = Mode::X;
 	}
@@ -247,7 +231,7 @@ FReply SMain::SelectX()
 }
 FReply SMain::SelectXInverted()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
 		motionHandler->Mode = Mode::XInverted;
 	}
@@ -255,7 +239,7 @@ FReply SMain::SelectXInverted()
 }
 FReply SMain::SelectY()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
 		motionHandler->Mode = Mode::Y;
 	}
@@ -263,7 +247,7 @@ FReply SMain::SelectY()
 }
 FReply SMain::SelectYInverted()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
 		motionHandler->Mode = Mode::YInverted;
 	}
@@ -313,7 +297,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->SetGlobalTime(lowerValue);
 
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
-			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 
@@ -338,7 +322,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
-			for (TSharedPtr<MotionHandler> motionHandler : *MotionHandlerPtrs)
+			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 			{
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);

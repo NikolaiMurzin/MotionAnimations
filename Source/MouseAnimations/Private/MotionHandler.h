@@ -35,6 +35,7 @@ public:
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
 	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_ = Mode::X);
+	MotionHandler();
 	void InitKeys();
 
 	void DeleteAllKeysFrom(FFrameNumber InTime);

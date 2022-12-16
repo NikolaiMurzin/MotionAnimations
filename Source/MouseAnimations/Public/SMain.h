@@ -46,10 +46,6 @@ public:
 
 	FText GetIsToggledRecording() const;
 
-	void SetChannelHandleFromSelectedKeys();
-	FMovieSceneChannelHandle ChannelHandle;
-	FName ChannelType;
-
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
 	void OnGlobalTimeChanged();
@@ -64,7 +60,6 @@ public:
 	FSlateApplication::FOnApplicationPreInputKeyDownListener* OnKeyDownEvent;
 	void OnKeyDownGlobal(const FKeyEvent& event);
 
-	TSharedPtr<SSpinBox<double>> DefaultScaleBox;
 	FVector2D PreviousPosition;
 	double PositionX;
 	double PositionY;
@@ -77,15 +72,18 @@ public:
 	bool IsTestAnimations;
 	FReply OnToggleTestAnimations();
 
-	TSharedPtr<TArray<TSharedPtr<MotionHandler>>> MotionHandlerPtrs;
+	TSharedPtr<SListView<TSharedPtr<MotionHandler>>> ListViewWidget;
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable);
+
+	TArray<TSharedPtr<MotionHandler>> MotionHandlers;
 	void RefreshMotionHandlers();
 	void ExecuteMotionHandlers(bool isInTickMode);
-
-	double GetValueFromTime(FFrameNumber InTime);
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;
 	void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+
+	float DefaultScale = 0.05;
 
 private:
 	TArray<ULevelSequence*> Sequences;

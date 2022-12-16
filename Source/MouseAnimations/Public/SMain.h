@@ -23,6 +23,11 @@
 /**
  *
  */
+struct MotionHandlerPath
+{
+	FGuid objectGuid;	 // UMovieScene findBinding() -> getTracks()
+	FText trackName;	 // UMovieSceneTrack GetName()
+};
 class MOUSEANIMATIONS_API SMain : public SCompoundWidget
 {
 public:

@@ -66,9 +66,23 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
+	FString objectFGuid = Item->ObjectFGuid.ToString();
+	FString trackName = Item->MovieSceneTrack->GetName();
+	FString movieSceneName = Item->MovieScene->GetName();
+	FString keyAreaName = Item->KeyArea->GetName().ToString();
+	FMovieSceneChannelHandle channelHandle = Item->KeyArea->GetChannel();
+	FString channelName = channelHandle.GetMetaData()->DisplayText.ToString();
+	FString channelDisplayText = channelHandle.GetMetaData()->Name.ToString();
+	FString group = channelHandle.GetMetaData()->Group.ToString();
+	FString sortOrder = FString::FromInt(channelHandle.GetMetaData()->SortOrder);
+	FString sectionName = Item->KeyArea->GetOwningSection()->GetName();
+	FString rowIndexSection = FString::FromInt(Item->KeyArea->GetOwningSection()->GetRowIndex());
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
-		.Content()[SNew(STextBlock).Text(FText::FromString("Some text"))];
+		.Content()[SNew(STextBlock)
+					   .Text(FText::FromString(objectFGuid + ", " + trackName + ", " + movieSceneName + ", " + keyAreaName + ", " +
+											   channelName + ", " + channelDisplayText + ", " + group + ", " + sortOrder + ", " +
+											   sectionName + ", " + rowIndexSection))];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -117,7 +131,6 @@ void SMain::RefreshSequences()
 		};
 	}
 }
-
 FReply SMain::OnRefreshBindings()
 {
 	RefreshMotionHandlers();

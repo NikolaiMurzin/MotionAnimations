@@ -1,6 +1,7 @@
 #include "MotionHandler.h"
 
 #include "Channels/MovieSceneBoolChannel.h"
+#include "Channels/MovieSceneChannelProxy.h"
 #include "Channels/MovieSceneDoubleChannel.h"
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneIntegerChannel.h"
@@ -12,6 +13,8 @@
 #include "ISequencerModule.h"
 #include "Internationalization/Text.h"
 #include "Math/TransformNonVectorized.h"
+#include "MovieSceneSequence.h"
+#include "MovieSceneTrack.h"
 #include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/ControlRig.h"
 #include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "RigVMCore/RigVM.h"
@@ -33,8 +36,53 @@
 #include <stdexcept>
 #include <string>
 
-MotionHandler::MotionHandler()
+MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data)
 {
+	Sequencer = Sequencer_;
+	ObjectFGuid = Data.ObjectFGuid;
+	Scale = Data.Scale;
+	ChannelTypeName = FName(Data.ChannelTypeName);
+	ChannelIndex = Data.ChannelIndex;
+
+	PreviousValue = 0;
+	IsFirstUpdate = true;
+	Mode = Mode::X;
+
+	if (Sequence == nullptr)
+	{
+		return;
+	}
+	MovieScene = Sequence->GetMovieScene();
+	FMovieSceneBinding* Binding = MovieScene->FindBinding(ObjectFGuid);
+	for (UMovieSceneTrack* Track_ : Binding->GetTracks())
+	{
+		if (Track_->GetTrackName().ToString() == Data.TrackName)
+		{
+			MovieSceneTrack = Track_;
+			break;
+		}
+	}
+	UMovieSceneSection* section;
+	if (MovieSceneTrack == nullptr)
+	{
+		return;
+	}
+	for (UMovieSceneSection* Section_ : MovieSceneTrack->GetAllSections())
+	{
+		if (Section_->GetRowIndex() == Data.SectionRowIndex)
+		{
+			section = Section_;
+			break;
+		}
+	}
+	if (section == nullptr)
+	{
+		return;
+	}
+	FMovieSceneChannelProxy& channelProxy = section->GetChannelProxy();
+	ChannelHandle = channelProxy.MakeHandle(FName(ChannelTypeName), ChannelIndex);
+	SetControlRigTrack(MovieSceneTrack);
+	CastChannel();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, enum Mode Mode_)
@@ -46,11 +94,26 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 	IsFirstUpdate = true;
 	MovieScene = MovieScene_;
 	Mode = Mode_;
+	ChannelTypeName = KeyArea->GetChannel().GetChannelTypeName();
+	ChannelIndex = KeyArea->GetChannel().GetChannelIndex();
 
 	ObjectFGuid = ObjectFGuid_;
 	MovieSceneTrack = MovieSceneTrack_;
 
-	MovieSceneControlRigParameterTrack = Cast<UMovieSceneControlRigParameterTrack>(MovieSceneTrack);
+	ChannelHandle = KeyArea->GetChannel();
+
+	SetControlRigTrack(MovieSceneTrack);
+	CastChannel();
+}
+
+bool MotionHandler::IsValidMotionHandler()
+{
+	return (FloatChannel != nullptr || DoubleChannel != nullptr || BoolChannel != nullptr || IntegerChannel != nullptr);
+}
+
+void MotionHandler::SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_)
+{
+	MovieSceneControlRigParameterTrack = Cast<UMovieSceneControlRigParameterTrack>(MovieSceneTrack_);
 
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
@@ -61,28 +124,24 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double DefaultScale_, ISe
 			UE_LOG(LogTemp, Warning, TEXT("current control selection is %s"), *currentControlSelection.ToString())
 		}
 	}
-
-	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
-
-	ChannelTypeName = Channel.GetChannelTypeName();
-
-	UE_LOG(LogTemp, Warning, TEXT("channe type is %s"), *ChannelTypeName.ToString());
-
+}
+void MotionHandler::CastChannel()
+{
 	if (ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		FloatChannel = Channel.Cast<FMovieSceneFloatChannel>().Get();
+		FloatChannel = ChannelHandle.Cast<FMovieSceneFloatChannel>().Get();
 	}
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		DoubleChannel = Channel.Cast<FMovieSceneDoubleChannel>().Get();
+		DoubleChannel = ChannelHandle.Cast<FMovieSceneDoubleChannel>().Get();
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")
 	{
-		BoolChannel = Channel.Cast<FMovieSceneBoolChannel>().Get();
+		BoolChannel = ChannelHandle.Cast<FMovieSceneBoolChannel>().Get();
 	}
 	else if (ChannelTypeName == "MovieSceneIntegerChannel")
 	{
-		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
+		IntegerChannel = ChannelHandle.Cast<FMovieSceneIntegerChannel>().Get();
 	}
 }
 FVector GetVectorFromString(FString input)
@@ -120,12 +179,10 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		valueToSet = InputVector.Y * -1;
 	}
 
-	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
-
 	if (ChannelTypeName == "MovieSceneFloatChannel")
 	{
 		UE_LOG(LogTemp, Warning, TEXT("float triggered"))
-		FloatChannel = Channel.Cast<FMovieSceneFloatChannel>().Get();
+		FloatChannel = ChannelHandle.Cast<FMovieSceneFloatChannel>().Get();
 		UE_LOG(LogTemp, Warning, TEXT("Scale value is %f"), Scale);
 		valueToSet = valueToSet * Scale;
 		valueToSet = (float) valueToSet;
@@ -151,7 +208,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	else if (ChannelTypeName == "MovieSceneDoubleChannel")
 	{
 		UE_LOG(LogTemp, Warning, TEXT("double triggered"))
-		DoubleChannel = Channel.Cast<FMovieSceneDoubleChannel>().Get();
+		DoubleChannel = ChannelHandle.Cast<FMovieSceneDoubleChannel>().Get();
 		valueToSet = valueToSet * Scale;
 		valueToSet = (double) valueToSet;
 		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
@@ -172,14 +229,14 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	}
 	else if (ChannelTypeName == "MovieSceneBoolChannel")
 	{
-		BoolChannel = Channel.Cast<FMovieSceneBoolChannel>().Get();
+		BoolChannel = ChannelHandle.Cast<FMovieSceneBoolChannel>().Get();
 		/* not implemented for now */
 	}
 	else if (ChannelTypeName == "MovieSceneIntegerChannel")
 	{
 		UE_LOG(LogTemp, Warning, TEXT("integer triggered"))
 
-		IntegerChannel = Channel.Cast<FMovieSceneIntegerChannel>().Get();
+		IntegerChannel = ChannelHandle.Cast<FMovieSceneIntegerChannel>().Get();
 		valueToSet = valueToSet * Scale;
 		valueToSet = (int32) valueToSet;
 		TMovieSceneChannelData<int> ChannelData = IntegerChannel->GetData();
@@ -201,7 +258,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 }
 void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 {
-	FMovieSceneChannelHandle Channel = KeyArea->GetChannel();
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
 		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
@@ -215,7 +271,7 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		FRigControlValue controlValueMax = controlElement->Settings.MaximumValue;
 		float valueOfChannel = 0;
 		FloatChannel->Evaluate(InTime, valueOfChannel);
-		FString ChannelDisplayText = Channel.GetMetaData()->DisplayText.ToString();
+		FString ChannelDisplayText = ChannelHandle.GetMetaData()->DisplayText.ToString();
 		if (controlType == ERigControlType::Float)
 		{
 			controlRig->SetControlValue(currentControlSelection, valueOfChannel, true, FRigControlModifiedContext(), true, true);

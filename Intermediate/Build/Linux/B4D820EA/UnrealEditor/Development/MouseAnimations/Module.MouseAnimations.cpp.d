@@ -2105,6 +2105,10 @@
   Editor/Sequencer/Public/AnimatedPropertyKey.h \
   Editor/Sequencer/Public/IKeyArea.h \
   Editor/Sequencer/Public/SequencerAddKeyOperation.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
+  Runtime/Core/Public/Containers/UnrealString.h \
+  Runtime/Core/Public/HAL/Platform.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
   ../Plugins/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h \
   Runtime/MovieSceneTracks/Public/Sections/MovieSceneParameterSection.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieSceneTracks/MovieSceneParameterSection.generated.h \
@@ -2375,6 +2379,7 @@
   Runtime/Core/Public/Templates/SharedPointerInternals.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/stdexcept \
   ThirdParty/Unix/LibCxx/include/c++/v1/string \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimations.h \
   Runtime/Core/Public/Modules/ModuleManager.h \

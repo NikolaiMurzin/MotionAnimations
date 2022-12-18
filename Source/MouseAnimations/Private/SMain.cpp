@@ -84,6 +84,10 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 					   .Text(FText::FromString(Item->GetObjectFGuid().ToString() + ", " + trackName + ", " + movieSceneName + ", " +
 											   keyAreaName + ", " + channelName + ", " + channelDisplayText + ", " + group + ", " +
 											   sortOrder + ", " + sectionName + ", " + rowIndexSection))];
+
+	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+	ListViewWidget->SetListItemsSource(MotionHandlers);
+	ListViewWidget->RequestListRefresh();
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -134,10 +138,10 @@ void SMain::RefreshSequences()
 }
 FReply SMain::OnRefreshBindings()
 {
-	RefreshMotionHandlers();
+	AddMotionHandlers();
 	return FReply::Handled();
 };
-void SMain::RefreshMotionHandlers()
+void SMain::AddMotionHandlers()
 {
 	if (Sequencer != nullptr)
 	{
@@ -152,24 +156,33 @@ void SMain::RefreshMotionHandlers()
 		{
 		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
 		} */
-
-		MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
-		ListViewWidget->SetListItemsSource(MotionHandlers);
-		ListViewWidget->RequestListRefresh();
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
-			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
-				KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
+			bool IsObjectAlreadyAdded = false;
+			for (TSharedPtr<MotionHandler> handler : MotionHandlers)
+			{
+				if (handler->KeyArea == KeyArea)
+				{
+					IsObjectAlreadyAdded = true;
+					UE_LOG(LogTemp, Warning, TEXT("Object is already added"));
+					break;
+				}
+			}
+			if (!IsObjectAlreadyAdded)
+			{
+				TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
+					KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
 
-			FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-			float value = motionHandler->GetValueFromTime(currentFrame);
-			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
-				FVector2D(value, value));	 // need to add two keys for enabling recording motions
-			FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
-			frame.Value += 1000;
-			motionHandler->SetKey(frame, FVector2D(value, value));
+				FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+				float value = motionHandler->GetValueFromTime(currentFrame);
+				motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
+					FVector2D(value, value));	 // need to add two keys for enabling recording motions
+				FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
+				frame.Value += 1000;
+				motionHandler->SetKey(frame, FVector2D(value, value));
 
-			MotionHandlers.Add(motionHandler);
+				MotionHandlers.Add(motionHandler);
+			}
 		}
 	}
 }
@@ -294,7 +307,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (key.ToString() == "W")
 	{
-		RefreshMotionHandlers();
+		AddMotionHandlers();
 	}
 	if (key.ToString() == "E")
 	{

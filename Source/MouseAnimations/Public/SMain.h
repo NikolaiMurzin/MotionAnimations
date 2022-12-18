@@ -81,8 +81,9 @@ public:
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TArray<TSharedPtr<MotionHandler>> MotionHandlers;
-	void RefreshMotionHandlers();
+	void AddMotionHandlers();
 	void ExecuteMotionHandlers(bool isInTickMode);
+	TArray<TSharedPtr<MotionHandler>> LoadMotionHandlersFromDisk();
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;

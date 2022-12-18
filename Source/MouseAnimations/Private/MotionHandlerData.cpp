@@ -5,6 +5,7 @@
 #include "Containers/UnrealString.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
+#include "MouseAnimations.h"
 
 FMotionHandlerData::FMotionHandlerData()
 {
@@ -44,16 +45,24 @@ bool FMotionHandlerData::Save()
 {
 	FString JsonString;
 	FJsonObjectConverter::UStructToJsonObjectString(*this, JsonString);
-	UE_LOG(LogTemp, Warning, TEXT("Json string is"), *JsonString);
-	FString FilePath;
+	UE_LOG(LogTemp, Warning, TEXT("Json string is %s"), *JsonString);
+	FString FilePath = GetFilePath();
+	UE_LOG(LogTemp, Warning, TEXT("Filepath is %s"), *FilePath);
 	return FFileHelper::SaveStringToFile(
-		FStringView(JsonString), *GetFilePath(), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
+		FStringView(JsonString), *FilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
 }
+FString FMotionHandlerData::GetName()
+{
+	return ObjectFGuid.ToString() + "." + TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName + "." +
+		   FString::FromInt(ChannelIndex);
+}
+
 FString FMotionHandlerData::GetFilePath()
 {
 	FString First = FPaths::ProjectPluginsDir();
-	FString Second = SequenceName;
-	FString Third = ObjectFGuid.ToString() + "." + TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName +
-					"." + FString::FromInt(ChannelIndex);
-	return FPaths::Combine(First, Second, Third);
+	FString PluginName_ = PluginName;
+	FString Second = "Saved";
+	FString Third = SequenceName;
+	FString Fourth = GetName();
+	return FPaths::Combine(First, PluginName, Second, Third, Fourth);
 }

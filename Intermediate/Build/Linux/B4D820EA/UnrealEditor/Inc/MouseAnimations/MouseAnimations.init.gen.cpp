@@ -17,13 +17,13 @@ void EmptyLinkFunctionForGeneratedCodeMouseAnimations_init() {}
 				nullptr,
 				0,
 				PKG_CompiledIn | 0x00000040,
-				0x147D3695,
-				0x3691F0CA,
+				0xF69B0216,
+				0x0A1F7E2C,
 				METADATA_PARAMS(nullptr, 0)
 			};
 			UECodeGen_Private::ConstructUPackage(Z_Registration_Info_UPackage__Script_MouseAnimations.OuterSingleton, PackageParams);
 		}
 		return Z_Registration_Info_UPackage__Script_MouseAnimations.OuterSingleton;
 	}
-	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_MouseAnimations(Z_Construct_UPackage__Script_MouseAnimations, TEXT("/Script/MouseAnimations"), Z_Registration_Info_UPackage__Script_MouseAnimations, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0x147D3695, 0x3691F0CA));
+	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_MouseAnimations(Z_Construct_UPackage__Script_MouseAnimations, TEXT("/Script/MouseAnimations"), Z_Registration_Info_UPackage__Script_MouseAnimations, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xF69B0216, 0x0A1F7E2C));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

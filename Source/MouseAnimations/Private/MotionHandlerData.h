@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "HAL/Platform.h"
 #include "Misc/Guid.h"
+#include "MotionHandlerMode.h"
 
 #include "MotionHandlerData.generated.h"
 
@@ -13,31 +14,34 @@ USTRUCT()
 struct FMotionHandlerData
 {
 	GENERATED_BODY()
-
 public:
+	UPROPERTY()
 	double Scale;
+	UPROPERTY()
 	FGuid ObjectFGuid;
+	UPROPERTY()
 	FString TrackName;
+	UPROPERTY()
 	int32 SectionRowIndex;
+	UPROPERTY()
 	FString ChannelTypeName;
+	UPROPERTY()
 	int32 ChannelIndex;
-	bool IsValidData;
-	enum class Mode : uint8
-	{
-		X,
-		XInverted,
-		Y,
-		YInverted,
-	};
-	Mode SelectedMode;
+
+	UPROPERTY()
 	FString ControlSelection;
+	UPROPERTY()
 	FString SequenceName;
+	bool IsValidData;
+	UPROPERTY()
+	Mode SelectedMode;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);
 	FMotionHandlerData(double Scale, FGuid ObjectFGuid, FString TrackName, int32 SectionRowIndex, FString ChannelTypeName,
 		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_);
 
+	FString GetName();
 	FString GetFilePath();
 	bool Save();
 };

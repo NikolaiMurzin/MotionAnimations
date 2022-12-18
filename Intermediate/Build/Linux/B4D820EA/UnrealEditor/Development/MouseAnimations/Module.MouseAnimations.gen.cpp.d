@@ -1797,7 +1797,9 @@
   Runtime/Core/Public/Containers/UnrealString.h \
   Runtime/Core/Public/CoreMinimal.h Runtime/Core/Public/HAL/Platform.h \
   Runtime/Core/Public/Misc/Guid.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
   Runtime/CoreUObject/Public/UObject/ObjectMacros.h \
   Runtime/CoreUObject/Public/UObject/ScriptMacros.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerMode.gen.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MouseAnimations.init.gen.cpp

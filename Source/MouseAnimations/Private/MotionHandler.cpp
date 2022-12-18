@@ -14,6 +14,7 @@
 #include "Internationalization/Text.h"
 #include "Math/TransformNonVectorized.h"
 #include "MotionHandlerData.h"
+#include "MotionHandlerMode.h"
 #include "MovieSceneSequence.h"
 #include "MovieSceneTrack.h"
 #include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/ControlRig.h"
@@ -37,9 +38,9 @@
 #include <stdexcept>
 #include <string>
 
-MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data_)
+MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath)
 {
-	Data = Data_;
+	Data = FMotionHandlerData(FilePath);
 	Sequencer = Sequencer_;
 
 	PreviousValue = 0;
@@ -82,7 +83,7 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	CastChannel();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
-	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, FMotionHandlerData::Mode Mode_)
+	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	KeyArea = KeyArea_;
@@ -105,7 +106,6 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
-	Data.Save();
 }
 
 bool MotionHandler::IsValidMotionHandler()
@@ -164,19 +164,19 @@ FVector GetVectorFromString(FString input)
 void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 {
 	double valueToSet = 0;
-	if (Data.SelectedMode == FMotionHandlerData::Mode::X)
+	if (Data.SelectedMode == Mode::X)
 	{
 		valueToSet = InputVector.X;
 	}
-	else if (Data.SelectedMode == FMotionHandlerData::Mode::XInverted)
+	else if (Data.SelectedMode == Mode::XInverted)
 	{
 		valueToSet = InputVector.X * -1;
 	}
-	else if (Data.SelectedMode == FMotionHandlerData::Mode::Y)
+	else if (Data.SelectedMode == Mode::Y)
 	{
 		valueToSet = InputVector.Y;
 	}
-	else if (Data.SelectedMode == FMotionHandlerData::Mode::YInverted)
+	else if (Data.SelectedMode == Mode::YInverted)
 	{
 		valueToSet = InputVector.Y * -1;
 	}
@@ -562,4 +562,20 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 	{
 		IntegerChannel->Optimize(params);
 	}
+}
+FGuid MotionHandler::GetObjectFGuid()
+{
+	return Data.ObjectFGuid;
+}
+void MotionHandler::SetSelectedMode(Mode Mode_)
+{
+	Data.SelectedMode = Mode_;
+}
+Mode MotionHandler::GetSelectedMode()
+{
+	return Data.SelectedMode;
+}
+bool MotionHandler::SaveData()
+{
+	return Data.Save();
 }

@@ -13,6 +13,7 @@
 #include "Editor/Sequencer/Public/SequencerAddKeyOperation.h"
 #include "Misc/FrameNumber.h"
 #include "MotionHandlerData.h"
+#include "MotionHandlerMode.h"
 #include "Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "Sequencer/Public/ISequencer.h"
 #include "UObject/NameTypes.h"
@@ -25,8 +26,8 @@ public:
 
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
 	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
-		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, FMotionHandlerData::Mode Mode_ = FMotionHandlerData::Mode::X);
-	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data_);
+		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_ = Mode::X);
+	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);
 	void CastChannel();
 
@@ -48,12 +49,17 @@ public:
 	UMovieSceneTrack* MovieSceneTrack;
 	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack;
 
-	FMotionHandlerData Data;
+	FGuid GetObjectFGuid();
+	Mode GetSelectedMode();
+	void SetSelectedMode(Mode Mode_);
+	bool SaveData();
 
 private:
 	void UpdateUI(FFrameNumber InTime);
 
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
+
+	FMotionHandlerData Data;
 
 	FMovieSceneChannelHandle ChannelHandle;
 	FMovieSceneFloatChannel* FloatChannel;

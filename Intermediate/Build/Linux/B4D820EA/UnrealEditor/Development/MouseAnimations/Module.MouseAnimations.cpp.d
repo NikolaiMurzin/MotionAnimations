@@ -2108,6 +2108,7 @@
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
   Runtime/Core/Public/Containers/UnrealString.h \
   Runtime/Core/Public/HAL/Platform.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
   ../Plugins/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h \
   Runtime/MovieSceneTracks/Public/Sections/MovieSceneParameterSection.h \
@@ -2395,9 +2396,9 @@
   Runtime/Core/Public/Misc/FileHelper.h \
   Runtime/Core/Public/Containers/StringView.h \
   Runtime/Core/Public/HAL/FileManager.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimations.h \
   Runtime/Core/Public/Modules/ModuleManager.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
   Editor/LevelEditor/Public/LevelEditor.h \
   Runtime/Core/Public/HAL/IConsoleManager.h \
   Runtime/Slate/Public/Framework/Docking/TabManager.h \

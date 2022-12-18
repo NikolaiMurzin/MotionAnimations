@@ -81,7 +81,7 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
 		.Content()[SNew(STextBlock)
-					   .Text(FText::FromString(Item->Data.ObjectFGuid.ToString() + ", " + trackName + ", " + movieSceneName + ", " +
+					   .Text(FText::FromString(Item->GetObjectFGuid().ToString() + ", " + trackName + ", " + movieSceneName + ", " +
 											   keyAreaName + ", " + channelName + ", " + channelDisplayText + ", " + group + ", " +
 											   sortOrder + ", " + sectionName + ", " + rowIndexSection))];
 }
@@ -158,14 +158,16 @@ void SMain::RefreshMotionHandlers()
 		ListViewWidget->RequestListRefresh();
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
-			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer,
-				SelectedSequence, SelectedTracks[0], SelectedObjects[0], FMotionHandlerData::Mode::X));
+			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
+				KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
 
+			FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+			float value = motionHandler->GetValueFromTime(currentFrame);
 			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
-				FVector2D(0, 0));	 // need to add two keys for enabling recording motions
+				FVector2D(value, value));	 // need to add two keys for enabling recording motions
 			FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
 			frame.Value += 1000;
-			motionHandler->SetKey(frame, FVector2D(0, 0));
+			motionHandler->SetKey(frame, FVector2D(value, value));
 
 			MotionHandlers.Add(motionHandler);
 		}
@@ -237,7 +239,7 @@ FReply SMain::SelectX()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::X;
+		motionHandler->SetSelectedMode(Mode::X);
 	}
 	return FReply::Handled();
 }
@@ -245,7 +247,7 @@ FReply SMain::SelectXInverted()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::XInverted;
+		motionHandler->SetSelectedMode(Mode::XInverted);
 	}
 	return FReply::Handled();
 }
@@ -253,7 +255,7 @@ FReply SMain::SelectY()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::Y;
+		motionHandler->SetSelectedMode(Mode::Y);
 	}
 	return FReply::Handled();
 }
@@ -261,7 +263,7 @@ FReply SMain::SelectYInverted()
 {
 	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
 	{
-		motionHandler->Data.SelectedMode = FMotionHandlerData::Mode::YInverted;
+		motionHandler->SetSelectedMode(Mode::YInverted);
 	}
 	return FReply::Handled();
 }
@@ -338,6 +340,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
+				motionHandler->SaveData();
 			}
 			Sequencer->Pause();
 			Sequencer->SetGlobalTime(lowerValue);

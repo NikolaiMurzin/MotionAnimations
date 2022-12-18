@@ -63,6 +63,9 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 														.ItemHeight(24)
 														.ListItemsSource(&MotionHandlers)
 														.OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
+
+	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+	ListViewWidget->SetListItemsSource(MotionHandlers);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -84,10 +87,6 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 					   .Text(FText::FromString(Item->GetObjectFGuid().ToString() + ", " + trackName + ", " + movieSceneName + ", " +
 											   keyAreaName + ", " + channelName + ", " + channelDisplayText + ", " + group + ", " +
 											   sortOrder + ", " + sectionName + ", " + rowIndexSection))];
-
-	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
-	ListViewWidget->SetListItemsSource(MotionHandlers);
-	ListViewWidget->RequestListRefresh();
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -182,6 +181,8 @@ void SMain::AddMotionHandlers()
 				motionHandler->SetKey(frame, FVector2D(value, value));
 
 				MotionHandlers.Add(motionHandler);
+				UE_LOG(LogTemp, Warning, TEXT("Requeset List refresh"));
+				ListViewWidget->RequestListRefresh();
 			}
 		}
 	}
@@ -224,26 +225,13 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 	nextFrame.Value += 1000;
 	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
-	if (PreviousPosition.X == 0 && PreviousPosition.Y == 0)
+	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
+	FVector2D vectorChange = PreviousPosition - currentPosition;
+	if (MotionHandlers.Num() > 0)
 	{
-		if (MotionHandlers.Num() > 0)
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
-			{
-				motionHandler->SetKey(nextFrame, FVector2D(0, 0));
-			}
-		}
-	}
-	else
-	{
-		FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
-		FVector2D vectorChange = PreviousPosition - currentPosition;
-		if (MotionHandlers.Num() > 0)
-		{
-			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
-			{
-				motionHandler->SetKey(nextFrame, vectorChange);
-			}
+			motionHandler->SetKey(nextFrame, vectorChange);
 		}
 	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();

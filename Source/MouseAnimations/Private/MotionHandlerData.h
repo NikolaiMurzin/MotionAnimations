@@ -44,4 +44,5 @@ public:
 	FString GetName();
 	FString GetFilePath();
 	bool Save();
+	bool Delete();
 };

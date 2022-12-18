@@ -53,6 +53,7 @@ public:
 	Mode GetSelectedMode();
 	void SetSelectedMode(Mode Mode_);
 	bool SaveData();
+	bool DeleteData();
 
 private:
 	void UpdateUI(FFrameNumber InTime);

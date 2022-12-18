@@ -51,6 +51,15 @@ bool FMotionHandlerData::Save()
 	return FFileHelper::SaveStringToFile(
 		FStringView(JsonString), *FilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
 }
+bool FMotionHandlerData::Delete()
+{
+	FString FilePath = GetFilePath();
+	if (FPaths::ValidatePath(FilePath) && FPaths::FileExists(FilePath))
+	{
+		return IFileManager::Get().Delete(*FilePath);
+	}
+	return false;
+}
 FString FMotionHandlerData::GetName()
 {
 	return ObjectFGuid.ToString() + "." + TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName + "." +

@@ -579,3 +579,7 @@ bool MotionHandler::SaveData()
 {
 	return Data.Save();
 }
+bool MotionHandler::DeleteData()
+{
+	return Data.Delete();
+}

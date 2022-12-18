@@ -81,14 +81,14 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
 }
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieScene* MovieScene_,
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, FMotionHandlerData::Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	KeyArea = KeyArea_;
 	PreviousValue = 0;
 	IsFirstUpdate = true;
-	MovieScene = MovieScene_;
+	MovieScene = Sequence_->GetMovieScene();
 	MovieSceneTrack = MovieSceneTrack_;
 
 	FString TrackName_ = MovieSceneTrack_->GetTrackName().ToString();
@@ -96,7 +96,8 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	FString ChannelTypeName = KeyArea->GetChannel().GetChannelTypeName().ToString();
 	int32 ChannelIndex = KeyArea->GetChannel().GetChannelIndex();
 
-	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_);
+	Data = FMotionHandlerData(
+		Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_, Sequence_->GetDisplayName().ToString());
 
 	MovieSceneTrack = MovieSceneTrack_;
 

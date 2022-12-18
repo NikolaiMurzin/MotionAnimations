@@ -24,7 +24,7 @@ public:
 	bool IsFirstUpdate;
 
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
-	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieScene* MovieScene_,
+	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, FMotionHandlerData::Mode Mode_ = FMotionHandlerData::Mode::X);
 	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FMotionHandlerData Data_);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);

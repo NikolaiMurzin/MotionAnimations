@@ -29,7 +29,7 @@ FMotionHandlerData::FMotionHandlerData(FString FilePath)
 	}
 }
 FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FString TrackName_, int32 SectionRowIndex_,
-	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_)
+	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_, FString SequenceName_)
 {
 	Scale = Scale_;
 	ObjectFGuid = ObjectFGuid_;
@@ -38,9 +38,22 @@ FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FStrin
 	ChannelTypeName = ChannelTypeName_;
 	ChannelIndex = ChannelIndex_;
 	SelectedMode = Mode_;
-	Save();
+	SequenceName = SequenceName_;
 }
 bool FMotionHandlerData::Save()
 {
-	return true;
+	FString JsonString;
+	FJsonObjectConverter::UStructToJsonObjectString(*this, JsonString);
+	UE_LOG(LogTemp, Warning, TEXT("Json string is"), *JsonString);
+	FString FilePath;
+	return FFileHelper::SaveStringToFile(
+		FStringView(JsonString), *GetFilePath(), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
+}
+FString FMotionHandlerData::GetFilePath()
+{
+	FString First = FPaths::ProjectPluginsDir();
+	FString Second = SequenceName;
+	FString Third = ObjectFGuid.ToString() + "." + TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName +
+					"." + FString::FromInt(ChannelIndex);
+	return FPaths::Combine(First, Second, Third);
 }

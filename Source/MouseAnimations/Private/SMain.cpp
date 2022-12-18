@@ -159,7 +159,7 @@ void SMain::RefreshMotionHandlers()
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
 			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(KeyArea, DefaultScale, Sequencer,
-				SelectedSequence->GetMovieScene(), SelectedTracks[0], SelectedObjects[0], FMotionHandlerData::Mode::X));
+				SelectedSequence, SelectedTracks[0], SelectedObjects[0], FMotionHandlerData::Mode::X));
 
 			motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
 				FVector2D(0, 0));	 // need to add two keys for enabling recording motions

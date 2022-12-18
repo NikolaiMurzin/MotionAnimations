@@ -30,13 +30,14 @@ public:
 		YInverted,
 	};
 	Mode SelectedMode;
-
 	FString ControlSelection;
+	FString SequenceName;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);
 	FMotionHandlerData(double Scale, FGuid ObjectFGuid, FString TrackName, int32 SectionRowIndex, FString ChannelTypeName,
-		int32 ChannelIndex, enum Mode Mode_);
+		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_);
 
+	FString GetFilePath();
 	bool Save();
 };

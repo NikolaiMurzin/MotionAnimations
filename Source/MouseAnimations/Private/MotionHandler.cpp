@@ -313,7 +313,8 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		}
 		else if (controlType == ERigControlType::EulerTransform)
 		{
-			FEulerTransform eulerValue = controlValue.GetAsTransform(ERigControlType::EulerTransform, ERigControlAxis::X);
+			FEulerTransform eulerValue;
+			eulerValue.FromFTransform(controlValue.GetAsTransform(ERigControlType::EulerTransform, ERigControlAxis::X));
 			UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
 			FRotator rotator = rotation.Rotator();
 			UE_LOG(LogTemp, Warning, TEXT("rotator is %s"), *rotator.ToString());
@@ -373,7 +374,6 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 				scale.Z = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
-			eulerValue.FromFTransform(eulerValue);
 			controlRig->SetControlValue(FName(Data.ControlSelection), eulerValue, true, FRigControlModifiedContext(), true, true);
 		}
 		else if (controlType == ERigControlType::TransformNoScale)

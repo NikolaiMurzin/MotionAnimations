@@ -2375,8 +2375,6 @@
   Editor/Sequencer/Public/IMovieRendererInterface.h \
   Editor/Sequencer/Public/MovieSceneSequenceEditor.h \
   Runtime/Core/Public/Math/TransformNonVectorized.h \
-  PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/ControlRig.h \
-  PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h \
   Runtime/Core/Public/Templates/SharedPointerInternals.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/stdexcept \
   ThirdParty/Unix/LibCxx/include/c++/v1/string \

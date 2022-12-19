@@ -320,7 +320,7 @@ void SMain::OnStopPlay()
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
 	FKey key = event.GetKey();
-	if (key.ToString() == "F1")
+	if (key.ToString() == "F2")
 	{
 		IsKeysEnabled = !IsKeysEnabled;
 	}

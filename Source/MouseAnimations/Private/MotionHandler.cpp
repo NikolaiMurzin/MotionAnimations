@@ -18,8 +18,6 @@
 #include "MotionHandlerMode.h"
 #include "MovieSceneSequence.h"
 #include "MovieSceneTrack.h"
-#include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/ControlRig.h"
-#include "PluginsLsp/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "RigVMCore/RigVM.h"
 #include "RigVMCore/RigVMExternalVariable.h"
 #include "Runtime/Core/Public/CoreFwd.h"

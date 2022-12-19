@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include "Channels/MovieSceneDoubleChannel.h"
-#include "Channels/MovieSceneFloatChannel.h"
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
 #include "HAL/Platform.h"
+#include "KeyValues.h"
 #include "Misc/Guid.h"
 #include "MotionHandlerMode.h"
 
@@ -39,14 +38,9 @@ public:
 	Mode SelectedMode;
 	UPROPERTY()
 	FText CustomName;
+
 	UPROPERTY()
-	TArray<FFrameNumber> Times;
-	UPROPERTY()
-	TArray<FMovieSceneFloatValue> FloatValues;
-	UPROPERTY()
-	TArray<FMovieSceneDoubleValue> DoubleValues;
-	UPROPERTY()
-	TArray<int32> IntegerValues;
+	TArray<FKeyValues> KeyValues;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);

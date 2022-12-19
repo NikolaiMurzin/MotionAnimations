@@ -13,7 +13,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define MOUSEANIMATIONS_MotionHandlerData_generated_h
 
-#define FID_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_18_GENERATED_BODY \
+#define FID_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_17_GENERATED_BODY \
 	friend struct Z_Construct_UScriptStruct_FMotionHandlerData_Statics; \
 	MOUSEANIMATIONS_API static class UScriptStruct* StaticStruct();
 

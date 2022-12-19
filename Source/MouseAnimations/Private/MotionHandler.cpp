@@ -12,6 +12,7 @@
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "Internationalization/Text.h"
+#include "KeyValues.h"
 #include "Math/NumericLimits.h"
 #include "Math/TransformNonVectorized.h"
 #include "MotionHandlerData.h"
@@ -628,20 +629,25 @@ bool MotionHandler::SaveData()
 	TRange<FFrameNumber> playbackRange = MovieScene->GetPlaybackRange();
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		Data.Times = FloatChannel->GetTimes();
-		Data.FloatValues = FloatChannel->GetValues();
+		FKeyValues KeyValues = FKeyValues();
+		KeyValues.FloatValues = FloatChannel->GetValues();
+		KeyValues.Times = FloatChannel->GetTimes();
+		Data.KeyValues.Add(KeyValues);
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		Data.Times = DoubleChannel->GetTimes();
-		Data.DoubleValues = DoubleChannel->GetValues();
+		FKeyValues KeyValues = FKeyValues();
+		KeyValues.DoubleValues = DoubleChannel->GetValues();
+		KeyValues.Times = DoubleChannel->GetTimes();
+		Data.KeyValues.Add(KeyValues);
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
-		Data.Times = IntegerChannel->GetTimes();
-		Data.IntegerValues = IntegerChannel->GetValues();
+		FKeyValues KeyValues = FKeyValues();
+		KeyValues.IntegerValues = IntegerChannel->GetValues();
+		KeyValues.Times = IntegerChannel->GetTimes();
+		Data.KeyValues.Add(KeyValues);
 	}
-
 	return Data.Save();
 }
 

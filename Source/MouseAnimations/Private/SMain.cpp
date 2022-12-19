@@ -403,7 +403,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			motionHandler->InsertCurrentKeyValuesToSequencer();
 		}
 	}
-	if (key.ToString() == "F7")
+	if (key.ToString() == "F12")
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{

@@ -83,8 +83,12 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 	FString sortOrder = FString::FromInt(channelHandle.GetMetaData()->SortOrder);
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
-		.Content()[SNew(STextBlock)
-					   .Text(FText::FromString(trackName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))];
+		.Content()
+			[SNew(SHorizontalBox) +
+				SHorizontalBox::Slot()[SNew(STextBlock)
+										   .Text(FText::FromString(
+											   trackName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))] +
+				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)]];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -272,7 +276,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 }
 FReply SMain::SelectX()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 	{
 		motionHandler->SetSelectedMode(Mode::X);
 	}
@@ -280,7 +284,7 @@ FReply SMain::SelectX()
 }
 FReply SMain::SelectXInverted()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 	{
 		motionHandler->SetSelectedMode(Mode::XInverted);
 	}
@@ -288,7 +292,7 @@ FReply SMain::SelectXInverted()
 }
 FReply SMain::SelectY()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 	{
 		motionHandler->SetSelectedMode(Mode::Y);
 	}
@@ -296,7 +300,7 @@ FReply SMain::SelectY()
 }
 FReply SMain::SelectYInverted()
 {
-	for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 	{
 		motionHandler->SetSelectedMode(Mode::YInverted);
 	}

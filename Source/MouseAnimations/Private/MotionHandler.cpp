@@ -12,6 +12,7 @@
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "Internationalization/Text.h"
+#include "Math/NumericLimits.h"
 #include "Math/TransformNonVectorized.h"
 #include "MotionHandlerData.h"
 #include "MotionHandlerMode.h"
@@ -42,6 +43,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 {
 	Data = FMotionHandlerData(FilePath);
 	Sequencer = Sequencer_;
+
+	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
 
 	PreviousValue = 0;
 	IsFirstUpdate = true;
@@ -627,4 +630,13 @@ bool MotionHandler::operator==(MotionHandler& handler)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Trying to compare %s and %s"), *Data.GetName(), *handler.Data.GetName());
 	return Data.GetName() == handler.Data.GetName();
+}
+double MotionHandler::OnGetScaleValueForSpinBox() const
+{
+	return Data.Scale;
+}
+void MotionHandler::OnScaleValueChangedRaw(double value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnScaleValue changed, value %f!!!"), value);
+	Data.Scale = value;
 }

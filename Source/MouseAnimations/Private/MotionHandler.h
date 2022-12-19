@@ -11,6 +11,7 @@
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencerTrackEditor.h"
 #include "Editor/Sequencer/Public/SequencerAddKeyOperation.h"
+#include "Math/NumericLimits.h"
 #include "Misc/FrameNumber.h"
 #include "MotionHandlerData.h"
 #include "MotionHandlerMode.h"
@@ -56,14 +57,19 @@ public:
 	bool DeleteData();
 	bool operator==(MotionHandler& handler);
 
+	double OnGetScaleValueForSpinBox() const;
+	DECLARE_DELEGATE_OneParam(FOnValueChanged, double /*NewValue*/);
+	FOnValueChanged OnScaleValueChanged;
+	void OnScaleValueChangedRaw(double value);
+
 	FMovieSceneChannelHandle ChannelHandle;
+
+	FMotionHandlerData Data;
 
 private:
 	void UpdateUI(FFrameNumber InTime);
 
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
-
-	FMotionHandlerData Data;
 
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;

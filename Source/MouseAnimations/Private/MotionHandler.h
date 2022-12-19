@@ -54,6 +54,9 @@ public:
 	void SetSelectedMode(Mode Mode_);
 	bool SaveData();
 	bool DeleteData();
+	bool operator==(MotionHandler& handler);
+
+	FMovieSceneChannelHandle ChannelHandle;
 
 private:
 	void UpdateUI(FFrameNumber InTime);
@@ -62,7 +65,6 @@ private:
 
 	FMotionHandlerData Data;
 
-	FMovieSceneChannelHandle ChannelHandle;
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneBoolChannel* BoolChannel;

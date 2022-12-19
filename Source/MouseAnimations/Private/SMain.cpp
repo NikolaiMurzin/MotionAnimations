@@ -23,10 +23,12 @@
 #include "LevelSequence.h"
 #include "Logging/LogMacros.h"
 #include "Logging/LogVerbosity.h"
+#include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Misc/QualifiedFrameTime.h"
 #include "MotionHandler.h"
 #include "MotionHandlerData.h"
+#include "MouseAnimations.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
 #include "MovieSceneSection.h"
@@ -50,10 +52,11 @@
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
-	IsStarted = false;
+	IsStarted = false;	  // for execute motion handlers on tick
 	RefreshSequences();
-	SelectedSequence = Sequences[0];
+	ChangeSelectedSequence(Sequences[0]);
 	RefreshSequencer();
+	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
@@ -64,7 +67,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 														.ListItemsSource(&MotionHandlers)
 														.OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 
-	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	ListViewWidget->SetListItemsSource(MotionHandlers);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -73,20 +75,16 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 {
 	FString trackName = Item->MovieSceneTrack->GetName();
 	FString movieSceneName = Item->MovieScene->GetName();
-	FString keyAreaName = Item->KeyArea->GetName().ToString();
-	FMovieSceneChannelHandle channelHandle = Item->KeyArea->GetChannel();
+	FMovieSceneChannelHandle channelHandle = Item->ChannelHandle;
 	FString channelName = channelHandle.GetMetaData()->DisplayText.ToString();
 	FString channelDisplayText = channelHandle.GetMetaData()->Name.ToString();
 	FString group = channelHandle.GetMetaData()->Group.ToString();
 	FString sortOrder = FString::FromInt(channelHandle.GetMetaData()->SortOrder);
-	FString sectionName = Item->KeyArea->GetOwningSection()->GetName();
-	FString rowIndexSection = FString::FromInt(Item->KeyArea->GetOwningSection()->GetRowIndex());
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
 		.Content()[SNew(STextBlock)
 					   .Text(FText::FromString(Item->GetObjectFGuid().ToString() + ", " + trackName + ", " + movieSceneName + ", " +
-											   keyAreaName + ", " + channelName + ", " + channelDisplayText + ", " + group + ", " +
-											   sortOrder + ", " + sectionName + ", " + rowIndexSection))];
+											   channelName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -97,7 +95,7 @@ FReply SMain::OnRefreshSequencer()
 
 void SMain::RefreshSequencer()
 {
-	if (SelectedSequence != nullptr)
+	if (SelectedSequence != nullptr && !IsSequencerRelevant)
 	{
 		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
@@ -115,6 +113,11 @@ void SMain::RefreshSequencer()
 				OnPlayEvent->AddRaw(this, &SMain::OnStartPlay);
 				OnStopEvent = &(Sequencer->OnStopEvent());
 				OnStopEvent->AddRaw(this, &SMain::OnStopPlay);
+
+				LoadMotionHandlersFromDisk(MotionHandlers);
+				ListViewWidget->RequestListRefresh();
+				IsSequencerRelevant = true;
+				UE_LOG(LogTemp, Warning, TEXT("Sequencer refreshed"));
 			};
 		}
 	}
@@ -133,6 +136,14 @@ void SMain::RefreshSequences()
 			Sequences.Add(Sequence);
 			break;
 		};
+	}
+}
+void SMain::ChangeSelectedSequence(ULevelSequence* Sequence_)
+{
+	if (Sequence_ != nullptr)
+	{
+		IsSequencerRelevant = false;
+		SelectedSequence = Sequence_;
 	}
 }
 FReply SMain::OnRefreshBindings()
@@ -158,43 +169,63 @@ void SMain::AddMotionHandlers()
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
 			bool IsObjectAlreadyAdded = false;
+
+			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
+				KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
+
 			for (TSharedPtr<MotionHandler> handler : MotionHandlers)
 			{
-				if (handler->KeyArea == KeyArea)
+				if (*handler == *motionHandler)
 				{
 					IsObjectAlreadyAdded = true;
-					UE_LOG(LogTemp, Warning, TEXT("Object is already added"));
-					break;
 				}
 			}
 			if (!IsObjectAlreadyAdded)
 			{
-				TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
-					KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
-
-				FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-				float value = motionHandler->GetValueFromTime(currentFrame);
-				motionHandler->SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
-					FVector2D(value, value));	 // need to add two keys for enabling recording motions
-				FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
-				frame.Value += 1000;
-				motionHandler->SetKey(frame, FVector2D(value, value));
-
 				MotionHandlers.Add(motionHandler);
-				UE_LOG(LogTemp, Warning, TEXT("Requeset List refresh"));
 				ListViewWidget->RequestListRefresh();
 			}
 		}
 	}
 }
-FReply SMain::OnToggleTestAnimations()
+void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers)
 {
-	if (IsRecordedStarted)
+	if (Sequencer != nullptr && SelectedSequence != nullptr)
 	{
-		return FReply::Handled();
+		FString First = FPaths::ProjectPluginsDir();
+		FString PluginName_ = PluginName;
+		FString SequenceName = SelectedSequence->GetDisplayName().ToString();
+		FString SavesDir = FPaths::Combine(First, PluginName_, FString("Saved"), SequenceName);
+		TArray<FString> FilePaths = TArray<FString>();
+		FString FilesExtension = "";
+		UE_LOG(LogTemp, Warning, TEXT("Trying to find files in  %s"), *SavesDir);
+		IFileManager::Get().FindFiles(FilePaths, *SavesDir, *FilesExtension);
+		for (FString filename : FilePaths)
+		{
+			FString path = FPaths::Combine(SavesDir, filename);
+			TSharedPtr<MotionHandler> handler = TSharedPtr<MotionHandler>(new MotionHandler(Sequencer, SelectedSequence, path));
+			if (handler->IsValidMotionHandler())
+			{
+				bool IsObjectAlreadyAdded = false;
+				for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+				{
+					if (*handler == *motionHandler)
+					{
+						IsObjectAlreadyAdded = true;
+					}
+				}
+				if (!IsObjectAlreadyAdded)
+				{
+					MotionHandlers.Add(handler);
+					ListViewWidget->RequestListRefresh();
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Motion handler is not valid"));
+			}
+		}
 	}
-	IsTestAnimations = !IsTestAnimations;
-	return FReply::Handled();
 }
 void SMain::OnGlobalTimeChanged()
 {
@@ -205,7 +236,7 @@ void SMain::OnGlobalTimeChanged()
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
-	if (IsTestAnimations)
+	if (false)	  // keep that code just to remember how to execute motion handlers every tick
 	{
 		if (IsStarted)
 		{
@@ -224,7 +255,6 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 {
 	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 	nextFrame.Value += 1000;
-	TArray<TSharedRef<IKeyArea>> keyAreas = TArray<TSharedRef<IKeyArea>>();
 	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 	FVector2D vectorChange = PreviousPosition - currentPosition;
 	if (MotionHandlers.Num() > 0)
@@ -285,10 +315,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		OnToggleRecording();
 	}
-	if (key.ToString() == "T")
-	{
-		OnToggleTestAnimations();
-	}
 	if (key.ToString() == "Q")
 	{
 		RefreshSequencer();
@@ -312,7 +338,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->SetGlobalTime(lowerValue);
 
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
-			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 
@@ -320,7 +346,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				DeleteKeysFrom.Value += 3000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, highValue));
 			}
-
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
 			Sequencer->PlayTo(params);
@@ -368,10 +393,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 }
 FReply SMain::OnToggleRecording()
 {
-	if (IsTestAnimations)
-	{
-		return FReply::Handled();
-	}
 	IsRecordedStarted = !IsRecordedStarted;
 	PreviousPosition = FSlateApplication::Get().GetCursorPos(); /* get mouse current pos and set /./ &*/
 	return FReply::Handled();

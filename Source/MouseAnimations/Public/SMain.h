@@ -23,11 +23,6 @@
 /**
  *
  */
-struct MotionHandlerPath
-{
-	FGuid objectGuid;	 // UMovieScene findBinding() -> getTracks()
-	FText trackName;	 // UMovieSceneTrack GetName()
-};
 class MOUSEANIMATIONS_API SMain : public SCompoundWidget
 {
 public:
@@ -40,7 +35,9 @@ public:
 	void Construct(const FArguments& InArgs);
 
 	void RefreshSequences();
+	void ChangeSelectedSequence(ULevelSequence* Sequence_);
 
+	bool IsSequencerRelevant;
 	void RefreshSequencer();
 	FReply OnRefreshSequencer();
 
@@ -66,16 +63,11 @@ public:
 	void OnKeyDownGlobal(const FKeyEvent& event);
 
 	FVector2D PreviousPosition;
-	double PositionX;
-	double PositionY;
 
 	FReply SelectX();
 	FReply SelectXInverted();
 	FReply SelectY();
 	FReply SelectYInverted();
-
-	bool IsTestAnimations;
-	FReply OnToggleTestAnimations();
 
 	TSharedPtr<SListView<TSharedPtr<MotionHandler>>> ListViewWidget;
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -83,7 +75,7 @@ public:
 	TArray<TSharedPtr<MotionHandler>> MotionHandlers;
 	void AddMotionHandlers();
 	void ExecuteMotionHandlers(bool isInTickMode);
-	TArray<TSharedPtr<MotionHandler>> LoadMotionHandlersFromDisk();
+	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;

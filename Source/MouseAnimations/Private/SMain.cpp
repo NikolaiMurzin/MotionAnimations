@@ -171,6 +171,7 @@ void SMain::AddMotionHandlers()
 		{
 		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
 		} */
+		TArray<TSharedPtr<MotionHandler>> selectionSet;
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
 			bool IsObjectAlreadyAdded = false;
@@ -183,17 +184,17 @@ void SMain::AddMotionHandlers()
 				if (*handler == *motionHandler)
 				{
 					IsObjectAlreadyAdded = true;
-					ListViewWidget->ClearSelection();
-					ListViewWidget->SetItemSelection(handler, true, ESelectInfo::Type::Direct);
+					selectionSet.Add(handler);
 				}
 			}
 			if (!IsObjectAlreadyAdded)
 			{
 				MotionHandlers.Add(motionHandler);
-				ListViewWidget->RequestListRefresh();
-				ListViewWidget->ClearSelection();
-				ListViewWidget->SetItemSelection(motionHandler, true, ESelectInfo::Type::Direct);
+				selectionSet.Add(motionHandler);
 			}
+			ListViewWidget->ClearSelection();
+			ListViewWidget->SetItemSelection(selectionSet, true, ESelectInfo::Type::Direct);
+			ListViewWidget->RequestListRefresh();
 		}
 	}
 }

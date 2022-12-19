@@ -127,8 +127,6 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	Data = FMotionHandlerData(
 		Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_, Sequence_->GetDisplayName().ToString());
 
-	MovieSceneTrack = MovieSceneTrack_;
-
 	ChannelHandle = KeyArea->GetChannel();
 
 	SetControlRigTrack(MovieSceneTrack);
@@ -199,6 +197,11 @@ FVector GetVectorFromString(FString input)
 }
 void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 {
+	if (!IsValidMotionHandler())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Motion Handler is not valid!"));
+		return;
+	}
 	double valueToSet = 0;
 	if (Data.SelectedMode == Mode::X)
 	{
@@ -622,8 +625,26 @@ Mode MotionHandler::GetSelectedMode()
 }
 bool MotionHandler::SaveData()
 {
+	TRange<FFrameNumber> playbackRange = MovieScene->GetPlaybackRange();
+	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		Data.Times = FloatChannel->GetTimes();
+		Data.FloatValues = FloatChannel->GetValues();
+	}
+	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		Data.Times = DoubleChannel->GetTimes();
+		Data.DoubleValues = DoubleChannel->GetValues();
+	}
+	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		Data.Times = IntegerChannel->GetTimes();
+		Data.IntegerValues = IntegerChannel->GetValues();
+	}
+
 	return Data.Save();
 }
+
 bool MotionHandler::DeleteData()
 {
 	return Data.Delete();

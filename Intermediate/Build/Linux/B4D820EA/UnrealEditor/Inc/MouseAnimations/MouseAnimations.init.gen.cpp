@@ -17,7 +17,7 @@ void EmptyLinkFunctionForGeneratedCodeMouseAnimations_init() {}
 				nullptr,
 				0,
 				PKG_CompiledIn | 0x00000040,
-				0xDDC832BA,
+				0xC4C367F7,
 				0x0A1F7E2C,
 				METADATA_PARAMS(nullptr, 0)
 			};
@@ -25,5 +25,5 @@ void EmptyLinkFunctionForGeneratedCodeMouseAnimations_init() {}
 		}
 		return Z_Registration_Info_UPackage__Script_MouseAnimations.OuterSingleton;
 	}
-	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_MouseAnimations(Z_Construct_UPackage__Script_MouseAnimations, TEXT("/Script/MouseAnimations"), Z_Registration_Info_UPackage__Script_MouseAnimations, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xDDC832BA, 0x0A1F7E2C));
+	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_MouseAnimations(Z_Construct_UPackage__Script_MouseAnimations, TEXT("/Script/MouseAnimations"), Z_Registration_Info_UPackage__Script_MouseAnimations, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xC4C367F7, 0x0A1F7E2C));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

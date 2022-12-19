@@ -74,13 +74,6 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	FString trackName = Item->MovieSceneTrack->GetName();
-	FString movieSceneName = Item->MovieScene->GetName();
-	FMovieSceneChannelHandle channelHandle = Item->ChannelHandle;
-	FString channelName = channelHandle.GetMetaData()->DisplayText.ToString();
-	FString channelDisplayText = channelHandle.GetMetaData()->Name.ToString();
-	FString group = channelHandle.GetMetaData()->Group.ToString();
-	FString sortOrder = FString::FromInt(channelHandle.GetMetaData()->SortOrder);
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
 		.Content()
@@ -89,7 +82,9 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 										   .Text(Item->Data.CustomName)
 										   .OnTextChanged(Item->OnTextChanged)
 										   .ClearKeyboardFocusOnCommit(true)] +
-				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)]];
+				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)] +
+				SHorizontalBox::Slot()
+					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)]];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -386,12 +381,33 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
-				motionHandler->SaveData();
 			}
 			Sequencer->Pause();
 			Sequencer->SetGlobalTime(lowerValue);
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
+		}
+	}
+	if (key.ToString() == "F5")
+	{
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->AddOrUpdateKeyValueInSequencer();
+			motionHandler->SaveData();
+		}
+	}
+	if (key.ToString() == "F6")
+	{
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->InsertCurrentKeyValuesToSequencer();
+		}
+	}
+	if (key.ToString() == "F7")
+	{
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->DeleteKeyValues();
 		}
 	}
 	if (key.ToString() == "Z")

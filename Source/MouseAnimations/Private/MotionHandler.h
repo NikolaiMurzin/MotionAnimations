@@ -53,13 +53,24 @@ public:
 	FGuid GetObjectFGuid();
 	Mode GetSelectedMode();
 	void SetSelectedMode(Mode Mode_);
+
 	bool SaveData();
 	bool DeleteData();
+	void AddOrUpdateKeyValueInSequencer();
+	void AddNewKeyValues();
+	void UpdateCurrentKeyValues();
+	void DeleteKeyValues();
+	void InsertCurrentKeyValuesToSequencer();
+
 	bool operator==(MotionHandler& handler);
 
 	DECLARE_DELEGATE_OneParam(FOnValueChanged, double /*NewValue*/);
 	FOnValueChanged OnScaleValueChanged;
 	void OnScaleValueChangedRaw(double value);
+
+	DECLARE_DELEGATE_OneParam(FOnCurrentIndexValueChanged, int32);
+	FOnCurrentIndexValueChanged OnCurrentIndexValueChanged;
+	void OnCurrentIndexValueChangedRaw(int32 value);
 
 	DECLARE_DELEGATE_OneParam(FOnTextChanged, const FText& /*NewValue*/);
 	FOnTextChanged OnTextChanged;

@@ -1789,15 +1789,124 @@
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/nl_types.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Module.MouseAnimations.gen.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Definitions.MouseAnimations.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.gen.cpp \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.gen.cpp \
   Runtime/CoreUObject/Public/UObject/GeneratedCppIncludes.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/KeyValues.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneDoubleChannel.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneCurveChannelCommon.h \
+  Runtime/CoreUObject/Public/UObject/ObjectMacros.h \
+  Runtime/Core/Public/Misc/FrameNumber.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneChannel.h \
+  Runtime/Core/Public/Misc/CoreDefines.h \
+  Runtime/Core/Public/Misc/FrameRate.h \
+  Runtime/Core/Public/Containers/ArrayView.h \
+  Runtime/Core/Public/Math/Range.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneChannel.generated.h \
+  Runtime/CoreUObject/Public/UObject/ScriptMacros.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneChannelData.h \
+  Runtime/Engine/Classes/Curves/KeyHandle.h \
+  Runtime/Core/Public/Misc/FrameTime.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneChannelData.generated.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneChannelTraits.h \
+  Runtime/Core/Public/Misc/Optional.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneChannelEditorData.h \
+  Runtime/Core/Public/UObject/NameTypes.h \
+  Runtime/Core/Public/Internationalization/Text.h \
+  Runtime/Core/Public/Math/Color.h \
+  Runtime/Core/Public/Templates/Function.h \
+  Runtime/MovieScene/Public/MovieSceneCommonHelpers.h \
+  Runtime/Core/Public/CoreMinimal.h \
+  Runtime/Engine/Classes/Engine/EngineTypes.h \
+  Runtime/CoreUObject/Public/UObject/UnrealType.h \
+  Runtime/CoreUObject/Public/UObject/ObjectKey.h \
+  Runtime/CoreUObject/Public/UObject/WeakFieldPtr.h \
+  Runtime/Core/Public/UObject/WeakObjectPtrTemplates.h \
+  Runtime/CoreUObject/Public/UObject/WeakObjectPtr.h \
+  Runtime/CoreUObject/Public/UObject/FieldPath.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneEvaluationTemplateInstance.h \
+  Runtime/Core/Public/CoreTypes.h Runtime/Core/Public/Containers/Map.h \
+  Runtime/Core/Public/Templates/UniquePtr.h \
+  Runtime/CoreUObject/Public/UObject/StrongObjectPtr.h \
+  Runtime/MovieScene/Public/MovieSceneSequenceID.h \
+  Runtime/CoreUObject/Public/UObject/Class.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneSequenceID.generated.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneRootOverridePath.h \
+  Runtime/MovieScene/Public/Compilation/MovieSceneCompiledDataID.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntitySystemRunner.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntityIDs.h \
+  Runtime/Core/Public/Containers/BitArray.h \
+  Runtime/Core/Public/Templates/TypeHash.h \
+  Runtime/Core/Public/Misc/Guid.h \
+  Runtime/MovieScene/Public/Evaluation/MovieScenePlayback.h \
+  Runtime/MovieScene/Public/MovieSceneFwd.h \
+  Runtime/Core/Public/Stats/Stats2.h \
+  Runtime/Core/Public/Misc/EnumClassFlags.h \
+  Runtime/Core/Public/HAL/PreprocessorHelpers.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneSequenceTransform.h \
+  Runtime/Core/Public/Algo/AllOf.h \
+  Runtime/Core/Public/Templates/Invoke.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneTimeTransform.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneTimeTransform.generated.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneTimeWarping.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneTimeWarping.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneSequenceTransform.generated.h \
+  Runtime/Core/Public/Async/TaskGraphInterfaces.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntitySystemTypes.h \
+  Runtime/Core/Public/Algo/Find.h Runtime/Core/Public/Stats/Stats.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneSequenceInstance.h \
+  Runtime/Core/Public/Containers/SortedMap.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntityManager.h \
+  Runtime/Core/Public/Containers/SparseArray.h \
+  Runtime/Core/Public/Misc/InlineValue.h \
+  Runtime/Core/Public/Misc/AssertionMacros.h \
+  Runtime/Core/Public/HAL/UnrealMemory.h \
+  Runtime/Core/Public/Templates/MemoryOps.h \
+  Runtime/Core/Public/Templates/PointerIsConvertibleFromTo.h \
+  Runtime/Core/Public/Templates/Decay.h \
+  Runtime/Core/Public/Templates/TypeCompatibleBytes.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntityFactoryTypes.h \
+  Runtime/Core/Public/Containers/Array.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneComponentTypeHandler.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneComponentTypeInfo.h \
+  Runtime/CoreUObject/Public/UObject/UObjectGlobals.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneComponentDebug.h \
+  Runtime/Core/Public/Math/Vector4.h Runtime/Core/Public/Algo/AnyOf.h \
+  Runtime/Core/Public/Algo/NoneOf.h Runtime/Core/Public/Algo/Common.h \
+  Runtime/Core/Public/Templates/UnrealTemplate.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneEntityLedger.h \
+  Runtime/Core/Public/Containers/Set.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneEvaluationField.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneEvaluationKey.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneTrackIdentifier.h \
+  Runtime/Core/Public/UObject/EditorObjectVersion.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneTrackIdentifier.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneEvaluationKey.generated.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneSegment.h \
+  Runtime/Core/Public/UObject/SequencerObjectVersion.h \
+  Runtime/MovieScene/Public/MovieSceneFrameMigration.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneFrameMigration.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneSegment.generated.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneEvaluationTree.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneEvaluationField.generated.h \
+  Runtime/MovieScene/Public/EntitySystem/MovieSceneSequenceInstanceHandle.h \
+  Runtime/MovieScene/Public/EntitySystem/IMovieSceneEntityProvider.h \
+  Runtime/CoreUObject/Public/UObject/Interface.h \
+  Runtime/MovieScene/Public/Evaluation/MovieSceneCompletionMode.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneCompletionMode.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/IMovieSceneEntityProvider.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneEvaluationTemplateInstance.generated.h \
+  Runtime/MovieScene/Public/KeyParams.h \
+  Runtime/Engine/Classes/Curves/RichCurve.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneCurveChannelCommon.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneDoubleChannel.generated.h \
+  Runtime/MovieScene/Public/Channels/MovieSceneFloatChannel.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneFloatChannel.generated.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.generated.h \
+  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.gen.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
   Runtime/Core/Public/Containers/UnrealString.h \
-  Runtime/Core/Public/CoreMinimal.h Runtime/Core/Public/HAL/Platform.h \
-  Runtime/Core/Public/Misc/Guid.h \
+  Runtime/Core/Public/HAL/Platform.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
-  Runtime/CoreUObject/Public/UObject/ObjectMacros.h \
-  Runtime/CoreUObject/Public/UObject/ScriptMacros.h \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerMode.gen.cpp \
   /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MouseAnimations.init.gen.cpp

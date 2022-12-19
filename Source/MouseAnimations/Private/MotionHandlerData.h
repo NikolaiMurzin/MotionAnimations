@@ -40,6 +40,8 @@ public:
 	FText CustomName;
 
 	UPROPERTY()
+	int32 CurrentIndex;
+	UPROPERTY()
 	TArray<FKeyValues> KeyValues;
 
 	FMotionHandlerData();

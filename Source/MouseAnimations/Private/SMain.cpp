@@ -85,9 +85,10 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 		.Padding(2.0f)
 		.Content()
 			[SNew(SHorizontalBox) +
-				SHorizontalBox::Slot()[SNew(STextBlock)
-										   .Text(FText::FromString(
-											   trackName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))] +
+				SHorizontalBox::Slot()[SNew(SEditableText)
+										   .Text(Item->Data.CustomName)
+										   .OnTextChanged(Item->OnTextChanged)
+										   .ClearKeyboardFocusOnCommit(true)] +
 				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)]];
 }
 
@@ -319,11 +320,28 @@ void SMain::OnStopPlay()
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
 	FKey key = event.GetKey();
+	if (key.ToString() == "F1")
+	{
+		IsKeysEnabled = !IsKeysEnabled;
+	}
+	if (!IsKeysEnabled)
+	{
+		return;
+	}
+	if (key.ToString() == "Delete")
+	{
+		for (TSharedPtr<MotionHandler> handler : ListViewWidget->GetSelectedItems())
+		{
+			handler->DeleteData();
+			MotionHandlers.Remove(handler);
+		}
+	}
 	if (key.ToString() == "W")
 	{
 		RefreshSequencer();
 		AddMotionHandlers();
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Key to strin gis %s : "), *key.ToString());
 	if (key.ToString() == "E")
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)

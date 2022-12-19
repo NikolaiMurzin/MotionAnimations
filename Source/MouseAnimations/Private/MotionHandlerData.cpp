@@ -41,6 +41,8 @@ FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FStrin
 	ChannelIndex = ChannelIndex_;
 	SelectedMode = Mode_;
 	SequenceName = SequenceName_;
+	CustomName = FText::FromString(
+		TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName + "." + FString::FromInt(ChannelIndex));
 }
 bool FMotionHandlerData::Save()
 {

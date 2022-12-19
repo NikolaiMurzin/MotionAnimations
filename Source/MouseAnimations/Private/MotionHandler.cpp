@@ -45,6 +45,7 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	Sequencer = Sequencer_;
 
 	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
+	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
 
 	PreviousValue = 0;
 	IsFirstUpdate = true;
@@ -116,6 +117,9 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	IsFirstUpdate = true;
 	MovieScene = Sequence_->GetMovieScene();
 	MovieSceneTrack = MovieSceneTrack_;
+
+	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
+	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
 
 	FString TrackName_ = MovieSceneTrack_->GetTrackName().ToString();
 	int32 RowIndex = KeyArea->GetOwningSection()->GetRowIndex();
@@ -631,12 +635,12 @@ bool MotionHandler::operator==(MotionHandler& handler)
 	UE_LOG(LogTemp, Warning, TEXT("Trying to compare %s and %s"), *Data.GetName(), *handler.Data.GetName());
 	return Data.GetName() == handler.Data.GetName();
 }
-double MotionHandler::OnGetScaleValueForSpinBox() const
-{
-	return Data.Scale;
-}
 void MotionHandler::OnScaleValueChangedRaw(double value)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnScaleValue changed, value %f!!!"), value);
 	Data.Scale = value;
+}
+void MotionHandler::OnTextChangedRaw(const FText& value)
+{
+	Data.CustomName = value;
 }

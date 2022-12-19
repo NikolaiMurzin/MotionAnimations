@@ -37,6 +37,8 @@ public:
 	void RefreshSequences();
 	void ChangeSelectedSequence(ULevelSequence* Sequence_);
 
+	bool IsKeysEnabled = false;
+
 	bool IsSequencerRelevant;
 	void RefreshSequencer();
 	FReply OnRefreshSequencer();

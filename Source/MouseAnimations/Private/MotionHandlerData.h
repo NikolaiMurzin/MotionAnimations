@@ -35,6 +35,8 @@ public:
 	bool IsValidData;
 	UPROPERTY()
 	Mode SelectedMode;
+	UPROPERTY()
+	FText CustomName;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);

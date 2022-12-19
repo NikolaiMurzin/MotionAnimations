@@ -57,10 +57,13 @@ public:
 	bool DeleteData();
 	bool operator==(MotionHandler& handler);
 
-	double OnGetScaleValueForSpinBox() const;
 	DECLARE_DELEGATE_OneParam(FOnValueChanged, double /*NewValue*/);
 	FOnValueChanged OnScaleValueChanged;
 	void OnScaleValueChangedRaw(double value);
+
+	DECLARE_DELEGATE_OneParam(FOnTextChanged, const FText& /*NewValue*/);
+	FOnTextChanged OnTextChanged;
+	void OnTextChangedRaw(const FText& value);
 
 	FMovieSceneChannelHandle ChannelHandle;
 

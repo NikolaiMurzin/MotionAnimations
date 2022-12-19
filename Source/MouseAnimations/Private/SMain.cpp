@@ -38,6 +38,7 @@
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Templates/SharedPointer.h"
+#include "Types/SlateEnums.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SSpinBox.h"
@@ -83,8 +84,7 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
 		.Padding(2.0f)
 		.Content()[SNew(STextBlock)
-					   .Text(FText::FromString(Item->GetObjectFGuid().ToString() + ", " + trackName + ", " + movieSceneName + ", " +
-											   channelName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))];
+					   .Text(FText::FromString(trackName + ", " + channelDisplayText + ", " + group + ", " + sortOrder))];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -178,12 +178,16 @@ void SMain::AddMotionHandlers()
 				if (*handler == *motionHandler)
 				{
 					IsObjectAlreadyAdded = true;
+					ListViewWidget->ClearSelection();
+					ListViewWidget->SetItemSelection(handler, true, ESelectInfo::Type::Direct);
 				}
 			}
 			if (!IsObjectAlreadyAdded)
 			{
 				MotionHandlers.Add(motionHandler);
 				ListViewWidget->RequestListRefresh();
+				ListViewWidget->ClearSelection();
+				ListViewWidget->SetItemSelection(motionHandler, true, ESelectInfo::Type::Direct);
 			}
 		}
 	}
@@ -311,16 +315,9 @@ void SMain::OnStopPlay()
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
 	FKey key = event.GetKey();
-	if (key.ToString() == "R")
-	{
-		OnToggleRecording();
-	}
-	if (key.ToString() == "Q")
-	{
-		RefreshSequencer();
-	}
 	if (key.ToString() == "W")
 	{
+		RefreshSequencer();
 		AddMotionHandlers();
 	}
 	if (key.ToString() == "E")
@@ -389,22 +386,5 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	else if (key.ToString() == "V")
 	{
 		SelectYInverted();
-	}
-}
-FReply SMain::OnToggleRecording()
-{
-	IsRecordedStarted = !IsRecordedStarted;
-	PreviousPosition = FSlateApplication::Get().GetCursorPos(); /* get mouse current pos and set /./ &*/
-	return FReply::Handled();
-}
-FText SMain::GetIsToggledRecording() const
-{
-	if (IsRecordedStarted)
-	{
-		return FText::FromString("Stop recording");
-	}
-	else
-	{
-		return FText::FromString("Start recording");
 	}
 }

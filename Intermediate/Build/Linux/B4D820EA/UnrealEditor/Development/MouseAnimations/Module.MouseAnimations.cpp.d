@@ -2523,6 +2523,7 @@
   Runtime/Slate/Public/Widgets/Views/STableViewBase.h \
   Runtime/Slate/Public/SlateOptMacros.h \
   Editor/UnrealEd/Public/Subsystems/AssetEditorSubsystem.h \
+  Runtime/SlateCore/Public/Types/SlateEnums.h \
   Runtime/Slate/Public/Widgets/Layout/SScrollBox.h \
   Runtime/SlateCore/Public/SlotBase.h \
   Runtime/SlateCore/Public/Layout/Geometry.h \

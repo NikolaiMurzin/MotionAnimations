@@ -43,10 +43,7 @@ public:
 
 	FReply OnRefreshBindings();
 
-	FReply OnToggleRecording();
 	bool IsRecordedStarted;
-
-	FText GetIsToggledRecording() const;
 
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;

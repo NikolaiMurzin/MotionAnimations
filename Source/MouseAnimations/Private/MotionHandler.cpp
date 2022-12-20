@@ -100,14 +100,7 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
 
-	FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	float value = GetValueFromTime(currentFrame);
-	SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
-		FVector2D(value, value));	 // need to add two keys for enabling recording motions
-	FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
-	frame.Value += 1000;
-	value = GetValueFromTime(frame);
-	SetKey(frame, FVector2D(value, value));
+	InitKeys();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -136,14 +129,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
 
-	FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	float value = GetValueFromTime(currentFrame);
-	SetKey(Sequencer->GetGlobalTime().Time.GetFrame(),
-		FVector2D(value, value));	 // need to add two keys for enabling recording motions
-	FFrameNumber frame = Sequencer->GetGlobalTime().Time.GetFrame();
-	frame.Value += 1000;
-	value = GetValueFromTime(frame);
-	SetKey(frame, FVector2D(value, value));
+	InitKeys();
 }
 
 bool MotionHandler::IsValidMotionHandler()
@@ -495,6 +481,34 @@ void MotionHandler::InitKeys()
 	FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 	/* todo list */
+	FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+	float value = GetValueFromTime(currentFrame);
+
+	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+	nextFrame.Value += 1000;
+	float secondValue = GetValueFromTime(currentFrame);
+	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
+	{
+		FloatChannel = ChannelHandle.Cast<FMovieSceneFloatChannel>().Get();
+		FloatChannel->GetData().UpdateOrAddKey(currentFrame, FMovieSceneFloatValue(value));
+		FloatChannel->GetData().UpdateOrAddKey(nextFrame, FMovieSceneFloatValue(secondValue));
+	}
+	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
+	{
+		DoubleChannel = ChannelHandle.Cast<FMovieSceneDoubleChannel>().Get();
+		DoubleChannel->GetData().UpdateOrAddKey(currentFrame, FMovieSceneDoubleValue(value));
+		DoubleChannel->GetData().UpdateOrAddKey(nextFrame, FMovieSceneDoubleValue(secondValue));
+	}
+	else if (Data.ChannelTypeName == "MovieSceneBoolChannel")
+	{
+		BoolChannel = ChannelHandle.Cast<FMovieSceneBoolChannel>().Get();
+	}
+	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
+	{
+		IntegerChannel = ChannelHandle.Cast<FMovieSceneIntegerChannel>().Get();
+		IntegerChannel->GetData().UpdateOrAddKey(currentFrame, int32(value));
+		IntegerChannel->GetData().UpdateOrAddKey(nextFrame, int32(secondValue));
+	}
 }
 double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 {

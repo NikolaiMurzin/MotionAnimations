@@ -1,4 +1,4 @@
-/media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Module.MouseAnimations.cpp.o: \
+/media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Module.MouseAnimations.cpp.o: \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/EditorLoadingSavingSettings.generated.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/Editor/UnrealEd/Classes/Settings/EditorLoadingSavingSettings.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/Factory.generated.h \
@@ -1789,10 +1789,10 @@
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/locale.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/bits/locale.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/nl_types.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Module.MouseAnimations.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Definitions.MouseAnimations.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandler.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandler.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Module.MouseAnimations.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Development/MouseAnimations/Definitions.MouseAnimations.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandler.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandler.h \
   Runtime/MovieScene/Public/Channels/MovieSceneBoolChannel.h \
   Runtime/CoreUObject/Public/UObject/ObjectMacros.h \
   Runtime/Core/Public/Misc/FrameNumber.h \
@@ -2105,13 +2105,13 @@
   Editor/Sequencer/Public/AnimatedPropertyKey.h \
   Editor/Sequencer/Public/IKeyArea.h \
   Editor/Sequencer/Public/SequencerAddKeyOperation.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
   Runtime/Core/Public/Containers/UnrealString.h \
   Runtime/Core/Public/HAL/Platform.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/KeyValues.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.generated.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/KeyValues.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.generated.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
   ../Plugins/Animation/ControlRig/Source/ControlRig/Public/Sequencer/MovieSceneControlRigParameterTrack.h \
   Runtime/MovieSceneTracks/Public/Sections/MovieSceneParameterSection.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieSceneTracks/MovieSceneParameterSection.generated.h \
@@ -2380,7 +2380,7 @@
   Runtime/Core/Public/Templates/SharedPointerInternals.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/stdexcept \
   ThirdParty/Unix/LibCxx/include/c++/v1/string \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.cpp \
   Runtime/JsonUtilities/Public/JsonObjectConverter.h \
   Runtime/Json/Public/Serialization/JsonTypes.h \
   Runtime/Json/Public/Dom/JsonObject.h Runtime/Json/Public/JsonGlobals.h \
@@ -2396,9 +2396,9 @@
   Runtime/Core/Public/Misc/FileHelper.h \
   Runtime/Core/Public/Containers/StringView.h \
   Runtime/Core/Public/HAL/FileManager.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimations.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimations.h \
   Runtime/Core/Public/Modules/ModuleManager.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimations.cpp \
   Editor/LevelEditor/Public/LevelEditor.h \
   Runtime/Core/Public/HAL/IConsoleManager.h \
   Runtime/Slate/Public/Framework/Docking/TabManager.h \
@@ -2414,9 +2414,9 @@
   Editor/EditorFramework/Public/Toolkits/IToolkitHost.h \
   Editor/UnrealEd/Public/Toolkits/AssetEditorToolkit.h \
   Editor/LevelEditor/Public/ViewportTypeDefinition.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimationsCommands.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimationsCommands.h \
   Runtime/Slate/Public/Framework/Commands/Commands.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimationsStyle.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/MouseAnimationsStyle.h \
   Runtime/SlateCore/Public/Styling/SlateStyle.h \
   Runtime/SlateCore/Public/Fonts/SlateFontInfo.h \
   Runtime/SlateCore/Public/Sound/SlateSound.h \
@@ -2429,7 +2429,7 @@
   Runtime/SlateCore/Public/Brushes/SlateRoundedBoxBrush.h \
   Runtime/SlateCore/Public/Brushes/SlateImageBrush.h \
   Runtime/SlateCore/Public/Brushes/SlateDynamicImageBrush.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/SMain.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/SMain.h \
   Runtime/Core/Public/Delegates/DelegateCombinations.h \
   Runtime/Slate/Public/Framework/Application/SlateApplication.h \
   Runtime/SlateCore/Public/Input/Events.h \
@@ -2452,6 +2452,8 @@
   Runtime/MovieScene/Public/MovieSceneBindingOverrides.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneBindingOverrides.generated.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/LevelSequence/LevelSequenceActor.generated.h \
+  Runtime/Slate/Public/SlateFwd.h \
+  Runtime/Slate/Public/Widgets/Input/SComboBox.h \
   Runtime/Slate/Public/Widgets/Input/SSpinBox.h \
   Runtime/InputCore/Classes/InputCoreTypes.h \
   Runtime/SlateCore/Public/Layout/Visibility.h \
@@ -2464,7 +2466,7 @@
   Runtime/SlateCore/Public/Widgets/SBoxPanel.h \
   Runtime/Slate/Public/Widgets/Text/STextBlock.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/limits \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/SMouseAnimationsMenu.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/SMouseAnimationsMenu.h \
   Developer/ToolMenus/Public/ToolMenus.h \
   Developer/ToolMenus/Public/IToolMenusModule.h \
   Developer/ToolMenus/Public/ToolMenu.h \
@@ -2495,8 +2497,8 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ToolMenus/ToolMenus.generated.h \
   Runtime/Slate/Public/Widgets/Docking/SDockTab.h \
   Runtime/Slate/Public/Widgets/Layout/SBox.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimationsCommands.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimationsStyle.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimationsCommands.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MouseAnimationsStyle.cpp \
   Runtime/SlateCore/Public/Styling/SlateStyleRegistry.h \
   Runtime/Engine/Public/Slate/SlateGameResources.h \
   Runtime/Projects/Public/Interfaces/IPluginManager.h \
@@ -2506,7 +2508,7 @@
   Runtime/Projects/Public/LocalizationDescriptor.h \
   Runtime/Projects/Public/PluginReferenceDescriptor.h \
   Runtime/SlateCore/Public/Styling/SlateStyleMacros.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/SMain.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/SMain.cpp \
   Runtime/AssetRegistry/Public/AssetRegistry/AssetRegistryModule.h \
   Runtime/AssetRegistry/Public/AssetRegistry/IAssetRegistry.h \
   Runtime/CoreUObject/Public/AssetRegistry/ARFilter.h \
@@ -2514,10 +2516,43 @@
   Runtime/Core/Public/Containers/StringFwd.h \
   Runtime/CoreUObject/Public/Misc/AssetRegistryInterface.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/AssetRegistry/IAssetRegistry.generated.h \
+  Editor/ContentBrowser/Public/ContentBrowserModule.h \
+  Runtime/AssetRegistry/Public/AssetData.h \
+  Editor/ContentBrowser/Public/ContentBrowserDelegates.h \
+  Runtime/Slate/Public/Widgets/SToolTip.h \
+  Developer/AssetTools/Public/IAssetTypeActions.h \
+  Developer/Merge/Public/Merge.h \
+  Editor/UnrealEd/Classes/ThumbnailRendering/ThumbnailManager.h \
+  Editor/UnrealEd/Classes/ThumbnailRendering/ThumbnailRenderer.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/ThumbnailRenderer.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/ThumbnailManager.generated.h \
+  Editor/ContentBrowserData/Public/ContentBrowserDataLegacyBridge.h \
+  Editor/ContentBrowserData/Public/ContentBrowserItemData.h \
+  Runtime/Core/Public/Misc/StringBuilder.h \
+  Editor/ContentBrowserData/Public/ContentBrowserDataMenuContexts.h \
+  Editor/ContentBrowserData/Public/ContentBrowserItem.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ContentBrowserData/ContentBrowserItem.generated.h \
+  Developer/CollectionManager/Public/CollectionManagerTypes.h \
+  Developer/SourceControl/Public/ISourceControlState.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ContentBrowserData/ContentBrowserDataMenuContexts.generated.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/ContentBrowserData/ContentBrowserDataLegacyBridge.generated.h \
+  Runtime/Engine/Classes/Engine/AssetManager.h \
+  /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/Runtime/Engine/Classes/Engine/AssetManagerTypes.h \
+  Runtime/CoreUObject/Public/UObject/PrimaryAssetId.h \
+  Runtime/AssetRegistry/Public/AssetBundleData.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/AssetManagerTypes.generated.h \
+  /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/Runtime/Engine/Classes/Engine/StreamableManager.h \
+  Runtime/CoreUObject/Public/UObject/SoftObjectPtr.h \
+  Runtime/AssetRegistry/Public/AssetRegistryModule.h \
+  Runtime/Core/Public/GenericPlatform/GenericPlatformChunkInstall.h \
+  Runtime/Core/Public/Logging/LogMacros.h \
+  Runtime/Core/Public/Delegates/IDelegateInstance.h \
+  /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/Runtime/Engine/Classes/Engine/ContentEncryptionConfig.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/AssetManager.generated.h \
   Runtime/Slate/Public/Framework/SlateDelegates.h \
-  ILevelSequenceEditorToolkit.h Runtime/Core/Public/Logging/LogMacros.h \
+  ILevelSequenceEditorToolkit.h \
   Runtime/Core/Public/Logging/LogVerbosity.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Public/STreeViewSequencer.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/STreeViewSequencer.h \
   Runtime/Slate/Public/Widgets/Input/SButton.h \
   Runtime/Slate/Public/Widgets/Views/ITableRow.h \
   Runtime/Slate/Public/Widgets/Views/STableViewBase.h \
@@ -2535,12 +2570,11 @@
   Runtime/Slate/Public/Framework/Layout/Overscroll.h \
   ThirdParty/Unix/LibCxx/include/c++/v1/iostream \
   ThirdParty/Unix/LibCxx/include/c++/v1/typeinfo \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/SMouseAnimationsMenu.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/SMouseAnimationsMenu.cpp \
   Runtime/Engine/Classes/Kismet/GameplayStatics.h \
   Runtime/Engine/Public/CollisionQueryParams.h \
   Runtime/Engine/Classes/Engine/LatentActionManager.h \
   Runtime/Engine/Classes/GameFramework/PlayerController.h \
-  Runtime/Slate/Public/SlateFwd.h \
   Runtime/Engine/Classes/Engine/NetSerialization.h \
   Runtime/Engine/Public/SceneTypes.h \
   Runtime/Engine/Classes/GameFramework/Controller.h \
@@ -2567,7 +2601,6 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/PlayerInput.generated.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/PlayerController.generated.h \
   Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h \
-  Runtime/CoreUObject/Public/UObject/SoftObjectPtr.h \
   Runtime/CoreUObject/Public/UObject/PropertyAccessUtil.h \
   Runtime/Engine/Classes/Engine/CollisionProfile.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/KismetSystemLibrary.generated.h \
@@ -2578,4 +2611,4 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/GameplayStaticsTypes.generated.h \
   Runtime/Engine/Classes/Particles/WorldPSCPool.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/GameplayStatics.generated.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/STreeViewSequencer.cpp
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/STreeViewSequencer.cpp

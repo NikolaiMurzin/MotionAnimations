@@ -13,9 +13,11 @@
 #include "CoreFwd.h"
 #include "CoreMinimal.h"
 #include "Delegates/DelegateCombinations.h"
+#include "Editor/ContentBrowser/Public/ContentBrowserModule.h"
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencer.h"
 #include "Editor/Sequencer/Public/SequencerKeyParams.h"
+#include "Engine/AssetManager.h"
 #include "Engine/EngineTypes.h"
 #include "Framework/SlateDelegates.h"
 #include "ILevelSequenceEditorToolkit.h"
@@ -35,12 +37,14 @@
 #include "STreeViewSequencer.h"
 #include "Sequencer/Public/SequencerAddKeyOperation.h"
 #include "SequencerAddKeyOperation.h"
+#include "SlateFwd.h"
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Templates/SharedPointer.h"
 #include "Types/SlateEnums.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
@@ -54,23 +58,58 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
 	IsStarted = false;	  // for execute motion handlers on tick
-	RefreshSequences();
-	ChangeSelectedSequence(Sequences[0]);
-	RefreshSequencer();
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+
+	RefreshSequences();
+	if (Sequences.Num() > 0)
+	{
+		ChangeSelectedSequence(Sequences[0]);
+	}
+	RefreshSequencer();
 
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
 
-	ChildSlot[SNew(SScrollBox) + SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
-														.ItemHeight(24)
-														.ListItemsSource(&MotionHandlers)
-														.OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
+	ChildSlot[SNew(SScrollBox) +
+			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
+				  this, &SMain::OnRefreshSequencesClicked)] +
+			  SScrollBox::Slot()[SAssignNew(SequencesComboBox, SComboBox<ULevelSequence*>)
+									 .OptionsSource(&Sequences)
+									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
+									 .OnSelectionChanged(this, &SMain::OnSequenceSelected)
+									 .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
+			  SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
+									 .ItemHeight(24)
+									 .ListItemsSource(&MotionHandlers)
+									 .OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 
 	ListViewWidget->SetListItemsSource(MotionHandlers);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
+TSharedRef<SWidget> SMain::MakeSequenceWidget(ULevelSequence* InSequence)
+{
+	return SNew(STextBlock).Text(FText::FromString(InSequence->GetDisplayName().ToString()));
+}
+void SMain::OnSequenceSelected(ULevelSequence* Sequence, ESelectInfo::Type SelectInfo)
+{
+	ChangeSelectedSequence(Sequence);
+}
+FReply SMain::OnRefreshSequencesClicked()
+{
+	RefreshSequences();
+	return FReply::Handled();
+}
+
+FText SMain::GetSelectedSequenceName() const
+{
+	if (SelectedSequence != nullptr)
+	{
+		return SelectedSequence->GetDisplayName();
+	}
+	return FText();
+}
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
@@ -124,18 +163,18 @@ void SMain::RefreshSequencer()
 }
 void SMain::RefreshSequences()
 {
-	UWorld* world = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport)->World();
-	ULevel* level = world->GetCurrentLevel();
-	for (AActor* Actor : level->Actors)
+	Sequences = TArray<ULevelSequence*>();
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	TArray<FAssetData> SequenceAssets;
+	AssetRegistryModule.Get().GetAssetsByClass(ULevelSequence::StaticClass()->GetFName(), SequenceAssets);
+
+	for (const FAssetData& AssetData : SequenceAssets)
 	{
-		if (Actor->GetClass()->IsChildOf(ALevelSequenceActor::StaticClass()))
+		ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData.GetAsset());
+		if (Sequence)
 		{
-			ALevelSequenceActor* SequenceActor = Cast<ALevelSequenceActor>(Actor);
-			SequenceActor->GetSequencePlayer();
-			ULevelSequence* Sequence = SequenceActor->GetSequence();
-			Sequences.Add(Sequence);
-			break;
-		};
+			Sequences.Add(Sequence);	// Do something with the sequence here
+		}
 	}
 }
 void SMain::ChangeSelectedSequence(ULevelSequence* Sequence_)
@@ -161,8 +200,9 @@ void SMain::AddMotionHandlers()
 		Sequencer->GetSelectedObjects(SelectedObjects);
 		TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
 		Sequencer->GetSelectedTracks(SelectedTracks);
-		/* UMovieSceneControlRigParameterTrack* controlRigTrack = Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]);
-		if (IsValid(controlRigTrack))
+		/* UMovieSceneControlRigParameterTrack* controlRigTrack =
+		Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]); if
+		(IsValid(controlRigTrack))
 		{
 		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
 		} */
@@ -237,11 +277,21 @@ void SMain::OnGlobalTimeChanged()
 	if (IsRecordedStarted)
 	{
 		ExecuteMotionHandlers(false);
+		Sequencer->GetRootMovieSceneSequence()->MarkPackageDirty();
+		FLevelEditorModule* LevelEditorModule = FModuleManager::GetModulePtr<FLevelEditorModule>("LevelEditor");
+
+		// Check if the level editor module is valid
+		if (LevelEditorModule)
+		{
+			// Refresh the editor
+			LevelEditorModule->OnMapChanged().Broadcast(nullptr, EMapChangeType::SaveMap);
+		}
 	}
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
-	if (false)	  // keep that code just to remember how to execute motion handlers every tick
+	if (false)	  // keep that code just to remember how to execute motion handlers
+				  // every tick
 	{
 		if (IsStarted)
 		{

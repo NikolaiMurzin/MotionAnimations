@@ -1,4 +1,4 @@
-/media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Module.MouseAnimations.gen.cpp.o: \
+/media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Module.MouseAnimations.gen.cpp.o: \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/EditorLoadingSavingSettings.generated.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/Editor/UnrealEd/Classes/Settings/EditorLoadingSavingSettings.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Source/../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/UnrealEd/Factory.generated.h \
@@ -1787,11 +1787,11 @@
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/locale.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/bits/locale.h \
   /media/kolya/sda/UnrealEngine5.0.3/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v20_clang-13.0.1-centos7/x86_64-unknown-linux-gnu/usr/include/nl_types.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Module.MouseAnimations.gen.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Definitions.MouseAnimations.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.gen.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Module.MouseAnimations.gen.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Debug/MouseAnimations/Definitions.MouseAnimations.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.gen.cpp \
   Runtime/CoreUObject/Public/UObject/GeneratedCppIncludes.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/KeyValues.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/KeyValues.h \
   Runtime/MovieScene/Public/Channels/MovieSceneDoubleChannel.h \
   Runtime/MovieScene/Public/Channels/MovieSceneCurveChannelCommon.h \
   Runtime/CoreUObject/Public/UObject/ObjectMacros.h \
@@ -1901,12 +1901,12 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneDoubleChannel.generated.h \
   Runtime/MovieScene/Public/Channels/MovieSceneFloatChannel.h \
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MovieScene/MovieSceneFloatChannel.generated.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.generated.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.gen.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/KeyValues.generated.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.gen.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerData.h \
   Runtime/Core/Public/Containers/UnrealString.h \
   Runtime/Core/Public/HAL/Platform.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerMode.gen.cpp \
-  /media/kolya/sda/UnrealProjects/cplusplus503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MouseAnimations.init.gen.cpp
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Private/MotionHandlerMode.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerData.generated.h \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MotionHandlerMode.gen.cpp \
+  /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/MouseAnimations/MouseAnimations.init.gen.cpp

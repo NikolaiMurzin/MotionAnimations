@@ -11,12 +11,15 @@
 #include "Editor/Sequencer/Public/ISequencer.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Input/Events.h"
+#include "LevelEditor.h"
 #include "LevelSequence.h"
 #include "LevelSequenceActor.h"
 #include "MotionHandler.h"
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
+#include "SlateFwd.h"
 #include "Templates/SharedPointerInternals.h"
+#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -36,6 +39,11 @@ public:
 
 	void RefreshSequences();
 	void ChangeSelectedSequence(ULevelSequence* Sequence_);
+	TSharedPtr<SComboBox<ULevelSequence*>> SequencesComboBox;
+	TSharedRef<SWidget> MakeSequenceWidget(ULevelSequence*);
+	void OnSequenceSelected(ULevelSequence* sequence, ESelectInfo::Type SelectInfo);
+	FText GetSelectedSequenceName() const;
+	FReply OnRefreshSequencesClicked();
 
 	bool IsKeysEnabled = false;
 

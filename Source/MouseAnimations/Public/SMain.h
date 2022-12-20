@@ -39,7 +39,6 @@ public:
 
 	void RefreshSequences();
 	void ChangeSelectedSequence(ULevelSequence* Sequence_);
-	TSharedPtr<SComboBox<ULevelSequence*>> SequencesComboBox;
 	TSharedRef<SWidget> MakeSequenceWidget(ULevelSequence*);
 	void OnSequenceSelected(ULevelSequence* sequence, ESelectInfo::Type SelectInfo);
 	FText GetSelectedSequenceName() const;

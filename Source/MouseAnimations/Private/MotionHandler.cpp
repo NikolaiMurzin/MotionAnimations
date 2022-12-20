@@ -624,7 +624,6 @@ bool MotionHandler::SaveData()
 {
 	return Data.Save();
 }
-
 bool MotionHandler::DeleteData()
 {
 	return Data.Delete();
@@ -698,7 +697,10 @@ void MotionHandler::UpdateCurrentKeyValues()
 }
 void MotionHandler::DeleteKeyValues()
 {
-	Data.KeyValues.RemoveAtSwap(Data.CurrentIndex);
+	if (Data.KeyValues.IsValidIndex(Data.CurrentIndex))
+	{
+		Data.KeyValues.RemoveAtSwap(Data.CurrentIndex);
+	}
 }
 void MotionHandler::InsertCurrentKeyValuesToSequencer()
 {

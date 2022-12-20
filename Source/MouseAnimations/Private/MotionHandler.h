@@ -52,6 +52,7 @@ public:
 
 	FGuid GetObjectFGuid();
 	Mode GetSelectedMode();
+	FText GetSelectedModeText() const;
 	void SetSelectedMode(Mode Mode_);
 
 	bool SaveData();
@@ -81,8 +82,6 @@ public:
 	FMotionHandlerData Data;
 
 private:
-	void UpdateUI(FFrameNumber InTime);
-
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 
 	FMovieSceneFloatChannel* FloatChannel;

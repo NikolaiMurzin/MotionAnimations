@@ -22,6 +22,7 @@
 #include "Framework/SlateDelegates.h"
 #include "ILevelSequenceEditorToolkit.h"
 #include "Input/Reply.h"
+#include "Kismet2/EnumEditorUtils.h"
 #include "LevelSequence.h"
 #include "Logging/LogMacros.h"
 #include "Logging/LogVerbosity.h"
@@ -74,7 +75,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	ChildSlot[SNew(SScrollBox) +
 			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
 				  this, &SMain::OnRefreshSequencesClicked)] +
-			  SScrollBox::Slot()[SAssignNew(SequencesComboBox, SComboBox<ULevelSequence*>)
+			  SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
 									 .OptionsSource(&Sequences)
 									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
 									 .OnSelectionChanged(this, &SMain::OnSequenceSelected)
@@ -123,7 +124,8 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 										   .ClearKeyboardFocusOnCommit(true)] +
 				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)] +
 				SHorizontalBox::Slot()
-					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)]];
+					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)] +
+				SHorizontalBox::Slot()[SNew(STextBlock).Text(UEnum::GetDisplayValueAsText(Item->Data.SelectedMode))]];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -277,15 +279,6 @@ void SMain::OnGlobalTimeChanged()
 	if (IsRecordedStarted)
 	{
 		ExecuteMotionHandlers(false);
-		Sequencer->GetRootMovieSceneSequence()->MarkPackageDirty();
-		FLevelEditorModule* LevelEditorModule = FModuleManager::GetModulePtr<FLevelEditorModule>("LevelEditor");
-
-		// Check if the level editor module is valid
-		if (LevelEditorModule)
-		{
-			// Refresh the editor
-			LevelEditorModule->OnMapChanged().Broadcast(nullptr, EMapChangeType::SaveMap);
-		}
 	}
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -374,7 +367,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		return;
 	}
-	if (key.ToString() == "Delete")
+	if (key.ToString() == "F11")
 	{
 		for (TSharedPtr<MotionHandler> handler : ListViewWidget->GetSelectedItems())
 		{
@@ -402,17 +395,17 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->Pause();
 			Sequencer->SetGlobalTime(lowerValue);
 
-			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 
 				FFrameNumber DeleteKeysFrom = lowerValue;
-				DeleteKeysFrom.Value += 3000;
+				DeleteKeysFrom.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, highValue));
 			}
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
+			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			Sequencer->PlayTo(params);
 		}
 	}

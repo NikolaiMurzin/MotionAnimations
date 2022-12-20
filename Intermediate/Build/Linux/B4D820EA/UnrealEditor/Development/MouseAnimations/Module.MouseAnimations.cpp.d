@@ -2551,6 +2551,10 @@
   ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/AssetManager.generated.h \
   Runtime/Slate/Public/Framework/SlateDelegates.h \
   ILevelSequenceEditorToolkit.h \
+  Editor/UnrealEd/Public/Kismet2/EnumEditorUtils.h \
+  Runtime/Engine/Classes/Engine/UserDefinedEnum.h \
+  ../Intermediate/Build/Linux/B4D820EA/UnrealEditor/Inc/Engine/UserDefinedEnum.generated.h \
+  Editor/UnrealEd/Public/Kismet2/ListenerManager.h \
   Runtime/Core/Public/Logging/LogVerbosity.h \
   /media/kolya/sda/UnrealProjects/AllOfTheLights503/Plugins/MouseAnimations/Source/MouseAnimations/Public/STreeViewSequencer.h \
   Runtime/Slate/Public/Widgets/Input/SButton.h \

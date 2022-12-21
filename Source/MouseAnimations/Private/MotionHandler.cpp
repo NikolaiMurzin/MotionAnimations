@@ -578,6 +578,10 @@ void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
 }
 void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 {
+	if (!IsValidMotionHandler())
+	{
+		return;
+	}
 	FKeyDataOptimizationParams params = FKeyDataOptimizationParams();
 	params.bAutoSetInterpolation = true;
 	params.Range = InRange;
@@ -597,15 +601,24 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		FloatChannel->Optimize(params);
+		if (FloatChannel != nullptr)
+		{
+			FloatChannel->Optimize(params);
+		}
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		DoubleChannel->Optimize(params);
+		if (DoubleChannel != nullptr)
+		{
+			DoubleChannel->Optimize(params);
+		}
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
-		IntegerChannel->Optimize(params);
+		if (IntegerChannel != nullptr)
+		{
+			IntegerChannel->Optimize(params);
+		}
 	}
 }
 FGuid MotionHandler::GetObjectFGuid()

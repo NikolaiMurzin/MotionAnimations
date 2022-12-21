@@ -420,7 +420,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
-			for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);

@@ -49,9 +49,7 @@ bool FMotionHandlerData::Save()
 {
 	FString JsonString;
 	FJsonObjectConverter::UStructToJsonObjectString(*this, JsonString);
-	UE_LOG(LogTemp, Warning, TEXT("Json string is %s"), *JsonString);
 	FString FilePath = GetFilePath();
-	UE_LOG(LogTemp, Warning, TEXT("Filepath is %s"), *FilePath);
 	return FFileHelper::SaveStringToFile(
 		FStringView(JsonString), *FilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
 }

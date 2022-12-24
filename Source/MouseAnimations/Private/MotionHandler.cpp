@@ -282,7 +282,7 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 	{
 		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
 		FRigControlElement* controlElement = controlRig->FindControl(FName(Data.ControlSelection));
-
+		UE_LOG(LogTemp, Warning, TEXT("Trying to set value to control %s"), *Data.ControlSelection);
 		ERigControlType controlType = controlElement->Settings.ControlType;
 		FRigControlValue controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
 		FRigControlValue controlValueMin = controlElement->Settings.MinimumValue;
@@ -745,7 +745,7 @@ void MotionHandler::InsertCurrentKeyValuesToSequencer()
 }
 bool MotionHandler::operator==(MotionHandler& handler)
 {
-	return Data.GetName() == handler.Data.GetName();
+	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection);
 }
 void MotionHandler::OnScaleValueChangedRaw(double value)
 {

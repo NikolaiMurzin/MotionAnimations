@@ -46,7 +46,6 @@ public:
 
 	bool IsKeysEnabled = false;
 
-	bool IsSequencerRelevant;
 	void RefreshSequencer();
 	FReply OnRefreshSequencer();
 
@@ -64,6 +63,10 @@ public:
 	FOnPlayEvent* OnPlayEvent;
 	bool IsStarted;
 	void OnStartPlay();
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnCloseEvent, TSharedRef<ISequencer>);
+	FOnCloseEvent* OnCloseEvent;
+	bool IsSequencerRelevant;
+	void OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_);
 
 	FSlateApplication::FOnApplicationPreInputKeyDownListener* OnKeyDownEvent;
 	void OnKeyDownGlobal(const FKeyEvent& event);
@@ -92,5 +95,5 @@ public:
 private:
 	TArray<ULevelSequence*> Sequences;
 	ULevelSequence* SelectedSequence;
-	ISequencer* Sequencer;
+	TSharedPtr<ISequencer> Sequencer;
 };

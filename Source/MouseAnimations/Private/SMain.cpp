@@ -76,7 +76,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
 				  this, &SMain::OnRefreshSequencesClicked)] +
 			  SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
-									 .OptionsSource(&Sequences)
+									 .OptionsSource((&Sequences))
 									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
 									 .OnSelectionChanged(this, &SMain::OnSequenceSelected)
 									 .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
@@ -136,7 +136,11 @@ FReply SMain::OnRefreshSequencer()
 
 void SMain::RefreshSequencer()
 {
-	if (SelectedSequence != nullptr && !IsSequencerRelevant)
+	if (IsSequencerRelevant)
+	{
+		return;
+	}
+	if (SelectedSequence != nullptr)
 	{
 		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
@@ -147,21 +151,26 @@ void SMain::RefreshSequencer()
 			ISequencer* seq = LevelSequenceEditor->GetSequencer().Get();
 			if (seq != nullptr)
 			{
-				Sequencer = seq;
+				Sequencer = TSharedPtr<ISequencer>(seq);
 				OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
 				OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
 				OnPlayEvent = &(Sequencer->OnPlayEvent());
 				OnPlayEvent->AddRaw(this, &SMain::OnStartPlay);
 				OnStopEvent = &(Sequencer->OnStopEvent());
 				OnStopEvent->AddRaw(this, &SMain::OnStopPlay);
+				OnCloseEvent = &(Sequencer->OnCloseEvent());
+				OnCloseEvent->AddRaw(this, &SMain::OnCloseEventRaw);
 
 				LoadMotionHandlersFromDisk(MotionHandlers);
 				ListViewWidget->RequestListRefresh();
 				IsSequencerRelevant = true;
-				UE_LOG(LogTemp, Warning, TEXT("Sequencer refreshed"));
 			};
 		}
 	}
+}
+void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
+{
+	IsSequencerRelevant = false;
 }
 void SMain::RefreshSequences()
 {
@@ -183,8 +192,8 @@ void SMain::ChangeSelectedSequence(ULevelSequence* Sequence_)
 {
 	if (Sequence_ != nullptr)
 	{
-		IsSequencerRelevant = false;
 		SelectedSequence = Sequence_;
+		IsSequencerRelevant = false;
 	}
 }
 FReply SMain::OnRefreshBindings()
@@ -245,7 +254,6 @@ void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handle
 		FString SavesDir = FPaths::Combine(First, PluginName_, FString("Saved"), SequenceName);
 		TArray<FString> FilePaths = TArray<FString>();
 		FString FilesExtension = "";
-		UE_LOG(LogTemp, Warning, TEXT("Trying to find files in  %s"), *SavesDir);
 		IFileManager::Get().FindFiles(FilePaths, *SavesDir, *FilesExtension);
 		for (FString filename : FilePaths)
 		{
@@ -355,6 +363,7 @@ void SMain::OnStopPlay()
 {
 	UE_LOG(LogTemp, Warning, TEXT("on stop play"));
 	IsStarted = false;
+	IsRecordedStarted = false;
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
@@ -380,13 +389,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		RefreshSequencer();
 		AddMotionHandlers();
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Key to strin gis %s : "), *key.ToString());
 	if (key.ToString() == "E")
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-			IsRecordedStarted = true;
-
 			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
 
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
@@ -405,8 +411,9 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			}
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
-			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			Sequencer->PlayTo(params);
+			IsRecordedStarted = true;
+			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 		}
 	}
 	if (key.ToString() == "D")

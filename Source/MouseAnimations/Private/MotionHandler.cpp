@@ -38,7 +38,7 @@
 #include <stdexcept>
 #include <string>
 
-MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath)
+MotionHandler::MotionHandler(TSharedPtr<ISequencer> Sequencer_, UMovieSceneSequence* Sequence, FString FilePath)
 {
 	Data = FMotionHandlerData(FilePath);
 	Sequencer = Sequencer_;
@@ -102,8 +102,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 
 	InitKeys();
 }
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
-	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, TSharedPtr<ISequencer> Sequencer_,
+	UMovieSceneSequence* Sequence_, UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	KeyArea = KeyArea_;
@@ -514,7 +514,7 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 {
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		if (FloatChannel != nullptr)
+		if (FloatChannel != nullptr && FloatChannel->HasAnyData())
 		{
 			float result = 0;
 			FloatChannel->Evaluate(InTime, result);
@@ -523,7 +523,7 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 	}
 	if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		if (DoubleChannel != nullptr)
+		if (DoubleChannel != nullptr && DoubleChannel->HasAnyData())
 		{
 			double result = 0;
 			DoubleChannel->Evaluate(InTime, result);
@@ -532,7 +532,7 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 	}
 	if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
-		if (IntegerChannel != nullptr)
+		if (IntegerChannel != nullptr && IntegerChannel->HasAnyData())
 		{
 			int32 result = 0;
 			IntegerChannel->Evaluate(InTime, result);
@@ -585,7 +585,7 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 	FKeyDataOptimizationParams params = FKeyDataOptimizationParams();
 	params.bAutoSetInterpolation = true;
 	params.Range = InRange;
-	params.Tolerance = 0.2;
+	params.Tolerance = 0.1;
 	params.DisplayRate = FFrameRate();
 	params.DisplayRate.Numerator = 24;
 	params.DisplayRate.Denominator = 1;
@@ -593,9 +593,10 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 	FFrameNumber highValue = InRange.GetUpperBoundValue();
 	highValue.Value += 1000;
 
-	float value = GetValueFromTime(highValue);
+	float value = 0;
+	value = GetValueFromTime(highValue);
 
-	SetKey(highValue, FVector2D(0, 0));
+	SetKey(highValue, FVector2D(value, value));
 
 	InRange.SetUpperBoundValue(highValue);
 

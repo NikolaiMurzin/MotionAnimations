@@ -286,6 +286,7 @@ void SMain::OnGlobalTimeChanged()
 {
 	if (IsRecordedStarted)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("IsRecordedStarted true"));
 		ExecuteMotionHandlers(false);
 	}
 };
@@ -420,8 +421,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-			IsRecordedStarted = false;
-
 			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
@@ -432,10 +431,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 			}
-			Sequencer->Pause();
 			Sequencer->SetGlobalTime(lowerValue);
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
+			Sequencer->Pause();
 		}
 	}
 	if (key.ToString() == "F5")

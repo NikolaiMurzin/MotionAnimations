@@ -31,7 +31,7 @@ FMotionHandlerData::FMotionHandlerData(FString FilePath)
 	}
 }
 FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FString TrackName_, int32 SectionRowIndex_,
-	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_, FString SequenceName_)
+	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_, FString SequenceName_, FText CustomName_)
 {
 	Scale = Scale_;
 	ObjectFGuid = ObjectFGuid_;
@@ -41,9 +41,8 @@ FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FStrin
 	ChannelIndex = ChannelIndex_;
 	SelectedMode = Mode_;
 	SequenceName = SequenceName_;
-	CustomName = FText::FromString(
-		TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName + "." + FString::FromInt(ChannelIndex));
 	CurrentIndex = 1;
+	CustomName = CustomName_;
 }
 bool FMotionHandlerData::Save()
 {

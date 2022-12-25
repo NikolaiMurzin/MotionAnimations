@@ -47,7 +47,7 @@ public:
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);
 	FMotionHandlerData(double Scale, FGuid ObjectFGuid, FString TrackName, int32 SectionRowIndex, FString ChannelTypeName,
-		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_);
+		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_, FText CustomName_);
 
 	FString GetName();
 	FString GetFilePath();

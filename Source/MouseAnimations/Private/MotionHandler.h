@@ -82,8 +82,6 @@ public:
 
 	FMotionHandlerData Data;
 
-	FString ChannelDisplayText;
-
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 

@@ -84,6 +84,10 @@ template<> MOUSEANIMATIONS_API UScriptStruct* StaticStruct<FMotionHandlerData>()
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_KeyValues_MetaData[];
 #endif
 		static const UECodeGen_Private::FArrayPropertyParams NewProp_KeyValues;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_ChannelDisplayText_MetaData[];
+#endif
+		static const UECodeGen_Private::FTextPropertyParams NewProp_ChannelDisplayText;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 		static const UECodeGen_Private::FStructParams ReturnStructParams;
 	};
@@ -170,6 +174,12 @@ template<> MOUSEANIMATIONS_API UScriptStruct* StaticStruct<FMotionHandlerData>()
 	};
 #endif
 	const UECodeGen_Private::FArrayPropertyParams Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_KeyValues = { "KeyValues", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, 1, STRUCT_OFFSET(FMotionHandlerData, KeyValues), EArrayPropertyFlags::None, METADATA_PARAMS(Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_KeyValues_MetaData, UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_KeyValues_MetaData)) }; // 1262242742
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ChannelDisplayText_MetaData[] = {
+		{ "ModuleRelativePath", "Private/MotionHandlerData.h" },
+	};
+#endif
+	const UECodeGen_Private::FTextPropertyParams Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ChannelDisplayText = { "ChannelDisplayText", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Text, RF_Public|RF_Transient|RF_MarkAsNative, 1, STRUCT_OFFSET(FMotionHandlerData, ChannelDisplayText), METADATA_PARAMS(Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ChannelDisplayText_MetaData, UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ChannelDisplayText_MetaData)) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FMotionHandlerData_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_Scale,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ObjectFGuid,
@@ -185,6 +195,7 @@ template<> MOUSEANIMATIONS_API UScriptStruct* StaticStruct<FMotionHandlerData>()
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_CurrentIndex,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_KeyValues_Inner,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_KeyValues,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewProp_ChannelDisplayText,
 	};
 	const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FMotionHandlerData_Statics::ReturnStructParams = {
 		(UObject* (*)())Z_Construct_UPackage__Script_MouseAnimations,
@@ -212,9 +223,9 @@ template<> MOUSEANIMATIONS_API UScriptStruct* StaticStruct<FMotionHandlerData>()
 		static const FStructRegisterCompiledInInfo ScriptStructInfo[];
 	};
 	const FStructRegisterCompiledInInfo Z_CompiledInDeferFile_FID_UnrealProjects_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_Statics::ScriptStructInfo[] = {
-		{ FMotionHandlerData::StaticStruct, Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewStructOps, TEXT("MotionHandlerData"), &Z_Registration_Info_UScriptStruct_MotionHandlerData, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FMotionHandlerData), 2540770452U) },
+		{ FMotionHandlerData::StaticStruct, Z_Construct_UScriptStruct_FMotionHandlerData_Statics::NewStructOps, TEXT("MotionHandlerData"), &Z_Registration_Info_UScriptStruct_MotionHandlerData, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FMotionHandlerData), 2834507296U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_UnrealProjects_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_1587852850(TEXT("/Script/MouseAnimations"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_UnrealProjects_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_1250343251(TEXT("/Script/MouseAnimations"),
 		nullptr, 0,
 		Z_CompiledInDeferFile_FID_UnrealProjects_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_UnrealProjects_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerData_h_Statics::ScriptStructInfo),
 		nullptr, 0);

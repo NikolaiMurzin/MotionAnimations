@@ -43,11 +43,13 @@ public:
 	int32 CurrentIndex;
 	UPROPERTY()
 	TArray<FKeyValues> KeyValues;
+	UPROPERTY()
+	FText ChannelDisplayText;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);
 	FMotionHandlerData(double Scale, FGuid ObjectFGuid, FString TrackName, int32 SectionRowIndex, FString ChannelTypeName,
-		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_, FText CustomName_);
+		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_, FText CustomName_, FText ChannelDisplayText);
 
 	FString GetName();
 	FString GetFilePath();

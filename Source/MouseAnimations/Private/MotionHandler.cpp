@@ -122,9 +122,12 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, TSharedPtr<
 	int32 ChannelIndex = KeyArea->GetChannel().GetChannelIndex();
 
 	ChannelHandle = KeyArea->GetChannel();
-	ChannelDisplayText = ChannelHandle.GetMetaData()->DisplayText.ToString();
+	FString MovieSceneTrackName = MovieSceneTrack_->GetDisplayName().ToString();
+	FString ChannelName = ChannelHandle.GetMetaData()->DisplayText.ToString();
+	FString DataCustomNameString = MovieSceneTrackName + "." + ChannelName;
+	FText DataCustomName = FText::FromString(DataCustomNameString);
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
-		Sequence_->GetDisplayName().ToString(), FText::FromString(ChannelDisplayText));
+		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText);
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
 	InitKeys();
@@ -313,6 +316,7 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		FRigControlValue controlValueMax = controlElement->Settings.MaximumValue;
 		float valueOfChannel = 0;
 		FloatChannel->Evaluate(InTime, valueOfChannel);
+		FString ChannelDisplayText = Data.ChannelDisplayText.ToString();
 		if (controlType == ERigControlType::Float)
 		{
 			controlRig->SetControlValue(

@@ -278,6 +278,7 @@ void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handle
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Motion handler is not valid"));
+				handler->DeleteData();
 			}
 		}
 	}
@@ -405,7 +406,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
-
 				FFrameNumber DeleteKeysFrom = lowerValue;
 				DeleteKeysFrom.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, highValue));

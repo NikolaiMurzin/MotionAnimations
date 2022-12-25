@@ -14,7 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #define MOUSEANIMATIONS_MotionHandlerMode_generated_h
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_AllOfTheLights503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerMode_h
+#define CURRENT_FILE_ID FID_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_MotionHandlerMode_h
 
 
 #define FOREACH_ENUM_MODE(op) \

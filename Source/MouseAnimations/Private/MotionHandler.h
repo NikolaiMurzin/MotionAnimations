@@ -42,6 +42,7 @@ public:
 	void Optimize(TRange<FFrameNumber> InRange);
 
 	bool IsValidMotionHandler();
+	bool ValidMotionHandler;	// for check latest execute of function IsValidMotionHandler();
 
 	const IKeyArea* KeyArea;
 

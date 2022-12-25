@@ -13,7 +13,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define MOUSEANIMATIONS_KeyValues_generated_h
 
-#define FID_AllOfTheLights503_Plugins_MouseAnimations_Source_MouseAnimations_Private_KeyValues_h_12_GENERATED_BODY \
+#define FID_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_KeyValues_h_12_GENERATED_BODY \
 	friend struct Z_Construct_UScriptStruct_FKeyValues_Statics; \
 	MOUSEANIMATIONS_API static class UScriptStruct* StaticStruct();
 
@@ -21,7 +21,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 template<> MOUSEANIMATIONS_API UScriptStruct* StaticStruct<struct FKeyValues>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_AllOfTheLights503_Plugins_MouseAnimations_Source_MouseAnimations_Private_KeyValues_h
+#define CURRENT_FILE_ID FID_cplusplus503_Plugins_MouseAnimations_Source_MouseAnimations_Private_KeyValues_h
 
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

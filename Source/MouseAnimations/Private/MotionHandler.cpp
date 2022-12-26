@@ -167,7 +167,21 @@ void MotionHandler::SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_)
 		TArray<FName> currentControlSelectionArr = MovieSceneControlRigParameterTrack->GetControlRig()->CurrentControlSelection();
 		if (currentControlSelectionArr.Num() > 0)
 		{
-			Data.ControlSelection = currentControlSelectionArr[0].ToString();
+			TArray<FString> out;
+			FString controlName;
+			FString keyAreaName = KeyArea->GetName().ToString();
+			keyAreaName.ParseIntoArray(out, TEXT("."), true);
+			if (out.Num() > 0)
+			{
+				controlName = out[0];
+			}
+			for (FName controlSelectionName : currentControlSelectionArr)
+			{
+				if (controlName == controlSelectionName.ToString())
+				{
+					Data.ControlSelection = controlSelectionName.ToString();
+				}
+			}
 		}
 	}
 }

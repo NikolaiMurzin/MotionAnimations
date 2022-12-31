@@ -27,6 +27,7 @@
 #include "Logging/LogMacros.h"
 #include "Logging/LogVerbosity.h"
 #include "Misc/FileHelper.h"
+#include "Misc/FrameNumber.h"
 #include "Misc/Paths.h"
 #include "Misc/QualifiedFrameTime.h"
 #include "MotionHandler.h"
@@ -40,11 +41,13 @@
 #include "SequencerAddKeyOperation.h"
 #include "SlateFwd.h"
 #include "SlateOptMacros.h"
+#include "Styling/SlateTypes.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Templates/SharedPointer.h"
 #include "Types/SlateEnums.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -60,6 +63,9 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 {
 	IsStarted = false;	  // for execute motion handlers on tick
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+	CustomRange = TRange<FFrameNumber>();
+	CustomRange.SetUpperBound(FFrameNumber());
+	CustomRange.SetLowerBound(FFrameNumber());
 
 	RefreshSequences();
 	if (Sequences.Num() > 0)
@@ -80,6 +86,11 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
 									 .OnSelectionChanged(this, &SMain::OnSequenceSelected)
 									 .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
+			  SScrollBox::Slot()[SNew(SCheckBox)
+									 .IsChecked(this, &SMain::GetIsCustomRange)
+									 .OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)] +
+			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
+			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)] +
 			  SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
 									 .ItemHeight(24)
 									 .ListItemsSource(&MotionHandlers)
@@ -110,6 +121,60 @@ FText SMain::GetSelectedSequenceName() const
 		return SelectedSequence->GetDisplayName();
 	}
 	return FText();
+}
+
+ECheckBoxState SMain::GetIsCustomRange() const
+{
+	return IsCustomRange ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+}
+void SMain::OnIsCustomRangeChanged(ECheckBoxState NewState)
+{
+	IsCustomRange = !IsCustomRange;
+}
+TRange<FFrameNumber> SMain::GetCurrentRange() const
+{
+	if (IsCustomRange)
+	{
+		return CustomRange;
+	}
+	else
+	{
+		if (SelectedSequence != nullptr)
+		{
+			return SelectedSequence->GetMovieScene()->GetPlaybackRange();
+		}
+	}
+	return TRange<FFrameNumber>();
+}
+FText SMain::GetCustomStartFromFrame() const
+{
+	if (IsCustomRange)
+	{
+		FFrameNumber lowerValue = GetCurrentRange().GetLowerBoundValue();
+		FString string = FString("Start frame: ");
+		FString value = FString::SanitizeFloat(lowerValue.Value);
+		string.Append(value);
+		return FText::FromString(string);
+	}
+	else
+	{
+		return FText::FromString("Custom start frame:");
+	}
+}
+FText SMain::GetCustomEndFrame() const
+{
+	if (IsCustomRange)
+	{
+		FFrameNumber upper = GetCurrentRange().GetUpperBoundValue();
+		FString string = FString("End frame: ");
+		FString value = FString::SanitizeFloat(upper.Value);
+		string.Append(value);
+		return FText::FromString(string);
+	}
+	else
+	{
+		return FText::FromString("Custom end frame:");
+	}
 }
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
@@ -287,9 +352,21 @@ void SMain::OnGlobalTimeChanged()
 {
 	if (IsRecordedStarted)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("IsRecordedStarted true"));
-		ExecuteMotionHandlers(false);
+		if (IsCustomRange)
+		{
+			FFrameNumber CurrentTime = Sequencer->GetLocalTime().Time.FrameNumber;
+			if (CurrentTime.Value >= CustomRange.GetLowerBoundValue().Value &&
+				CurrentTime.Value <= CustomRange.GetUpperBoundValue().Value)
+			{
+				ExecuteMotionHandlers(false);
+			}
+		}
+		else
+		{
+			ExecuteMotionHandlers(false);
+		}
 	}
+	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
@@ -322,7 +399,6 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 			motionHandler->SetKey(nextFrame, vectorChange);
 		}
 	}
-	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 }
 FReply SMain::SelectX()
 {
@@ -405,10 +481,13 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
-				FFrameNumber DeleteKeysFrom = lowerValue;
+				TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
+				FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
+				FFrameNumber higherCurrentValue = CurrentRange_.GetUpperBoundValue();
+				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
+				FFrameNumber DeleteKeysFrom = lowerCurrentValue;
 				DeleteKeysFrom.Value += 1000;
-				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, highValue));
+				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, higherCurrentValue));
 			}
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
@@ -425,17 +504,25 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
 			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 
-			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->Optimize(playbackRange);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
 			}
 			Sequencer->SetGlobalTime(lowerValue);
-			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
-			params.Frame = highValue;
 			Sequencer->Pause();
 		}
+	}
+	if (key.ToString() == "A")
+	{
+		TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+		FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+		FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+		Sequencer->Pause();
+		Sequencer->SetGlobalTime(lowerValue);
+		FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+		params.Frame = highValue;
+		Sequencer->PlayTo(params);
 	}
 	if (key.ToString() == "F5")
 	{
@@ -474,5 +561,19 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	else if (key.ToString() == "V")
 	{
 		SelectYInverted();
+	}
+	else if (key.ToString() == "T")
+	{
+		if (Sequencer != nullptr && SelectedSequence != nullptr)
+		{
+			CustomRange.SetLowerBound(Sequencer->GetLocalTime().Time.FrameNumber);
+		}
+	}
+	else if (key.ToString() == "Y")
+	{
+		if (Sequencer != nullptr && SelectedSequence != nullptr)
+		{
+			CustomRange.SetUpperBound(Sequencer->GetLocalTime().Time.FrameNumber);
+		}
 	}
 }

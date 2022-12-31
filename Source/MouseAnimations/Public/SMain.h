@@ -18,6 +18,7 @@
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
 #include "SlateFwd.h"
+#include "Styling/SlateTypes.h"
 #include "Templates/SharedPointerInternals.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSpinBox.h"
@@ -92,7 +93,15 @@ public:
 
 	float DefaultScale = 0.05;
 
+	bool IsCustomRange = false;
+	ECheckBoxState GetIsCustomRange() const;
+	void OnIsCustomRangeChanged(ECheckBoxState NewState);
+	TRange<FFrameNumber> GetCurrentRange() const;
+	FText GetCustomStartFromFrame() const;
+	FText GetCustomEndFrame() const;
+
 private:
+	TRange<FFrameNumber> CustomRange;
 	TArray<ULevelSequence*> Sequences;
 	ULevelSequence* SelectedSequence;
 	TSharedPtr<ISequencer> Sequencer;

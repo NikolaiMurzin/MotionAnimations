@@ -487,6 +487,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 				FFrameNumber DeleteKeysFrom = lowerCurrentValue;
 				DeleteKeysFrom.Value += 1000;
+				higherCurrentValue.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, higherCurrentValue));
 			}
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();

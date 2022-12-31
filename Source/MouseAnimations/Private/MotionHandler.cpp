@@ -596,12 +596,11 @@ void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Delete keys within called"));
 	TArray<FKeyHandle> KeyHandles = TArray<FKeyHandle>();
-	TArray<FFrameNumber> frames = TArray<FFrameNumber>();
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
 		if (FloatChannel != nullptr)
 		{
-			FloatChannel->GetKeys(InRange, &frames, &KeyHandles);
+			FloatChannel->GetKeys(InRange, nullptr, &KeyHandles);
 			FloatChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
 		}
 	}
@@ -609,7 +608,7 @@ void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 	{
 		if (DoubleChannel != nullptr)
 		{
-			DoubleChannel->GetKeys(InRange, &frames, &KeyHandles);
+			DoubleChannel->GetKeys(InRange, nullptr, &KeyHandles);
 			DoubleChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
 		}
 	}
@@ -617,7 +616,7 @@ void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 	{
 		if (IntegerChannel != nullptr)
 		{
-			IntegerChannel->GetKeys(InRange, &frames, &KeyHandles);
+			IntegerChannel->GetKeys(InRange, nullptr, &KeyHandles);
 			IntegerChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
 		}
 	}

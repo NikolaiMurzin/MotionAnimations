@@ -127,7 +127,8 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, TSharedPtr<
 	FString DataCustomNameString = MovieSceneTrackName + "." + ChannelName;
 	FText DataCustomName = FText::FromString(DataCustomNameString);
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
-		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText);
+		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText,
+		KeyArea->GetName().ToString());
 	SetControlRigTrack(MovieSceneTrack);
 	CastChannel();
 	InitKeys();
@@ -169,7 +170,7 @@ void MotionHandler::SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_)
 		{
 			TArray<FString> out;
 			FString controlName;
-			FString keyAreaName = KeyArea->GetName().ToString();
+			FString keyAreaName = Data.KeyAreaName;
 			keyAreaName.ParseIntoArray(out, TEXT("."), true);
 			if (out.Num() > 0)
 			{

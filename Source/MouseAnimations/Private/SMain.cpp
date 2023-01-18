@@ -516,14 +516,17 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (key.ToString() == "A")
 	{
-		TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
-		FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-		FFrameNumber highValue = playbackRange.GetUpperBoundValue();
-		Sequencer->Pause();
-		Sequencer->SetGlobalTime(lowerValue);
-		FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
-		params.Frame = highValue;
-		Sequencer->PlayTo(params);
+		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		{
+			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+			Sequencer->Pause();
+			Sequencer->SetGlobalTime(lowerValue);
+			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+			params.Frame = highValue;
+			Sequencer->PlayTo(params);
+		}
 	}
 	if (key.ToString() == "F5")
 	{

@@ -42,7 +42,7 @@ public:
 	UPROPERTY()
 	int32 CurrentIndex;
 	UPROPERTY()
-	TArray<FKeyValues> KeyValues;
+	TMap<int32, FKeyValues> KeyValues;
 	UPROPERTY()
 	FText ChannelDisplayText;
 

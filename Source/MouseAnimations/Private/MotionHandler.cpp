@@ -784,6 +784,10 @@ void MotionHandler::InsertCurrentKeyValuesToSequencer()
 	}
 	if (MovieScene != nullptr)
 	{
+		if (!Data.KeyValues.Contains(Data.CurrentIndex))
+		{
+			return;
+		}
 		TRange<FFrameNumber> playbackRange = MovieScene->GetPlaybackRange();
 		DeleteKeysWithin(playbackRange);
 		if (Data.ChannelTypeName == "MovieSceneFloatChannel")

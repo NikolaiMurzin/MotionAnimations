@@ -72,11 +72,37 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	{
 		ChangeSelectedSequence(Sequences[0]);
 	}
-	RefreshSequencer();
 
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
+
+	//	AssetRegistryModule.Get().OnAssetRemoved().AddLambda(
+	//		[this](const FAssetData& AssetData)
+	//		{
+	//			ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData.GetAsset());
+	//			if (SelectedSequence == Sequence)
+	//			{
+	//				SelectedSequence = nullptr;
+	//			}
+	//			if (Sequence)
+	//			{
+	//				Sequences.Remove(Sequence);	   // Do something with the sequence here
+	//			}
+	//			IsSequencerRelevant = false;
+	//			RefreshSequencer();
+	//		});
+	//	AssetRegistryModule.Get().OnAssetAdded().AddLambda(
+	//		[this](const FAssetData& AssetData)
+	//		{
+	//			RefreshSequences();	   // your code here
+	//			if (Sequences.Num() > 0)
+	//			{
+	//				ChangeSelectedSequence(Sequences[0]);
+	//			}
+	//			IsSequencerRelevant = false;
+	//			RefreshSequencer();
+	//		});
 
 	ChildSlot[SNew(SScrollBox) +
 			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
@@ -97,6 +123,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 									 .OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 
 	ListViewWidget->SetListItemsSource(MotionHandlers);
+	RefreshSequencer();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -276,9 +303,14 @@ void SMain::AddMotionHandlers()
 		Sequencer->GetSelectedObjects(SelectedObjects);
 		TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
 		Sequencer->GetSelectedTracks(SelectedTracks);
+		if (SelectedObjects.Num() < 1 || SelectedTracks.Num() < 1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("You are not selected any tracks or objects"));
+			return;
+		}
 		/* UMovieSceneControlRigParameterTrack* controlRigTrack =
 		Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]); if
-		(IsValid(controlRigTrack))
+		(IsValid(conolRigTrack))
 		{
 		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
 		} */
@@ -490,27 +522,35 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				higherCurrentValue.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, higherCurrentValue));
 			}
+
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
 			Sequencer->PlayTo(params);
 			IsRecordedStarted = true;
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
+
+			Sequencer->UpdatePlaybackRange();
+			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
+			Sequencer->NotifyBindingsChanged();
 		}
 	}
 	if (key.ToString() == "D")
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
-			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
+			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
+			FFrameNumber higherCurrentValue = CurrentRange_.GetUpperBoundValue();
+			FFrameNumber lowerCurrentValueCopy = lowerCurrentValue;
+			lowerCurrentValueCopy.Value += 1000;
+			CurrentRange_.SetLowerBoundValue(lowerCurrentValueCopy);
 
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				motionHandler->Optimize(playbackRange);
-				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerValue);
+				motionHandler->Optimize(CurrentRange_);
+				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 			}
-			Sequencer->SetGlobalTime(lowerValue);
+			Sequencer->SetGlobalTime(lowerCurrentValue);
 			Sequencer->Pause();
 		}
 	}
@@ -525,7 +565,12 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->SetGlobalTime(lowerValue);
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
+
 			Sequencer->PlayTo(params);
+
+			Sequencer->UpdatePlaybackRange();
+			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
+			Sequencer->NotifyBindingsChanged();
 		}
 	}
 	if (key.ToString() == "F5")

@@ -136,24 +136,17 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, TSharedPtr<
 
 bool MotionHandler::IsValidMotionHandler()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Is valid Motion handler called"));
 	if (Sequencer == nullptr || MovieScene == nullptr || MovieSceneTrack == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Motion handler is not valid"));
 		ValidMotionHandler = false;
 		return false;
 	}
-	bool IsBindingExistInSequencer = Sequencer->FindObjectsInCurrentSequence(Data.ObjectFGuid).Num() > 0;
 	bool ChannelNullPtr =
 		(FloatChannel == nullptr || DoubleChannel == nullptr || BoolChannel == nullptr || IntegerChannel == nullptr);
-	bool IsValid_ = !ChannelNullPtr || !IsBindingExistInSequencer;
+	bool IsValid_ = !ChannelNullPtr;
 	if (!IsValid_)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Motion handler is not valid"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Motion handler is valid"));
 	}
 	ValidMotionHandler = IsValid_;
 	return IsValid_;
@@ -271,7 +264,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			PreviousValue = (double) prevValue;
 			IsFirstUpdate = false;
 		}
-		SyncControlRigWithChannelValue(InTime);
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
@@ -317,14 +309,22 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			PreviousValue = (double) evalResult;
 		}
 	}
+	SyncControlRigWithChannelValue(InTime);
 }
 void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 {
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("It's control rig"));
 		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
 		FRigControlElement* controlElement = controlRig->FindControl(FName(Data.ControlSelection));
-		UE_LOG(LogTemp, Warning, TEXT("Trying to set value to control %s"), *Data.ControlSelection);
+		if (controlElement == nullptr)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("motion handler is not valid, maybe you forget to select control in sequencer when tried to init motion "
+					 "handler?"));
+			return;
+		}
 		ERigControlType controlType = controlElement->Settings.ControlType;
 		FRigControlValue controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
 		FRigControlValue controlValueMin = controlElement->Settings.MinimumValue;

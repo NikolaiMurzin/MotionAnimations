@@ -550,7 +550,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->Optimize(CurrentRange_);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 			}
-			Sequencer->SetGlobalTime(lowerCurrentValue);
+			Sequencer->SetGlobalTime(SelectedSequence->GetMovieScene()->GetPlaybackRange().GetLowerBoundValue());
 			Sequencer->Pause();
 		}
 	}

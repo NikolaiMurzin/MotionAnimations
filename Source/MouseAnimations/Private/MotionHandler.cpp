@@ -142,7 +142,7 @@ bool MotionHandler::IsValidMotionHandler()
 		return false;
 	}
 	bool ChannelNullPtr =
-		(FloatChannel == nullptr || DoubleChannel == nullptr || BoolChannel == nullptr || IntegerChannel == nullptr);
+		(FloatChannel == nullptr && DoubleChannel == nullptr && BoolChannel == nullptr && IntegerChannel == nullptr);
 	bool IsValid_ = !ChannelNullPtr;
 	if (!IsValid_)
 	{

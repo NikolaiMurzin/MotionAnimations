@@ -38,6 +38,7 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
+	FText GetIsActive() const;
 	void RefreshSequences();
 	void ChangeSelectedSequence(ULevelSequence* Sequence_);
 	TSharedRef<SWidget> MakeSequenceWidget(ULevelSequence*);

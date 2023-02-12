@@ -107,6 +107,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	ChildSlot[SNew(SScrollBox) +
 			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
 				  this, &SMain::OnRefreshSequencesClicked)] +
+			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetIsActive)] +
 			  SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
 									 .OptionsSource((&Sequences))
 									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
@@ -131,6 +132,14 @@ TSharedRef<SWidget> SMain::MakeSequenceWidget(ULevelSequence* InSequence)
 {
 	return SNew(STextBlock).Text(FText::FromString(InSequence->GetDisplayName().ToString()));
 }
+FText SMain::GetIsActive() const
+{
+	if (IsKeysEnabled)
+	{
+		return FText::FromString("Active");
+	}
+	return FText::FromString("Not active");
+};
 void SMain::OnSequenceSelected(ULevelSequence* Sequence, ESelectInfo::Type SelectInfo)
 {
 	ChangeSelectedSequence(Sequence);

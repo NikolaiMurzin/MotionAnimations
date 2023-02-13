@@ -62,6 +62,7 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
 	IsStarted = false;	  // for execute motion handlers on tick
+						  //
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	CustomRange = TRange<FFrameNumber>();
 	CustomRange.SetUpperBound(FFrameNumber());
@@ -77,32 +78,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
 
-	//	AssetRegistryModule.Get().OnAssetRemoved().AddLambda(
-	//		[this](const FAssetData& AssetData)
-	//		{
-	//			ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData.GetAsset());
-	//			if (SelectedSequence == Sequence)
-	//			{
-	//				SelectedSequence = nullptr;
-	//			}
-	//			if (Sequence)
-	//			{
-	//				Sequences.Remove(Sequence);	   // Do something with the sequence here
-	//			}
-	//			IsSequencerRelevant = false;
-	//			RefreshSequencer();
-	//		});
-	//	AssetRegistryModule.Get().OnAssetAdded().AddLambda(
-	//		[this](const FAssetData& AssetData)
-	//		{
-	//			RefreshSequences();	   // your code here
-	//			if (Sequences.Num() > 0)
-	//			{
-	//				ChangeSelectedSequence(Sequences[0]);
-	//			}
-	//			IsSequencerRelevant = false;
-	//			RefreshSequencer();
-	//		});
+	UE_LOG(LogTemp, Warning, TEXT("construct called"));
 
 	ChildSlot[SNew(SScrollBox) +
 			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
@@ -154,7 +130,10 @@ FText SMain::GetSelectedSequenceName() const
 {
 	if (SelectedSequence != nullptr)
 	{
-		return SelectedSequence->GetDisplayName();
+		if (SelectedSequence->IsValidLowLevel())
+		{
+			return SelectedSequence->GetDisplayName();
+		}
 	}
 	return FText();
 }
@@ -192,10 +171,7 @@ FText SMain::GetCustomStartFromFrame() const
 		string.Append(value);
 		return FText::FromString(string);
 	}
-	else
-	{
-		return FText::FromString("Custom start frame:");
-	}
+	return FText::FromString("Custom start frame:");
 }
 FText SMain::GetCustomEndFrame() const
 {
@@ -207,10 +183,7 @@ FText SMain::GetCustomEndFrame() const
 		string.Append(value);
 		return FText::FromString(string);
 	}
-	else
-	{
-		return FText::FromString("Custom end frame:");
-	}
+	return FText::FromString("Custom end frame:");
 }
 
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
@@ -252,7 +225,7 @@ void SMain::RefreshSequencer()
 			ISequencer* seq = LevelSequenceEditor->GetSequencer().Get();
 			if (seq != nullptr)
 			{
-				Sequencer = TSharedPtr<ISequencer>(seq);
+				Sequencer = seq;
 				OnGlobalTimeChangedDelegate = &(Sequencer->OnGlobalTimeChanged());
 				OnGlobalTimeChangedDelegate->AddRaw(this, &SMain::OnGlobalTimeChanged);
 				OnPlayEvent = &(Sequencer->OnPlayEvent());
@@ -411,6 +384,12 @@ void SMain::OnGlobalTimeChanged()
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
+	if (!SelectedSequence->IsValidLowLevel())
+	{
+		RefreshSequences();
+		MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
+	}
+
 	if (false)	  // keep that code just to remember how to execute motion handlers
 				  // every tick
 	{

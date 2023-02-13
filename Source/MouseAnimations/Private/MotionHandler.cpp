@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <string>
 
-MotionHandler::MotionHandler(TSharedPtr<ISequencer> Sequencer_, UMovieSceneSequence* Sequence, FString FilePath)
+MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath)
 {
 	Data = FMotionHandlerData(FilePath);
 	Sequencer = Sequencer_;
@@ -102,8 +102,8 @@ MotionHandler::MotionHandler(TSharedPtr<ISequencer> Sequencer_, UMovieSceneSeque
 	CastChannel();
 	InitKeys();
 }
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, TSharedPtr<ISequencer> Sequencer_,
-	UMovieSceneSequence* Sequence_, UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
+	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	KeyArea = KeyArea_;

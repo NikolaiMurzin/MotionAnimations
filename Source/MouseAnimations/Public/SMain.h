@@ -35,6 +35,38 @@ public:
 	}
 	SLATE_END_ARGS()
 
+	SMain()
+	{
+		UE_LOG(LogTemp, Warning, TEXT("constructor is called"));
+	}
+	~SMain()
+	{
+		UE_LOG(LogTemp, Warning, TEXT("destructor is called"));
+		if (Sequencer != nullptr)
+		{
+			if (OnGlobalTimeChangedDelegate != nullptr)
+			{
+				OnGlobalTimeChangedDelegate->RemoveAll(this);
+			}
+			if (OnPlayEvent != nullptr)
+			{
+				OnPlayEvent->RemoveAll(this);
+			}
+			if (OnStopEvent != nullptr)
+			{
+				OnStopEvent->RemoveAll(this);
+			}
+			if (OnCloseEvent != nullptr)
+			{
+				OnCloseEvent->RemoveAll(this);
+			}
+			if (OnKeyDownEvent != nullptr)
+			{
+				OnKeyDownEvent->RemoveAll(this);
+			}
+		}
+	}
+
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
@@ -105,5 +137,5 @@ private:
 	TRange<FFrameNumber> CustomRange;
 	TArray<ULevelSequence*> Sequences;
 	ULevelSequence* SelectedSequence;
-	TSharedPtr<ISequencer> Sequencer;
+	ISequencer* Sequencer;
 };

@@ -384,7 +384,7 @@ void SMain::OnGlobalTimeChanged()
 };
 void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
-	if (!SelectedSequence->IsValidLowLevel())
+	if (SelectedSequence == nullptr || !SelectedSequence->IsValidLowLevel())
 	{
 		RefreshSequences();
 		MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
@@ -586,18 +586,22 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	if (key.ToString() == "Z")
 	{
 		SelectX();
+		ListViewWidget->RebuildList();
 	}
 	else if (key.ToString() == "X")
 	{
 		SelectXInverted();
+		ListViewWidget->RebuildList();
 	}
 	else if (key.ToString() == "C")
 	{
 		SelectY();
+		ListViewWidget->RebuildList();
 	}
 	else if (key.ToString() == "V")
 	{
 		SelectYInverted();
+		ListViewWidget->RebuildList();
 	}
 	else if (key.ToString() == "T")
 	{

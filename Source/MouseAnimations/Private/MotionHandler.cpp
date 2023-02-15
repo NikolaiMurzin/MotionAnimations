@@ -8,17 +8,26 @@
 #include "ControlRig.h"
 #include "CoreFwd.h"
 #include "Editor.h"
+#include "EngineUtils.h"
 #include "EulerTransform.h"
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "Internationalization/Text.h"
 #include "KeyValues.h"
+#include "Math/Color.h"
 #include "Math/NumericLimits.h"
 #include "Math/TransformNonVectorized.h"
 #include "MotionHandlerData.h"
 #include "MotionHandlerMode.h"
+#include "MovieScene/MovieSceneNiagaraTrack.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraFloatParameterTrack.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraParameterTrack.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraVectorParameterTrack.h"
 #include "MovieSceneSequence.h"
 #include "MovieSceneTrack.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraTypes.h"
 #include "RigVMCore/RigVM.h"
 #include "RigVMCore/RigVMExternalVariable.h"
 #include "Runtime/Core/Public/CoreFwd.h"
@@ -32,6 +41,8 @@
 #include "SequencerKeyParams.h"
 #include "SequencerWidgets/Public/ITimeSlider.h"
 #include "Templates/SharedPointerInternals.h"
+#include "Tracks/MovieSceneMaterialTrack.h"
+#include "Tracks/MovieSceneParticleParameterTrack.h"
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
 #include "Units/RigUnitContext.h"
@@ -51,6 +62,10 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 
 	PreviousValue = 0;
 	IsFirstUpdate = true;
+
+	MovieSceneControlRigParameterTrack = nullptr;
+	MovieSceneMaterialTrack = nullptr;
+	MovieSceneNiagaraParameterTrack = nullptr;
 
 	if (Sequence == nullptr)
 	{
@@ -99,8 +114,9 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	}
 
 	SetControlRigTrack(MovieSceneTrack);
+	SetMaterialTrack(MovieSceneTrack);
+	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
-	InitKeys();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -111,6 +127,9 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	IsFirstUpdate = true;
 	MovieScene = Sequence_->GetMovieScene();
 	MovieSceneTrack = MovieSceneTrack_;
+	MovieSceneControlRigParameterTrack = nullptr;
+	MovieSceneMaterialTrack = nullptr;
+	MovieSceneNiagaraParameterTrack = nullptr;
 
 	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
 	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
@@ -130,8 +149,9 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText,
 		KeyArea->GetName().ToString());
 	SetControlRigTrack(MovieSceneTrack);
+	SetMaterialTrack(MovieSceneTrack);
+	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
-	InitKeys();
 }
 
 bool MotionHandler::IsValidMotionHandler()
@@ -179,6 +199,202 @@ void MotionHandler::SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_)
 		}
 	}
 }
+void MotionHandler::SetMaterialTrack(UMovieSceneTrack* MovieSceneTrack_)
+{
+	UMovieSceneMaterialTrack* MovieSceneMaterialTrack_ = Cast<UMovieSceneMaterialTrack>(MovieSceneTrack_);
+	if (MovieSceneMaterialTrack_ != nullptr && IsValid(MovieSceneMaterialTrack_))
+	{
+		MovieSceneMaterialTrack = MovieSceneMaterialTrack_;
+		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneMaterialTrack"));
+	}
+}
+void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
+{
+	UMovieSceneParticleParameterTrack* MovieSceneParticleTrack_ = Cast<UMovieSceneParticleParameterTrack>(MovieSceneTrack_);
+	UMovieSceneNiagaraTrack* MovieSceneNiagaraTrack_ = Cast<UMovieSceneNiagaraTrack>(MovieSceneTrack_);
+	UMovieSceneNiagaraParameterTrack* MovieSceneNiagaraParameterTrack_ = Cast<UMovieSceneNiagaraParameterTrack>(MovieSceneTrack_);
+	if (IsValid(MovieSceneParticleTrack_))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneParticleTrack"));
+	}
+	if (IsValid(MovieSceneNiagaraTrack_))
+	{
+		MovieSceneNiagaraTrack = MovieSceneNiagaraTrack_;
+		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneNiagaraTrack"));
+
+		UObject* Obj = Sequencer->FindSpawnedObjectOrTemplate(Data.ObjectFGuid);
+		if (Obj != nullptr)
+		{
+			UNiagaraComponent* NiagaraComponent_ = Cast<UNiagaraComponent>(Obj);
+			if (NiagaraComponent_ != nullptr)
+			{
+				NiagaraComponent = NiagaraComponent_;
+				UE_LOG(LogTemp, Warning, TEXT("find niagara component"));
+			}
+		}
+
+		// for determine which type of param we have
+		if (IsValid(MovieSceneNiagaraParameterTrack_))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneNiagaraParameterTrack_"));
+			MovieSceneNiagaraParameterTrack = MovieSceneNiagaraParameterTrack_;
+			UMovieSceneNiagaraFloatParameterTrack* MovieSceneNiagaraFloatTrack_ =
+				Cast<UMovieSceneNiagaraFloatParameterTrack>(MovieSceneNiagaraParameterTrack_);
+			if (MovieSceneNiagaraFloatTrack_ != nullptr)
+			{
+				MovieSceneNiagaraFloatTrack = MovieSceneNiagaraFloatTrack_;
+			}
+			UMovieSceneNiagaraVectorParameterTrack* MovieSceneNiagaraVectorTrack_ =
+				Cast<UMovieSceneNiagaraVectorParameterTrack>(MovieSceneNiagaraParameterTrack_);
+			if (MovieSceneNiagaraVectorTrack_ != nullptr)
+			{
+				MovieSceneNiagaraVectorTrack = MovieSceneNiagaraVectorTrack_;
+			}
+		}
+	}
+}
+void MotionHandler::SyncNiagaraParam(FFrameNumber InTime)
+{
+	if (MovieSceneNiagaraParameterTrack == nullptr)
+	{
+		return;
+	}
+	if (IsValid(MovieSceneNiagaraParameterTrack))
+	{
+		if (FloatChannel != nullptr)
+		{
+			float value;
+			FloatChannel->Evaluate(InTime, value);
+			if (NiagaraComponent != nullptr)
+			{
+				FNiagaraVariable var = MovieSceneNiagaraParameterTrack->GetParameter();
+				if (MovieSceneNiagaraFloatTrack != nullptr)
+				{
+					NiagaraComponent->SetFloatParameter(var.GetName(), value);
+				}
+				else if (MovieSceneNiagaraVectorTrack != nullptr)
+				{
+					FVector vec = FVector();
+					FString VectorString = NiagaraComponent->GetOverrideParameters().ToString();
+
+					// Find the starting position of the X component
+					int32 StartIndex = VectorString.Find("X:") + 2;
+
+					// Find the ending position of the X component
+					int32 EndIndex = VectorString.Find("Y:") - 1;
+
+					// Extract the X component from the string
+					FString XString = VectorString.Mid(StartIndex, EndIndex - StartIndex);
+					float XValue = FCString::Atof(*XString);
+
+					// Find the starting position of the Y component
+					StartIndex = VectorString.Find("Y:") + 2;
+
+					// Find the ending position of the Y component
+					EndIndex = VectorString.Find("Z:") - 1;
+
+					// Extract the Y component from the string
+					FString YString = VectorString.Mid(StartIndex, EndIndex - StartIndex);
+					float YValue = FCString::Atof(*YString);
+
+					// Find the starting position of the Z component
+					StartIndex = VectorString.Find("Z:") + 2;
+
+					// Find the ending position of the Z component
+					EndIndex = VectorString.Len() - 2;
+
+					// Extract the Z component from the string
+					FString ZString = VectorString.Mid(StartIndex, EndIndex - StartIndex);
+					float ZValue = FCString::Atof(*ZString);
+					FString axis = *Data.ChannelDisplayText.ToString();
+					if (axis == "X")
+					{
+						vec.X = value;
+						vec.Y = YValue;
+						vec.Z = ZValue;
+						UE_LOG(LogTemp, Warning, TEXT("X"));
+					}
+					else if (axis == "Y")
+					{
+						vec.X = XValue;
+						vec.Y = value;
+						vec.Z = ZValue;
+						UE_LOG(LogTemp, Warning, TEXT("Y"));
+					}
+					else if (axis == "Z")
+					{
+						vec.X = XValue;
+						vec.Y = YValue;
+						vec.Z = value;
+						UE_LOG(LogTemp, Warning, TEXT("Z"));
+					}
+					NiagaraComponent->SetVectorParameter(var.GetName(), vec);
+				}
+			}
+		}
+	}
+}
+void MotionHandler::SyncMaterialTrack(FFrameNumber InTime)
+{
+	if (MovieSceneMaterialTrack == nullptr)
+	{
+		return;
+	}
+	if (IsValid(MovieSceneMaterialTrack))
+	{
+		FName ParameterName = FName(*Data.ChannelDisplayText.ToString());
+		FString ChannelDisplayText = Data.ChannelDisplayText.ToString();
+		UE_LOG(LogTemp, Warning, TEXT("Data Channel DisplayText is  %s"), *ChannelDisplayText);
+		if (FloatChannel == nullptr)
+		{
+			return;
+		}
+		float value;
+		FloatChannel->Evaluate(InTime, value);
+		if (ChannelDisplayText.Equals("R") || ChannelDisplayText.Equals("G") || ChannelDisplayText.Equals("B") ||
+			ChannelDisplayText.Equals("A"))
+		{
+			FString ParamName = Data.KeyAreaName;
+			ParamName = ParamName.LeftChop(1);
+
+			FLinearColor color = FLinearColor();
+			if (ChannelDisplayText.Equals("R"))
+			{
+				color.R = value;
+				color.G = 0;
+				color.B = 0;
+				color.A = 0;
+			}
+			else if (ChannelDisplayText.Equals("G"))
+			{
+				color.R = 0;
+				color.G = value;
+				color.B = 0;
+				color.A = 0;
+			}
+			else if (ChannelDisplayText.Equals("B"))
+			{
+				color.R = 0;
+				color.G = 0;
+				color.B = value;
+				color.A = 0;
+			}
+			else if (ChannelDisplayText.Equals("A"))
+			{
+				color.R = 0;
+				color.G = 0;
+				color.B = 0;
+				color.A = value;
+			}
+			MovieSceneMaterialTrack->AddColorParameterKey(FName(*ParamName), InTime, color);
+		}
+		else
+		{
+			MovieSceneMaterialTrack->AddScalarParameterKey(ParameterName, InTime, value);
+			UE_LOG(LogTemp, Warning, TEXT("Set value to Movie Scene Material Scalar Track!"));
+		}
+	}
+}
 void MotionHandler::CastChannel()
 {
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
@@ -218,7 +434,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		UE_LOG(LogTemp, Warning, TEXT("Can't set key, motion handler is not valid"));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Set key called"));
 	double valueToSet = 0;
 	if (Data.SelectedMode == Mode::X)
 	{
@@ -237,9 +452,10 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		valueToSet = InputVector.Y * -1;
 	}
 
+	valueToSet = valueToSet * Data.Scale;
+
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		valueToSet = valueToSet * Data.Scale;
 		valueToSet = (float) valueToSet;
 		if (!FloatChannel->HasAnyData())
 		{
@@ -252,7 +468,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			valueToSet += PreviousValue;
 			UE_LOG(LogTemp, Warning, TEXT("Update or add key called"));
 			ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
-			UE_LOG(LogTemp, Warning, TEXT("After Update or add key called"));
 			PreviousValue = valueToSet;
 		}
 		else
@@ -309,7 +524,9 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			PreviousValue = (double) evalResult;
 		}
 	}
+	SyncMaterialTrack(InTime);
 	SyncControlRigWithChannelValue(InTime);
+	SyncNiagaraParam(InTime);
 }
 void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 {
@@ -515,38 +732,6 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 			}
 			controlRig->SetControlValue(FName(Data.ControlSelection), vec, true, FRigControlModifiedContext(), true, true);
 		}
-	}
-}
-void MotionHandler::InitKeys()
-{
-	if (IsValidMotionHandler())
-	{
-		return;
-	}
-	TRange<FFrameNumber> playbackRange = MovieScene->GetPlaybackRange();
-	FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
-	/* todo list */
-	FFrameNumber currentFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	float value = GetValueFromTime(currentFrame);
-
-	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	nextFrame.Value += 1000;
-	float secondValue = GetValueFromTime(currentFrame);
-	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
-	{
-		FloatChannel->GetData().UpdateOrAddKey(currentFrame, FMovieSceneFloatValue(value));
-		FloatChannel->GetData().UpdateOrAddKey(nextFrame, FMovieSceneFloatValue(secondValue));
-	}
-	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
-	{
-		DoubleChannel->GetData().UpdateOrAddKey(currentFrame, FMovieSceneDoubleValue(value));
-		DoubleChannel->GetData().UpdateOrAddKey(nextFrame, FMovieSceneDoubleValue(secondValue));
-	}
-	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
-	{
-		IntegerChannel->GetData().UpdateOrAddKey(currentFrame, int32(value));
-		IntegerChannel->GetData().UpdateOrAddKey(nextFrame, int32(secondValue));
 	}
 }
 double MotionHandler::GetValueFromTime(FFrameNumber InTime)

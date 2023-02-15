@@ -15,8 +15,14 @@
 #include "Misc/FrameNumber.h"
 #include "MotionHandlerData.h"
 #include "MotionHandlerMode.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraFloatParameterTrack.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraParameterTrack.h"
+#include "MovieScene/Parameters/MovieSceneNiagaraVectorParameterTrack.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "Sequencer/MovieSceneControlRigParameterTrack.h"
 #include "Sequencer/Public/ISequencer.h"
+#include "Tracks/MovieSceneMaterialTrack.h"
 #include "UObject/NameTypes.h"
 
 class MotionHandler
@@ -30,9 +36,9 @@ public:
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_ = Mode::X);
 	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);
+	void SetMaterialTrack(UMovieSceneTrack* MovieSceneTrack_);
+	void SetNiagaraTrack(UMovieSceneTrack* NiagaraTrack_);
 	void CastChannel();
-
-	void InitKeys();
 
 	void DeleteAllKeysFrom(FFrameNumber InTime);
 	void DeleteKeysWithin(TRange<FFrameNumber> InRange);
@@ -49,7 +55,6 @@ public:
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
 	UMovieSceneTrack* MovieSceneTrack;
-	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack;
 
 	FGuid GetObjectFGuid();
 	Mode GetSelectedMode();
@@ -84,6 +89,17 @@ public:
 
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
+	void SyncMaterialTrack(FFrameNumber InTime);
+	void SyncNiagaraParam(FFrameNumber InTime);
+
+	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack = nullptr;
+	UMovieSceneMaterialTrack* MovieSceneMaterialTrack = nullptr;
+	UMovieSceneNiagaraTrack* MovieSceneNiagaraTrack = nullptr;
+	UMovieSceneNiagaraParameterTrack* MovieSceneNiagaraParameterTrack = nullptr;
+	UMovieSceneNiagaraFloatParameterTrack* MovieSceneNiagaraFloatTrack = nullptr;
+	UMovieSceneNiagaraVectorParameterTrack* MovieSceneNiagaraVectorTrack = nullptr;
+
+	UNiagaraComponent* NiagaraComponent = nullptr;
 
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;

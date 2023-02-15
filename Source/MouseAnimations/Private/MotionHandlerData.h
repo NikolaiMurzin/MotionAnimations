@@ -40,14 +40,15 @@ public:
 	FText CustomName;
 
 	UPROPERTY()
-	int32 CurrentIndex;
-	UPROPERTY()
-	TMap<int32, FKeyValues> KeyValues;
-	UPROPERTY()
 	FText ChannelDisplayText;
 
 	UPROPERTY()
 	FString KeyAreaName;
+
+	UPROPERTY()
+	int32 CurrentIndex;
+	UPROPERTY()
+	TMap<int32, FKeyValues> KeyValues;
 
 	FMotionHandlerData();
 	FMotionHandlerData(FString FilePath);

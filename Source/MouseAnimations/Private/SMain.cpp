@@ -36,6 +36,7 @@
 #include "MovieScene.h"
 #include "MovieSceneBinding.h"
 #include "MovieSceneSection.h"
+#include "MovieSceneSequence.h"
 #include "STreeViewSequencer.h"
 #include "Sequencer/Public/SequencerAddKeyOperation.h"
 #include "SequencerAddKeyOperation.h"

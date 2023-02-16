@@ -67,8 +67,8 @@ bool FMotionHandlerData::Delete()
 }
 FString FMotionHandlerData::GetName()
 {
-	return ObjectFGuid.ToString() + "." + TrackName + "." + FString::FromInt(SectionRowIndex) + "." + ChannelTypeName + "." +
-		   KeyAreaName + "." + FString::FromInt(ChannelIndex);
+	return ObjectFGuid.ToString() + "." + TrackName + "." + TrackDisplayName + "." + FString::FromInt(SectionRowIndex) + "." +
+		   ChannelTypeName + "." + KeyAreaName + "." + FString::FromInt(ChannelIndex);
 }
 
 FString FMotionHandlerData::GetFilePath()

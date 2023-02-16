@@ -147,7 +147,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	FText DataCustomName = FText::FromString(DataCustomNameString);
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
 		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText,
-		KeyArea->GetName().ToString());
+		KeyArea->GetName().ToString(), MovieSceneTrackName);
 	SetControlRigTrack(MovieSceneTrack);
 	SetMaterialTrack(MovieSceneTrack);
 	SetNiagaraTrack(MovieSceneTrack);
@@ -1006,7 +1006,9 @@ void MotionHandler::InsertCurrentKeyValuesToSequencer()
 }
 bool MotionHandler::operator==(MotionHandler& handler)
 {
-	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection);
+	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&
+			Data.ChannelDisplayText.ToString() == handler.Data.ChannelDisplayText.ToString() &&
+			Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName);
 }
 void MotionHandler::OnScaleValueChangedRaw(double value)
 {

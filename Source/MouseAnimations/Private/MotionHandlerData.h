@@ -23,6 +23,8 @@ public:
 	UPROPERTY()
 	FString TrackName;
 	UPROPERTY()
+	FString TrackDisplayName;
+	UPROPERTY()
 	int32 SectionRowIndex;
 	UPROPERTY()
 	FString ChannelTypeName;
@@ -54,7 +56,7 @@ public:
 	FMotionHandlerData(FString FilePath);
 	FMotionHandlerData(double Scale, FGuid ObjectFGuid, FString TrackName, int32 SectionRowIndex, FString ChannelTypeName,
 		int32 ChannelIndex, enum Mode Mode_, FString SequenceName_, FText CustomName_, FText ChannelDisplayText,
-		FString KeyAreaName_);
+		FString KeyAreaName_, FString TrackDisplayName_);
 
 	FString GetName();
 	FString GetFilePath();

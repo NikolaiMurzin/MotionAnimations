@@ -32,7 +32,7 @@ FMotionHandlerData::FMotionHandlerData(FString FilePath)
 }
 FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FString TrackName_, int32 SectionRowIndex_,
 	FString ChannelTypeName_, int32 ChannelIndex_, enum Mode Mode_, FString SequenceName_, FText CustomName_,
-	FText ChannelDisplayText_, FString KeyAreaName_)
+	FText ChannelDisplayText_, FString KeyAreaName_, FString TrackDisplayName_)
 {
 	Scale = Scale_;
 	ObjectFGuid = ObjectFGuid_;
@@ -46,6 +46,7 @@ FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FStrin
 	CustomName = CustomName_;
 	ChannelDisplayText = ChannelDisplayText_;
 	KeyAreaName = KeyAreaName_;
+	TrackDisplayName = TrackDisplayName_;
 }
 bool FMotionHandlerData::Save()
 {

@@ -87,6 +87,8 @@ public:
 
 	FMotionHandlerData Data;
 
+	void ResetNiagaraState();
+
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 	void SyncMaterialTrack(FFrameNumber InTime);

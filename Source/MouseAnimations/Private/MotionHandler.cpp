@@ -334,6 +334,15 @@ void MotionHandler::SyncNiagaraParam(FFrameNumber InTime)
 		}
 	}
 }
+void MotionHandler::ResetNiagaraState()
+{
+	if (NiagaraComponent != nullptr)
+	{
+		NiagaraComponent->DeactivateImmediate();
+		NiagaraComponent->ActivateSystem();
+		UE_LOG(LogTemp, Warning, TEXT("Reset niagara called"));
+	}
+}
 void MotionHandler::SyncMaterialTrack(FFrameNumber InTime)
 {
 	if (MovieSceneMaterialTrack == nullptr)

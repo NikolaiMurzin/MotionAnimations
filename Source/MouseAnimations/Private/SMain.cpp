@@ -510,6 +510,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				DeleteKeysFrom.Value += 1000;
 				higherCurrentValue.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, higherCurrentValue));
+				motionHandler->ResetNiagaraState();
 			}
 
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
@@ -538,6 +539,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->Optimize(CurrentRange_);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
+				motionHandler->ResetNiagaraState();
 			}
 			Sequencer->SetGlobalTime(SelectedSequence->GetMovieScene()->GetPlaybackRange().GetLowerBoundValue());
 			Sequencer->Pause();
@@ -554,6 +556,11 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->SetGlobalTime(lowerValue);
 			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
 			params.Frame = highValue;
+
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+			{
+				motionHandler->ResetNiagaraState();
+			}
 
 			Sequencer->PlayTo(params);
 

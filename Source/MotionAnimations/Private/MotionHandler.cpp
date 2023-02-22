@@ -491,19 +491,27 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		valueToSet = valueToSet * Data.Scale;
 		valueToSet = (double) valueToSet;
+		if (!DoubleChannel->HasAnyData())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
+			return;
+		}
 		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
 		ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
 	}
 	else if (Data.ChannelTypeName == "MovieSceneBoolChannel")
 	{
-		BoolChannel = ChannelHandle.Cast<FMovieSceneBoolChannel>().Get();
 		/* not implemented for now */
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
 		valueToSet = (int32) valueToSet;
+		if (!IntegerChannel->HasAnyData())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
+			return;
+		}
 		TMovieSceneChannelData<int> ChannelData = IntegerChannel->GetData();
 		ChannelData.UpdateOrAddKey(InTime, valueToSet);
 	}

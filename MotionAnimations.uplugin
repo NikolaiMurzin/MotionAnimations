@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "MouseAnimations",
+	"FriendlyName": "MotionAnimations",
 	"Description": "Control your animations with mouse!",
 	"Category": "Other",
 	"CreatedBy": "NikolaiMurzin",
@@ -21,7 +21,7 @@
   ],
 	"Modules": [
 		{
-			"Name": "MouseAnimations",
+			"Name": "MotionAnimations",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}

@@ -8,9 +8,9 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 
-extern const FString PluginName = "MouseAnimations";
+extern const FString PluginName = "MotionAnimations";
 
-class FMouseAnimationsModule : public IModuleInterface
+class FMotionAnimationsModule : public IModuleInterface
 {
 public:
 	/** IModuleInterface implementation */

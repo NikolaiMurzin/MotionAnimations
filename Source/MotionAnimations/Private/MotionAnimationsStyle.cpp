@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "MouseAnimationsStyle.h"
+#include "MotionAnimationsStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Slate/SlateGameResources.h"
@@ -9,9 +9,9 @@
 
 #define RootToContentDir Style->RootToContentDir
 
-TSharedPtr<FSlateStyleSet> FMouseAnimationsStyle::StyleInstance = nullptr;
+TSharedPtr<FSlateStyleSet> FMotionAnimationsStyle::StyleInstance = nullptr;
 
-void FMouseAnimationsStyle::Initialize()
+void FMotionAnimationsStyle::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
@@ -20,33 +20,33 @@ void FMouseAnimationsStyle::Initialize()
 	}
 }
 
-void FMouseAnimationsStyle::Shutdown()
+void FMotionAnimationsStyle::Shutdown()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 	ensure(StyleInstance.IsUnique());
 	StyleInstance.Reset();
 }
 
-FName FMouseAnimationsStyle::GetStyleSetName()
+FName FMotionAnimationsStyle::GetStyleSetName()
 {
-	static FName StyleSetName(TEXT("MouseAnimationsStyle"));
+	static FName StyleSetName(TEXT("MotionAnimationsStyle"));
 	return StyleSetName;
 }
 
 const FVector2D Icon16x16(16.0f, 16.0f);
 const FVector2D Icon20x20(20.0f, 20.0f);
 
-TSharedRef< FSlateStyleSet > FMouseAnimationsStyle::Create()
+TSharedRef< FSlateStyleSet > FMotionAnimationsStyle::Create()
 {
-	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("MouseAnimationsStyle"));
-	Style->SetContentRoot(IPluginManager::Get().FindPlugin("MouseAnimations")->GetBaseDir() / TEXT("Resources"));
+	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("MotionAnimationsStyle"));
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin("MotionAnimations")->GetBaseDir() / TEXT("Resources"));
 
-	Style->Set("MouseAnimations.OpenPluginWindow", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon20x20));
+	Style->Set("MotionAnimations.OpenPluginWindow", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon20x20));
 
 	return Style;
 }
 
-void FMouseAnimationsStyle::ReloadTextures()
+void FMotionAnimationsStyle::ReloadTextures()
 {
 	if (FSlateApplication::IsInitialized())
 	{
@@ -54,7 +54,7 @@ void FMouseAnimationsStyle::ReloadTextures()
 	}
 }
 
-const ISlateStyle& FMouseAnimationsStyle::Get()
+const ISlateStyle& FMotionAnimationsStyle::Get()
 {
 	return *StyleInstance;
 }

@@ -7,7 +7,7 @@
 #include "Styling/SlateStyle.h"
 
 /**  */
-class FMouseAnimationsStyle
+class FMotionAnimationsStyle
 {
 public:
 

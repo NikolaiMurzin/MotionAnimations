@@ -70,10 +70,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	CustomRange.SetLowerBound(FFrameNumber());
 
 	RefreshSequences();
-	if (Sequences.Num() > 0)
-	{
-		ChangeSelectedSequence(Sequences[0]);
-	}
 
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
@@ -101,7 +97,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 									 .OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 
 	ListViewWidget->SetListItemsSource(MotionHandlers);
-	RefreshSequencer();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -217,6 +212,7 @@ void SMain::RefreshSequencer()
 	}
 	if (SelectedSequence != nullptr)
 	{
+		Sequencer = nullptr;
 		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
 		ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*) AssetEditor;
@@ -262,6 +258,10 @@ void SMain::RefreshSequences()
 			Sequences.Add(Sequence);	// Do something with the sequence here
 		}
 	}
+	if (Sequences.Num() > 0)
+	{
+		ChangeSelectedSequence(Sequences[0]);
+	}
 }
 void SMain::ChangeSelectedSequence(ULevelSequence* Sequence_)
 {
@@ -278,7 +278,7 @@ FReply SMain::OnRefreshBindings()
 };
 void SMain::AddMotionHandlers()
 {
-	if (Sequencer != nullptr)
+	if (Sequencer != nullptr && SelectedSequence != nullptr)
 	{
 		TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 		Sequencer->GetSelectedKeyAreas(KeyAreas);

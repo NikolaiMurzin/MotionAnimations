@@ -192,10 +192,13 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 										   .Text(Item->Data.CustomName)
 										   .OnTextChanged(Item->OnTextChanged)
 										   .ClearKeyboardFocusOnCommit(true)] +
-				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)] +
+				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item-> OnScaleValueChanged)] +
 				SHorizontalBox::Slot()
 					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)] +
-				SHorizontalBox::Slot()[SNew(STextBlock).Text(UEnum::GetDisplayValueAsText(Item->Data.SelectedMode))]];
+				SHorizontalBox::Slot()[SNew(STextBlock).Text(UEnum::GetDisplayValueAsText(Item->Data.SelectedMode))] +
+				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.LowerBoundValue).OnValueChanged(Item->OnLowerBoundValueChanged)] +
+				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.UpperBoundValue).OnValueChanged(Item->OnUpperBoundValueChanged)]
+			];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -417,6 +420,7 @@ void SMain::ExecuteMotionHandlers(bool isInTickMode)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
+			FVector2D value = vectorChange;
 			motionHandler->SetKey(nextFrame, vectorChange);
 		}
 	}
@@ -455,12 +459,10 @@ FReply SMain::SelectYInverted()
 }
 void SMain::OnStartPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("on start play"));
 	IsStarted = true;
 }
 void SMain::OnStopPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("on stop play"));
 	IsStarted = false;
 	IsRecordedStarted = false;
 }
@@ -523,6 +525,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
 			Sequencer->NotifyBindingsChanged();
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
+		}
 	}
 	if (key.ToString() == "D")
 	{
@@ -543,6 +549,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			}
 			Sequencer->SetGlobalTime(SelectedSequence->GetMovieScene()->GetPlaybackRange().GetLowerBoundValue());
 			Sequencer->Pause();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
 	if (key.ToString() == "A")

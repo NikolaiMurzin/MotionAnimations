@@ -50,6 +50,10 @@ public:
 	UPROPERTY()
 	int32 CurrentIndex;
 	UPROPERTY()
+	double UpperBoundValue = 0;
+	UPROPERTY()
+	double LowerBoundValue = 0;
+	UPROPERTY()
 	TMap<int32, FKeyValues> KeyValues;
 
 	FMotionHandlerData();

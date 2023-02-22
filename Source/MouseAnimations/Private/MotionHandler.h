@@ -79,6 +79,14 @@ public:
 	FOnCurrentIndexValueChanged OnCurrentIndexValueChanged;
 	void OnCurrentIndexValueChangedRaw(int32 value);
 
+	DECLARE_DELEGATE_OneParam(FOnUpperBoundValueChanged, double);
+	FOnUpperBoundValueChanged OnUpperBoundValueChanged;
+	void OnUpperBoundValueChangedRaw(double value);
+
+	DECLARE_DELEGATE_OneParam(FOnLowerBoundValueChanged, double);
+	FOnLowerBoundValueChanged OnLowerBoundValueChanged;
+	void OnLowerBoundValueChangedRaw(double value);
+
 	DECLARE_DELEGATE_OneParam(FOnTextChanged, const FText& /*NewValue*/);
 	FOnTextChanged OnTextChanged;
 	void OnTextChangedRaw(const FText& value);

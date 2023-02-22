@@ -14,10 +14,8 @@ FMotionHandlerData::FMotionHandlerData()
 FMotionHandlerData::FMotionHandlerData(FString FilePath)
 {
 	FString FileData = "";
-	UE_LOG(LogTemp, Warning, TEXT("Trying to init MotionHandlerData with filepath %s"), *FilePath);
 	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DID NOT FIND FILE"));
 		IsValidData = false;
 		return;
 	}
@@ -26,7 +24,6 @@ FMotionHandlerData::FMotionHandlerData(FString FilePath)
 
 	if (FJsonObjectConverter::JsonObjectStringToUStruct(FileData, this, 0, 0))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CONVERTED"));
 		IsValidData = true;
 	}
 }

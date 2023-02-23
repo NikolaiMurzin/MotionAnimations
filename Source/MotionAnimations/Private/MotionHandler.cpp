@@ -155,6 +155,10 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
 }
+MotionHandler::~MotionHandler()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Call destructor of motion handler"));
+}
 
 bool MotionHandler::IsValidMotionHandler()
 {

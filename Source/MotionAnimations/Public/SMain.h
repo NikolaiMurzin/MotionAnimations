@@ -21,8 +21,10 @@
 #include "Styling/SlateTypes.h"
 #include "Templates/SharedPointerInternals.h"
 #include "Widgets/Input/SComboBox.h"
+#include "Widgets/SWindow.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Settings.h"
 
 /**
  *
@@ -35,37 +37,8 @@ public:
 	}
 	SLATE_END_ARGS()
 
-	SMain()
-	{
-		UE_LOG(LogTemp, Warning, TEXT("constructor is called"));
-	}
-	~SMain()
-	{
-		UE_LOG(LogTemp, Warning, TEXT("destructor is called"));
-		if (Sequencer != nullptr)
-		{
-			if (OnGlobalTimeChangedDelegate != nullptr)
-			{
-				OnGlobalTimeChangedDelegate->RemoveAll(this);
-			}
-			if (OnPlayEvent != nullptr)
-			{
-				OnPlayEvent->RemoveAll(this);
-			}
-			if (OnStopEvent != nullptr)
-			{
-				OnStopEvent->RemoveAll(this);
-			}
-			if (OnCloseEvent != nullptr)
-			{
-				OnCloseEvent->RemoveAll(this);
-			}
-			if (OnKeyDownEvent != nullptr)
-			{
-				OnKeyDownEvent->RemoveAll(this);
-			}
-		}
-	}
+	SMain();
+	~SMain();
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
@@ -84,6 +57,8 @@ public:
 	FReply OnRefreshSequencer();
 
 	FReply OnRefreshBindings();
+
+	void RefreshSettings();
 
 	bool IsRecordedStarted;
 
@@ -133,9 +108,12 @@ public:
 	FText GetCustomStartFromFrame() const;
 	FText GetCustomEndFrame() const;
 
+	FReply OpenSettingsWindow();
+
 private:
 	TRange<FFrameNumber> CustomRange;
 	TArray<ULevelSequence*> Sequences;
 	ULevelSequence* SelectedSequence;
+	FSettings* Settings;
 	ISequencer* Sequencer;
 };

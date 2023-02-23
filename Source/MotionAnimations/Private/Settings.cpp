@@ -1,26 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Settings.h"
-#include <Misc/FileHelper.h>
+
 #include <JsonObjectConverter.h>
+#include <Misc/FileHelper.h>
 
 FSettings::FSettings()
 {
-	FString FileData = "";
 	FString FilePath = GetFilePath();
-	
+
 	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
 	{
 		SetDefaultSettings();
 		Save();
 		return;
 	}
-
-	FFileHelper::LoadFileToString(FileData, *FilePath);
-
-	if (FJsonObjectConverter::JsonObjectStringToUStruct(FileData, this, 0, 0))
+	else
 	{
+		LoadSettingsFromDisk();
 	}
 }
 
@@ -35,6 +32,20 @@ FString FSettings::GetFilePath()
 
 void FSettings::SetDefaultSettings()
 {
+	Keys.Add(TTuple<FString, FString>("Activate", "F2"));
+	Keys.Add(TTuple<FString, FString>("Delete item", "F11"));
+	Keys.Add(TTuple<FString, FString>("Refresh sequencer", "W"));
+	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
+	Keys.Add(TTuple<FString, FString>("Stop recording and optimize", "D"));
+	Keys.Add(TTuple<FString, FString>("Preview animation", "A"));
+	Keys.Add(TTuple<FString, FString>("Save item", "F5"));
+	Keys.Add(TTuple<FString, FString>("Load keys from item to sequencer", "F6"));
+	Keys.Add(TTuple<FString, FString>("Select x axis", "Z"));
+	Keys.Add(TTuple<FString, FString>("Select -x axis", "X"));
+	Keys.Add(TTuple<FString, FString>("Select y axis", "C"));
+	Keys.Add(TTuple<FString, FString>("Select -y axis", "V"));
+	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
+	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
 }
 bool FSettings::Save()
 {
@@ -43,6 +54,17 @@ bool FSettings::Save()
 	FString FilePath = GetFilePath();
 	return FFileHelper::SaveStringToFile(
 		FStringView(JsonString), *FilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
+}
+bool FSettings::LoadSettingsFromDisk()
+{
+	FString FilePath = GetFilePath();
+	FString FileData = "";
+	FFileHelper::LoadFileToString(FileData, *FilePath);
+	if (FJsonObjectConverter::JsonObjectStringToUStruct(FileData, this, 0, 0))
+	{
+		return true;
+	}
+	return false;
 }
 FSettings::~FSettings()
 {

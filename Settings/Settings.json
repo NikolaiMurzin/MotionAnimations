@@ -1,0 +1,22 @@
+{
+	"isInCustomRange": false,
+	"upperRange": 0,
+	"lowerRange": 0,
+	"keys":
+	{
+		"Activate": "F2",
+		"Delete item": "F9",
+		"Refresh sequencer": "Q",
+		"Start recording": "E",
+		"Stop recording and optimize": "D",
+		"Preview animation": "A",
+		"Save item": "F5",
+		"Load keys from item to sequencer": "F6",
+		"Select x axis": "Z",
+		"Select -x axis": "X",
+		"Select y axis": "C",
+		"Select -y axis": "V",
+		"Set upper bound of custom range": "Y",
+		"Set lower bound of custom range": "T"
+	}
+}

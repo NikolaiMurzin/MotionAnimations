@@ -37,8 +37,10 @@
 #include "MovieSceneBinding.h"
 #include "MovieSceneSection.h"
 #include "MovieSceneSequence.h"
+#include "SSettingsWidget.h"
 #include "Sequencer/Public/SequencerAddKeyOperation.h"
 #include "SequencerAddKeyOperation.h"
+#include "Settings.h"
 #include "SlateFwd.h"
 #include "SlateOptMacros.h"
 #include "Styling/SlateTypes.h"
@@ -59,10 +61,12 @@
 #include <string>
 #include <typeinfo>
 
-BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
+SMain::SMain()
 {
 	IsStarted = false;	  // for execute motion handlers on tick
-						  //
+
+	Settings = new FSettings();
+
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	CustomRange = TRange<FFrameNumber>();
 	CustomRange.SetUpperBound(FFrameNumber());
@@ -74,28 +78,80 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
 
-	UE_LOG(LogTemp, Warning, TEXT("construct called"));
-
-	ChildSlot[SNew(SScrollBox) +
-			  SScrollBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))].OnClicked(
-				  this, &SMain::OnRefreshSequencesClicked)] +
-			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetIsActive)] +
-			  SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
-									 .OptionsSource((&Sequences))
-									 .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
-									 .OnSelectionChanged(this, &SMain::OnSequenceSelected)
-									 .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
-			  SScrollBox::Slot()[SNew(SCheckBox)
-									 .IsChecked(this, &SMain::GetIsCustomRange)
-									 .OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)] +
-			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
-			  SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)] +
-			  SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
-									 .ItemHeight(24)
-									 .ListItemsSource(&MotionHandlers)
-									 .OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
-
-	ListViewWidget->SetListItemsSource(MotionHandlers);
+	OnGlobalTimeChangedDelegate = nullptr;
+	OnPlayEvent = nullptr;
+	OnStopEvent = nullptr;
+	OnCloseEvent = nullptr;
+	OnKeyDownEvent = nullptr;
+}
+SMain::~SMain()
+{
+	delete Settings;
+	if (Sequencer != nullptr)
+	{
+		if (OnGlobalTimeChangedDelegate != nullptr)
+		{
+			if (OnGlobalTimeChangedDelegate != nullptr)
+			{
+				OnGlobalTimeChangedDelegate->RemoveAll(this);
+			}
+		}
+		if (OnPlayEvent != nullptr)
+		{
+			if (OnPlayEvent != nullptr)
+			{
+				OnPlayEvent->RemoveAll(this);
+			}
+		}
+		if (OnStopEvent != nullptr)
+		{
+			if (OnStopEvent != nullptr)
+			{
+				OnStopEvent->RemoveAll(this);
+			}
+		}
+		if (OnCloseEvent != nullptr)
+		{
+			if (OnCloseEvent != nullptr)
+			{
+				OnCloseEvent->RemoveAll(this);
+			}
+		}
+		if (OnKeyDownEvent != nullptr)
+		{
+			if (OnKeyDownEvent != nullptr)
+			{
+				OnKeyDownEvent->RemoveAll(this);
+			}
+		}
+	}
+}
+BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
+{
+	ChildSlot
+		[SNew(SScrollBox) +
+			SScrollBox::Slot()
+				[SNew(SHorizontalBox) +
+					SHorizontalBox::Slot()[SNew(SButton)
+											   .Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))]
+											   .OnClicked(this, &SMain::OnRefreshSequencesClicked)] +
+					SHorizontalBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Settings"))].OnClicked(
+						this, &SMain::OpenSettingsWindow)]] +
+			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetIsActive)] +
+			SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
+								   .OptionsSource((&Sequences))
+								   .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
+								   .OnSelectionChanged(this, &SMain::OnSequenceSelected)
+								   .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
+			SScrollBox::Slot()[SNew(SCheckBox)
+								   .IsChecked(this, &SMain::GetIsCustomRange)
+								   .OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)] +
+			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
+			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)] +
+			SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
+								   .ItemHeight(24)
+								   .ListItemsSource(&MotionHandlers)
+								   .OnGenerateRow(this, &SMain::OnGenerateRowForList)]];
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -119,6 +175,20 @@ FReply SMain::OnRefreshSequencesClicked()
 {
 	RefreshSequences();
 	return FReply::Handled();
+}
+
+FReply SMain::OpenSettingsWindow()
+{
+	TSharedRef<SWindow> SettingsWindow = SNew(SWindow).Title(FText::FromString(TEXT("Settings"))).ClientSize(FVector2D(400, 500));
+	TSharedRef<SSettingsWidget> SettingsWidget = SNew(SSettingsWidget);
+	SettingsWidget.Get().OnChangeKeyEvent->AddRaw(this, &SMain::RefreshSettings);
+	SettingsWindow->SetContent(SettingsWidget);
+	FSlateApplication::Get().AddWindow(SettingsWindow);
+	return FReply::Handled();
+}
+void SMain::RefreshSettings()
+{
+	Settings->LoadSettingsFromDisk();
 }
 
 FText SMain::GetSelectedSequenceName() const
@@ -468,8 +538,13 @@ void SMain::OnStopPlay()
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
-	FKey key = event.GetKey();
-	if (key.ToString() == "F2")
+	FString key = event.GetKey().ToString();
+	if (Settings->Keys.Num() < 14)	  // there should be at least 14 settings
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Something with your settings file!"));
+		return;
+	}
+	if (Settings->Keys["Activate"] == key)
 	{
 		IsKeysEnabled = !IsKeysEnabled;
 	}
@@ -477,7 +552,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		return;
 	}
-	if (key.ToString() == "F11")
+	if (Settings->Keys["Delete item"] == key)
 	{
 		for (TSharedPtr<MotionHandler> handler : ListViewWidget->GetSelectedItems())
 		{
@@ -485,12 +560,12 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			MotionHandlers.Remove(handler);
 		}
 	}
-	if (key.ToString() == "W")
+	if (Settings->Keys["Refresh sequencer"] == key)
 	{
 		RefreshSequencer();
 		AddMotionHandlers();
 	}
-	if (key.ToString() == "E")
+	if (Settings->Keys["Start recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
@@ -502,16 +577,16 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->Pause();
 			Sequencer->SetGlobalTime(lowerValue);
 
+			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
+			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
+			FFrameNumber DeleteKeysTo = CurrentRange_.GetUpperBoundValue();
+
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
-				FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
-				FFrameNumber higherCurrentValue = CurrentRange_.GetUpperBoundValue();
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 				FFrameNumber DeleteKeysFrom = lowerCurrentValue;
-				DeleteKeysFrom.Value += 1000;
-				higherCurrentValue.Value += 1000;
-				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, higherCurrentValue));
+				DeleteKeysFrom.Value += 2000;
+				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, DeleteKeysTo));
 				motionHandler->ResetNiagaraState();
 			}
 
@@ -531,7 +606,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
-	if (key.ToString() == "D")
+	if (Settings->Keys["Stop recording and optimize"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
@@ -557,7 +632,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
-	if (key.ToString() == "A")
+	if (Settings->Keys["Preview animation"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
@@ -581,7 +656,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			Sequencer->NotifyBindingsChanged();
 		}
 	}
-	if (key.ToString() == "F5")
+	if (Settings->Keys["Save item"] == key)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
@@ -589,48 +664,41 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			motionHandler->SaveData();
 		}
 	}
-	if (key.ToString() == "F6")
+	if (Settings->Keys["Load keys from item to sequencer"] == key)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->InsertCurrentKeyValuesToSequencer();
 		}
 	}
-	if (key.ToString() == "F12")
-	{
-		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
-		{
-			motionHandler->DeleteKeyValues();
-		}
-	}
-	if (key.ToString() == "Z")
+	if (Settings->Keys["Select x axis"] == key)
 	{
 		SelectX();
 		ListViewWidget->RebuildList();
 	}
-	else if (key.ToString() == "X")
+	else if (Settings->Keys["Select -x axis"] == key)
 	{
 		SelectXInverted();
 		ListViewWidget->RebuildList();
 	}
-	else if (key.ToString() == "C")
+	else if (Settings->Keys["Select y axis"] == key)
 	{
 		SelectY();
 		ListViewWidget->RebuildList();
 	}
-	else if (key.ToString() == "V")
+	else if (Settings->Keys["Select -y axis"] == key)
 	{
 		SelectYInverted();
 		ListViewWidget->RebuildList();
 	}
-	else if (key.ToString() == "T")
+	else if (Settings->Keys["Set lower bound of custom range"] == key)
 	{
 		if (Sequencer != nullptr && SelectedSequence != nullptr)
 		{
 			CustomRange.SetLowerBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}
 	}
-	else if (key.ToString() == "Y")
+	else if (Settings->Keys["Set upper bound of custom range"] == key)
 	{
 		if (Sequencer != nullptr && SelectedSequence != nullptr)
 		{

@@ -16,13 +16,18 @@ public:
 	FSettings();
 	~FSettings();
 
+	UPROPERTY()
 	bool IsInCustomRange;
+	UPROPERTY()
 	int UpperRange;
+	UPROPERTY()
 	int LowerRange;
 
+	UPROPERTY()
 	TMap<FString, FString> Keys;
 
 	void SetDefaultSettings();
 	bool Save();
 	FString GetFilePath();
+	bool LoadSettingsFromDisk();
 };

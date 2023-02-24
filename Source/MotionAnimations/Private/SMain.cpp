@@ -67,6 +67,12 @@ SMain::SMain()
 
 	Settings = new FSettings();
 
+	OnGlobalTimeChangedDelegate = nullptr;
+	OnPlayEvent = nullptr;
+	OnStopEvent = nullptr;
+	OnCloseEvent = nullptr;
+	OnKeyDownEvent = nullptr;
+
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	CustomRange = TRange<FFrameNumber>();
 	CustomRange.SetUpperBound(FFrameNumber());
@@ -77,12 +83,6 @@ SMain::SMain()
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
-
-	OnGlobalTimeChangedDelegate = nullptr;
-	OnPlayEvent = nullptr;
-	OnStopEvent = nullptr;
-	OnCloseEvent = nullptr;
-	OnKeyDownEvent = nullptr;
 }
 SMain::~SMain()
 {
@@ -130,24 +130,57 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 {
 	ChildSlot
 		[SNew(SScrollBox) +
+			SScrollBox::Slot()[SNew(SHorizontalBox) +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetIsActive)].Padding(
+								   FMargin(10.f, 20.0f, 0.0f, 0.f)) +
+							   SHorizontalBox::Slot()
+								   [SNew(SHorizontalBox) +
+									   SHorizontalBox::Slot()[SNew(SButton)
+																  .Content()[SNew(STextBlock).Text(FText::FromString("Settings"))]
+																  .OnClicked(this, &SMain::OpenSettingsWindow)]
+										   .FillWidth(0.3f)
+										   .HAlign(HAlign_Right)
+										   .Padding(10.f)]] +
+			SScrollBox::Slot()[SNew(SHorizontalBox) +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Current sequence:"))]
+								   .AutoWidth()
+								   .Padding(FMargin(0.f, 2.5f, 5.f, 0.f))
+								   .AutoWidth() +
+							   SHorizontalBox::Slot()[SNew(SComboBox<ULevelSequence*>)
+														  .OptionsSource((&Sequences))
+														  .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
+														  .OnSelectionChanged(this, &SMain::OnSequenceSelected)
+														  .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]]
+								   .AutoWidth() +
+							   SHorizontalBox::Slot()[SNew(SButton)
+														  .Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))]
+														  .OnClicked(this, &SMain::OnRefreshSequencesClicked)]
+								   .FillWidth(0.3f)
+								   .HAlign(HAlign_Right)
+								   .Padding(FMargin(0.f, 0.f, 10.f, 0.0f))]
+				.Padding(FMargin(10.f, 0.f, 0.0f, 5.f)) +
 			SScrollBox::Slot()
-				[SNew(SHorizontalBox) +
-					SHorizontalBox::Slot()[SNew(SButton)
-											   .Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))]
-											   .OnClicked(this, &SMain::OnRefreshSequencesClicked)] +
-					SHorizontalBox::Slot()[SNew(SButton).Content()[SNew(STextBlock).Text(FText::FromString("Settings"))].OnClicked(
-						this, &SMain::OpenSettingsWindow)]] +
-			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetIsActive)] +
-			SScrollBox::Slot()[SNew(SComboBox<ULevelSequence*>)
-								   .OptionsSource((&Sequences))
-								   .OnGenerateWidget(this, &SMain::MakeSequenceWidget)
-								   .OnSelectionChanged(this, &SMain::OnSequenceSelected)
-								   .Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]] +
-			SScrollBox::Slot()[SNew(SCheckBox)
-								   .IsChecked(this, &SMain::GetIsCustomRange)
-								   .OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)] +
-			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
-			SScrollBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)] +
+				[SNew(SVerticalBox) +
+					SVerticalBox::Slot()[SNew(SHorizontalBox) +
+										 SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Activate custom range"))]
+											 .AutoWidth()
+											 .Padding(FMargin(0.0f, 0.0f, 10.f, 0.0f)) +
+										 SHorizontalBox::Slot()[SNew(SCheckBox)
+																	.IsChecked(this, &SMain::GetIsCustomRange)
+																	.OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)
+
+	]
+											 .AutoWidth()] +
+					SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
+					SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)]]
+					.Padding(FMargin(10.f, 0.f, 0.f, 5.f)) +
+			SScrollBox::Slot()[SNew(SHorizontalBox) + SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Name"))] +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Scale"))] +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Current index"))] +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Selected Mode"))] +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Lower bound value"))] +
+							   SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Upper bound value"))]]
+				.Padding(FMargin(10.f, 5.f, 0.f, 5.f)) +
 			SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
 								   .ItemHeight(24)
 								   .ListItemsSource(&MotionHandlers)
@@ -159,6 +192,30 @@ TSharedRef<SWidget> SMain::MakeSequenceWidget(ULevelSequence* InSequence)
 {
 	return SNew(STextBlock).Text(FText::FromString(InSequence->GetDisplayName().ToString()));
 }
+
+TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
+		.Padding(2.0f)
+		.Content()
+			[SNew(SHorizontalBox) +
+				SHorizontalBox::Slot()[SNew(SEditableText)
+										   .Text(Item->Data.CustomName)
+										   .OnTextChanged(Item->OnTextChanged)
+										   .ClearKeyboardFocusOnCommit(true)]
+
+				+ SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)] +
+				SHorizontalBox::Slot()
+					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)] +
+				SHorizontalBox::Slot()[SNew(STextBlock)
+										   .Text(UEnum::GetDisplayValueAsText(Item->Data.SelectedMode))
+										   .Justification(ETextJustify::Center)] +
+				SHorizontalBox::Slot()
+					[SNew(SSpinBox<double>).Value(Item->Data.LowerBoundValue).OnValueChanged(Item->OnLowerBoundValueChanged)] +
+				SHorizontalBox::Slot()
+					[SNew(SSpinBox<double>).Value(Item->Data.UpperBoundValue).OnValueChanged(Item->OnUpperBoundValueChanged)]];
+}
+
 FText SMain::GetIsActive() const
 {
 	if (IsKeysEnabled)
@@ -249,26 +306,6 @@ FText SMain::GetCustomEndFrame() const
 		return FText::FromString(string);
 	}
 	return FText::FromString("Custom end frame:");
-}
-
-TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
-{
-	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
-		.Padding(2.0f)
-		.Content()
-			[SNew(SHorizontalBox) +
-				SHorizontalBox::Slot()[SNew(SEditableText)
-										   .Text(Item->Data.CustomName)
-										   .OnTextChanged(Item->OnTextChanged)
-										   .ClearKeyboardFocusOnCommit(true)] +
-				SHorizontalBox::Slot()[SNew(SSpinBox<double>).Value(Item->Data.Scale).OnValueChanged(Item->OnScaleValueChanged)] +
-				SHorizontalBox::Slot()
-					[SNew(SSpinBox<int32>).Value(Item->Data.CurrentIndex).OnValueChanged(Item->OnCurrentIndexValueChanged)] +
-				SHorizontalBox::Slot()[SNew(STextBlock).Text(UEnum::GetDisplayValueAsText(Item->Data.SelectedMode))] +
-				SHorizontalBox::Slot()
-					[SNew(SSpinBox<double>).Value(Item->Data.LowerBoundValue).OnValueChanged(Item->OnLowerBoundValueChanged)] +
-				SHorizontalBox::Slot()
-					[SNew(SSpinBox<double>).Value(Item->Data.UpperBoundValue).OnValueChanged(Item->OnUpperBoundValueChanged)]];
 }
 
 FReply SMain::OnRefreshSequencer()
@@ -585,7 +622,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 				FFrameNumber DeleteKeysFrom = lowerCurrentValue;
-				DeleteKeysFrom.Value += 2000;
+				DeleteKeysFrom.Value += 1000;
+				DeleteKeysTo.Value += 2000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, DeleteKeysTo));
 				motionHandler->ResetNiagaraState();
 			}

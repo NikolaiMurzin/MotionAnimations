@@ -52,8 +52,9 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SSettingsWidget::Construct(const FA
 																  RebuildMainBox();
 																  return FReply::Handled();
 															  })
-														  .DesiredSizeScale(TAttribute<FVector2D>(FVector2D(0.5, 2)))
-														  .HAlign(HAlign_Right)]]
+														  .HAlign(HAlign_Right)]
+								   .AutoWidth()
+								   .Padding(FMargin(5.f, 5.f, 15.f, 5.f))]
 
 				 +
 			SScrollBox::Slot()[MainBox.ToSharedRef()]];
@@ -73,9 +74,9 @@ void SSettingsWidget::RebuildMainBox()
 				SelectedFunction = Elem.Key;
 				return FReply::Handled();
 			});
-		Block->AddSlot().HAlign(HAlign_Left)[Name];
-		Block->AddSlot().HAlign(HAlign_Center)[Key];
-		Block->AddSlot().HAlign(HAlign_Right)[Button];
+		Block->AddSlot().HAlign(HAlign_Left)[Name].Padding(5.f);
+		Block->AddSlot().HAlign(HAlign_Center)[Key].Padding(5.f);
+		Block->AddSlot().HAlign(HAlign_Right)[SNew(SHorizontalBox) + SHorizontalBox::Slot()[Button]].Padding(FMargin(5.f, 5.f, 15.f, 5.f));
 
 		// Add the text block to the vertical box
 		MainBox->AddSlot().AutoHeight()[Block];

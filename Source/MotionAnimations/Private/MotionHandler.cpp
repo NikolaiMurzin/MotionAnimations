@@ -119,7 +119,6 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
 	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
-	MAccelerator->Reset();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -159,7 +158,6 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
 	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
-	MAccelerator->Reset();
 }
 MotionHandler::~MotionHandler()
 {

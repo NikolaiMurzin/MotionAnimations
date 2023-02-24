@@ -46,6 +46,7 @@
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
 #include "Units/RigUnitContext.h"
+#include "Accelerator.h"
 
 #include <stdexcept>
 #include <string>
@@ -117,6 +118,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetMaterialTrack(MovieSceneTrack);
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
+	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
+	MAccelerator->Reset();
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -130,6 +133,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	MovieSceneControlRigParameterTrack = nullptr;
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
+
 
 	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
 	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
@@ -154,10 +158,12 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetMaterialTrack(MovieSceneTrack);
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
+	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
+	MAccelerator->Reset();
 }
 MotionHandler::~MotionHandler()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Call destructor of motion handler"));
+	delete MAccelerator;
 }
 
 bool MotionHandler::IsValidMotionHandler()
@@ -490,7 +496,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			return;
 		}
 		TMovieSceneChannelData<FMovieSceneFloatValue> ChannelData = FloatChannel->GetData();
-		UE_LOG(LogTemp, Warning, TEXT("Update or add key called"));
 		ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
@@ -498,7 +503,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		valueToSet = (double) valueToSet;
 		if (!DoubleChannel->HasAnyData())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
+			UE_LOG(LogTemp, Warning, TEXT("Can't get data of double channel"));
 			return;
 		}
 		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();

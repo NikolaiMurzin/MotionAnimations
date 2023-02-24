@@ -24,6 +24,7 @@
 #include "Sequencer/Public/ISequencer.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 #include "UObject/NameTypes.h"
+#include "Accelerator.h"
 
 class MotionHandler
 {
@@ -112,8 +113,10 @@ private:
 
 	UNiagaraComponent* NiagaraComponent = nullptr;
 
-	FMovieSceneFloatChannel* FloatChannel;
-	FMovieSceneDoubleChannel* DoubleChannel;
-	FMovieSceneBoolChannel* BoolChannel;
-	FMovieSceneIntegerChannel* IntegerChannel;
+	FMovieSceneFloatChannel* FloatChannel = nullptr;
+	FMovieSceneDoubleChannel* DoubleChannel = nullptr;
+	FMovieSceneBoolChannel* BoolChannel = nullptr;
+	FMovieSceneIntegerChannel* IntegerChannel = nullptr;
+
+	Accelerator* MAccelerator;
 };

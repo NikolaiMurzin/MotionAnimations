@@ -10,12 +10,18 @@
 Accelerator::Accelerator(
 	FMovieSceneFloatChannel* floatChannel, FMovieSceneDoubleChannel* doubleChannel, FMovieSceneIntegerChannel* integerChannel)
 {
-	FloatChannel = floatChannel;
-	DoubleChannel = doubleChannel;
-	IntegerChannel = integerChannel;
 	Range = TRange<FFrameNumber>();
 	IsFirstExecution = true;
-	Reset();
+	LatestIndexSetted = -1;
+
+	FloatChannel = floatChannel;
+	IntegerChannel = integerChannel;
+
+	DoubleChannel = doubleChannel;
+	DoubleValues = TArray<FMovieSceneDoubleValue>();
+	Times = TArray<FFrameNumber>();
+
+	Reinit();
 }
 
 Accelerator::~Accelerator()
@@ -24,37 +30,39 @@ Accelerator::~Accelerator()
 void Accelerator::Accelerate(int value, FFrameNumber keyPosition)
 {
 	int keyIndex = FindNearestKeyBy(keyPosition);
-	UE_LOG(LogTemp, Warning, TEXT("called accelerate %d"), keyIndex);
-	FFrameNumber moveBy = HowMuchCanMove(keyIndex, value);
-	UE_LOG(LogTemp, Warning, TEXT("can move by %d"), moveBy.Value);
+	if (keyIndex == LatestIndexSetted)
+	{
+		return;
+	}
+	FFrameNumber movePlus = FFrameNumber();
+	movePlus.Value = value;
+	FFrameNumber moveBy = HowMuchCanMove(keyIndex, movePlus); // FFrameNumber moveBy = keyPosition + value;
 	UpdateKey(keyIndex, moveBy);
-	TotalMovement += moveBy;
+	PreviousMove += movePlus;
+	LatestIndexSetted = keyIndex;
 }
 FFrameNumber Accelerator::HowMuchCanMove(int keyIndex, FFrameNumber moveBy)
 {
-	if (moveBy > 0)
+	if (!Times.IsValidIndex(keyIndex))
 	{
-		return Times[keyIndex] + moveBy;
+		FFrameNumber fn = FFrameNumber();
+		fn.Value = 0;
+		return fn;
+	}
+	if (moveBy >= 0)
+	{
+		return Times[keyIndex] + moveBy + PreviousMove;
 	}
 	else if (moveBy < 0)
 	{
 		if (Times.IsValidIndex(keyIndex - 1))
 		{
-			FFrameNumber frameWouldBe = Times[keyIndex] + moveBy;
-			if (frameWouldBe < Times[keyIndex - 1])	   // if frame would be < than previous frame
-			{
-				FFrameNumber newMoveBy = Times[keyIndex] - Times[keyIndex - 1] -
-										 5;	   // when we should move it by maximum available size to previous frame
-				return Times[keyIndex] - newMoveBy;
-			}
-			else
-			{
-				return Times[keyIndex] + moveBy;
-			}
-		}
+			FFrameNumber max = Times[keyIndex - 1] + PreviousMove; // take latest installed value??? here we need to take not from Times but from actual FDoubleChannel;A
+		}	// Get previous value, set value but maximum as previous value, not lower!!!
 		else
 		{
-			return Times[keyIndex] + moveBy;
+			UE_LOG(LogTemp, Warning, TEXT("triger  third "));
+			return Times[keyIndex];
 		}
 	}
 	return FFrameNumber();
@@ -68,6 +76,7 @@ void Accelerator::UpdateKey(int keyIndex, FFrameNumber time)
 	{
 		FMovieSceneDoubleValue value = DoubleValues[keyIndex];
 		DoubleChannel->GetData().UpdateOrAddKey(time, value);
+		DoubleChannel->AutoSetTangents();
 	}
 	else if (IntegerChannel != nullptr)
 	{
@@ -109,8 +118,27 @@ void Accelerator::Reset()
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		Times = DoubleChannel->GetTimes();
-		DoubleValues = DoubleChannel->GetValues();
+		if (Times.IsValidIndex(1))
+		{
+			DoubleChannel->DeleteKeysFrom(Times[1], false);
+		}
+	}
+	else if (IntegerChannel != nullptr)
+	{
+	}
+	PreviousMove.Value = 0;
+}
+void Accelerator::Reinit()
+{
+	if (FloatChannel != nullptr)
+	{
+	}
+	else if (DoubleChannel != nullptr)
+	{
+		Times.Reset();
+		Times.Append(DoubleChannel->GetTimes());
+		DoubleValues.Reset();
+		DoubleValues.Append(DoubleChannel->GetValues());
 		if (Times.Num() > 0)
 		{
 			FFrameNumber lower = Times[0];
@@ -122,5 +150,22 @@ void Accelerator::Reset()
 	else if (IntegerChannel != nullptr)
 	{
 	}
-	TotalMovement = FFrameNumber();
+	PreviousMove = FFrameNumber();
+	PreviousMove.Value = 0;
+}
+void Accelerator::BackChannelToOriginalState()
+{
+	if (FloatChannel != nullptr)
+	{
+	}
+	else if (DoubleChannel != nullptr)
+	{
+		DoubleChannel->Reset();
+		const TArray<FFrameNumber> times = TArray<FFrameNumber>(Times);
+		const TArray<FMovieSceneDoubleValue> values = TArray<FMovieSceneDoubleValue>(DoubleValues);
+		DoubleChannel->AddKeys(times, values);
+	}
+	else if (IntegerChannel != nullptr)
+	{
+	}
 }

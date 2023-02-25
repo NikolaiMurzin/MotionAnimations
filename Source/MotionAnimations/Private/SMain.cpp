@@ -497,10 +497,11 @@ void SMain::OnGlobalTimeChanged()
 	{
 		if (MotionHandlers.Num() > 0)
 		{
-			FFrameNumber currFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+			FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+			nextFrame.Value += 1000;
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				motionHandler->Accelerate(vectorChange, currFrame);
+				motionHandler->Accelerate(vectorChange, nextFrame);
 			}
 		}
 	}
@@ -588,6 +589,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		RefreshSequencer();
 		AddMotionHandlers();
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->ReInitAccelerator();
+		}
 	}
 	if (Settings->Keys["Start recording"] == key)
 	{
@@ -648,6 +653,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
+			motionHandler->ResetAccelerator();
 			motionHandler->ResetNiagaraState();
 		}
 
@@ -655,7 +661,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		params.Frame = highValue;
 		Sequencer->PlayTo(params);
 		IsScalingStarted = true;
-	
 		PreviousPosition = FSlateApplication::Get().GetCursorPos();
 
 		Sequencer->UpdatePlaybackRange();

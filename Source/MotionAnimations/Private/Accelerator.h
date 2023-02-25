@@ -20,25 +20,27 @@ public:
 	void Accelerate(int value, FFrameNumber from);
 	void ChangeRange(TRange<FFrameNumber> range);
 	void Reset();
+	void Reinit();
 
 private:
-	void MoveKeys(FFrameNumber moveFrom, FFrameNumber moveBy);
 	int FindNearestKeyBy(FFrameNumber frame);
-	void PasteKeys();
-
-	bool IsFirstExecution;
-
 	void UpdateKey(int keyIndex, FFrameNumber time);
 	FFrameNumber HowMuchCanMove(int keyIndex, FFrameNumber moveBy);
+	void BackChannelToOriginalState();
+
+
+	bool IsFirstExecution;
+	int LatestIndexSetted;
+
 
 	TRange<FFrameNumber> Range;
 
-	TArrayView<const FFrameNumber> Times;
-	TArrayView<const FMovieSceneDoubleValue> DoubleValues;
-	TArrayView<const FMovieSceneFloatValue> FloatValues;
-	TArrayView<int const> IntValues;
+	TArray<FFrameNumber> Times;
+	TArray<FMovieSceneDoubleValue> DoubleValues;
+	TArray<FMovieSceneFloatValue> FloatValues;
+	TArray<int const> IntValues;
 
-	FFrameNumber TotalMovement;
+	FFrameNumber PreviousMove;
 
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;

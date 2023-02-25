@@ -100,6 +100,8 @@ public:
 	void ResetNiagaraState();
 
 	void Accelerate(FVector2D value, FFrameNumber keyTime);
+	void ResetAccelerator();
+	void ReInitAccelerator();
 
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);

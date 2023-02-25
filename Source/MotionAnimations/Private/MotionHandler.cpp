@@ -507,10 +507,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
 		ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
 	}
-	else if (Data.ChannelTypeName == "MovieSceneBoolChannel")
-	{
-		/* not implemented for now */
-	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
 		valueToSet = (int32) valueToSet;
@@ -1030,12 +1026,20 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 		valueToSet = value.Y * -1;
 	}
 
-	valueToSet = valueToSet * 0.00972;
+	valueToSet = valueToSet * Data.Scale;
 
 	MAccelerator->Accelerate(valueToSet, keyTime);
 }
-bool MotionHandler::operator==(MotionHandler& handler)
+void MotionHandler::ResetAccelerator()
 {
+	MAccelerator->Reset();
+}
+void MotionHandler::ReInitAccelerator()
+{
+	MAccelerator->Reinit();
+}
+bool MotionHandler::operator==(MotionHandler& handler)
+	{
 	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&
 			Data.ChannelDisplayText.ToString() == handler.Data.ChannelDisplayText.ToString() &&
 			Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName);

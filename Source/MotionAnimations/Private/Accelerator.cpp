@@ -14,74 +14,60 @@ Accelerator::Accelerator(
 	DoubleChannel = doubleChannel;
 	IntegerChannel = integerChannel;
 	Range = TRange<FFrameNumber>();
+	IsFirstExecution = true;
 	Reset();
 }
 
 Accelerator::~Accelerator()
 {
 }
-void Accelerator::Accelerate(int value, FFrameNumber from)
+void Accelerator::Accelerate(int value, FFrameNumber keyPosition)
 {
-	MoveKeys(from, value);
-	PasteKeys();
+	int keyIndex = FindNearestKeyBy(keyPosition);
+	UE_LOG(LogTemp, Warning, TEXT("called accelerate %d"), keyIndex);
+	FFrameNumber moveBy = HowMuchCanMove(keyIndex, value);
+	UE_LOG(LogTemp, Warning, TEXT("can move by %d"), moveBy.Value);
+	UpdateKey(keyIndex, moveBy);
+	TotalMovement += moveBy;
 }
-void Accelerator::MoveKeys(FFrameNumber moveFrom, FFrameNumber moveBy)
+FFrameNumber Accelerator::HowMuchCanMove(int keyIndex, FFrameNumber moveBy)
 {
-	int nearestKeyIndex = FindNearestKeyBy(moveFrom);	 // it shouldn't move lower than previous key
-	for (int i = 0; i < KeyTimes.Num(); i++)
+	if (moveBy > 0)
 	{
-		if (i >= nearestKeyIndex)
+		return Times[keyIndex] + moveBy;
+	}
+	else if (moveBy < 0)
+	{
+		if (Times.IsValidIndex(keyIndex - 1))
 		{
-			if (moveBy > 0)
+			FFrameNumber frameWouldBe = Times[keyIndex] + moveBy;
+			if (frameWouldBe < Times[keyIndex - 1])	   // if frame would be < than previous frame
 			{
-				KeyTimes[i] += moveBy;
+				FFrameNumber newMoveBy = Times[keyIndex] - Times[keyIndex - 1] -
+										 5;	   // when we should move it by maximum available size to previous frame
+				return Times[keyIndex] - newMoveBy;
 			}
-			else if (moveBy < 0)
+			else
 			{
-				if (KeyTimes.IsValidIndex(i - 1))
-				{
-					FFrameNumber frameWouldBe = KeyTimes[i] + moveBy;
-					if (frameWouldBe < KeyTimes[i - 1])	  // if frame would be < than previous frame
-					{
-						FFrameNumber newMoveBy = KeyTimes[i] - KeyTimes[i - 1] - 5; // when we should move it by maximum available size to previous frame
-						KeyTimes[i] -= newMoveBy;
-					}
-					else
-					{
-						KeyTimes[i] += moveBy;
-					}
-				}
-				else
-				{
-					KeyTimes[i] += moveBy;
-				}
+				return Times[keyIndex] + moveBy;
 			}
 		}
+		else
+		{
+			return Times[keyIndex] + moveBy;
+		}
 	}
+	return FFrameNumber();
 }
-void Accelerator::MoveKey(FFrameNumber moveFrom, FFrameNumber moveBy)
-{
-	int keyIndex = FindNearestKeyBy(moveFrom);
-}
-void Accelerator::PasteKeys()
+void Accelerator::UpdateKey(int keyIndex, FFrameNumber time)
 {
 	if (FloatChannel != nullptr)
 	{
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		TArrayView<const FMovieSceneDoubleValue> values = DoubleChannel->GetValues();
-		DoubleChannel->Reset();
-		TMovieSceneChannelData DoubleChannelData = DoubleChannel->GetData();
-		for (int i = 0; i < KeyTimes.Num(); i++)
-		{
-			if (KeyTimes.IsValidIndex(i) && values.IsValidIndex(i))
-			{
-				int time = KeyTimes[i].Value;
-				FMovieSceneDoubleValue value = values[i];
-				DoubleChannelData.UpdateOrAddKey(time, value);
-			}
-		}
+		FMovieSceneDoubleValue value = DoubleValues[keyIndex];
+		DoubleChannel->GetData().UpdateOrAddKey(time, value);
 	}
 	else if (IntegerChannel != nullptr)
 	{
@@ -90,17 +76,27 @@ void Accelerator::PasteKeys()
 int Accelerator::FindNearestKeyBy(FFrameNumber frame)	 // return key with that FFrameNumber or next key
 {
 	int index = -1;
-	for (int i = 0; i < KeyTimes.Num(); i++)
+	for (int i = 0; i < Times.Num(); i++)
 	{
-		if (KeyTimes[i].Value == frame.Value)
+		if (Times[i].Value == frame.Value)
 		{
 			return i;
 		}
 		else
 		{
-			if (frame.Value > KeyTimes[i].Value && frame.Value < KeyTimes[i + 1].Value)
+			if (frame.Value > Times[i].Value)
 			{
-				return i + 1;
+				if (Times.IsValidIndex(i + 1))
+				{
+					if (frame.Value < Times[i + 1].Value)
+					{
+						return i + 1;
+					}
+				}
+				else
+				{
+					return i;	 // if it's the last frame
+				}
 			}
 		}
 	}
@@ -110,39 +106,21 @@ void Accelerator::Reset()
 {
 	if (FloatChannel != nullptr)
 	{
-		TArrayView<const FFrameNumber> Times = FloatChannel->GetTimes();
-		if (Times.Num() > 0)
-		{
-			FFrameNumber lower = Times[0];
-			FFrameNumber high = Times.Last().Value;
-			Range.SetLowerBound(lower);
-			Range.SetUpperBound(high);
-			FloatChannel->GetKeys(Range, &KeyTimes, &Keys);
-		}
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		TArrayView<const FFrameNumber> Times = DoubleChannel->GetTimes();
+		Times = DoubleChannel->GetTimes();
+		DoubleValues = DoubleChannel->GetValues();
 		if (Times.Num() > 0)
 		{
 			FFrameNumber lower = Times[0];
 			FFrameNumber high = Times.Last().Value;
 			Range.SetLowerBound(lower);
 			Range.SetUpperBound(high);
-			DoubleChannel->GetKeys(Range, &KeyTimes, &Keys);
 		}
 	}
 	else if (IntegerChannel != nullptr)
 	{
-		TArrayView<const FFrameNumber> Times = IntegerChannel->GetTimes();
-		if (Times.Num() > 0)
-		{
-			FFrameNumber lower = Times[0];
-			FFrameNumber high = Times.Last().Value;
-			Range.SetLowerBound(lower);
-			Range.SetUpperBound(high);
-			IntegerChannel->GetKeys(Range, &KeyTimes, &Keys);
-		}
 	}
-	LatestMultiply = 0;
+	TotalMovement = FFrameNumber();
 }

@@ -5,8 +5,9 @@
 	"keys":
 	{
 		"Activate": "F2",
-		"Delete item": "F9",
+		"Delete item": "F11",
 		"Refresh sequencer": "Q",
+		"Start scaling": "R",
 		"Start recording": "E",
 		"Stop recording and optimize": "D",
 		"Preview animation": "A",

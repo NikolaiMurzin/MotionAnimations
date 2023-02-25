@@ -99,6 +99,8 @@ public:
 
 	void ResetNiagaraState();
 
+	void Accelerate(FVector2D value, FFrameNumber keyTime);
+
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 	void SyncMaterialTrack(FFrameNumber InTime);

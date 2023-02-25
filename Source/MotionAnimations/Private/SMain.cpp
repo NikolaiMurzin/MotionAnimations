@@ -475,6 +475,8 @@ void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handle
 }
 void SMain::OnGlobalTimeChanged()
 {
+	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
+	FVector2D vectorChange = PreviousPosition - currentPosition;
 	if (IsRecordedStarted)
 	{
 		if (IsCustomRange)
@@ -483,52 +485,36 @@ void SMain::OnGlobalTimeChanged()
 			if (CurrentTime.Value >= CustomRange.GetLowerBoundValue().Value &&
 				CurrentTime.Value <= CustomRange.GetUpperBoundValue().Value)
 			{
-				ExecuteMotionHandlers(false);
+				ExecuteMotionHandlers(vectorChange);
 			}
 		}
 		else
 		{
-			ExecuteMotionHandlers(false);
+			ExecuteMotionHandlers(vectorChange);
+		}
+	}
+	if (IsScalingStarted)
+	{
+		if (MotionHandlers.Num() > 0)
+		{
+			FFrameNumber currFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+			{
+				motionHandler->Accelerate(vectorChange, currFrame);
+			}
 		}
 	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 };
-void SMain::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
-{
-	if (SelectedSequence == nullptr || !SelectedSequence->IsValidLowLevel())
-	{
-		RefreshSequences();
-		MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
-	}
-
-	if (false)	  // keep that code just to remember how to execute motion handlers
-				  // every tick
-	{
-		if (IsStarted)
-		{
-			float desiredDeltaTime = 1 / (fps * 3);
-			float timeFromLatest = (float) (InCurrentTime - TimeFromLatestTestExecution);
-			FVector2D cursorPos = FSlateApplication::Get().GetCursorPos();
-
-			if (timeFromLatest >= desiredDeltaTime)
-			{
-				ExecuteMotionHandlers(true);
-			}
-		}
-	}
-}
-void SMain::ExecuteMotionHandlers(bool isInTickMode)
+void SMain::ExecuteMotionHandlers(FVector2D value)
 {
 	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 	nextFrame.Value += 1000;
-	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
-	FVector2D vectorChange = PreviousPosition - currentPosition;
 	if (MotionHandlers.Num() > 0)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-			FVector2D value = vectorChange;
-			motionHandler->SetKey(nextFrame, vectorChange);
+			motionHandler->SetKey(nextFrame, value);
 		}
 	}
 }
@@ -572,6 +558,7 @@ void SMain::OnStopPlay()
 {
 	IsStarted = false;
 	IsRecordedStarted = false;
+	IsScalingStarted = false;
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
@@ -643,6 +630,37 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			UE_LOG(LogTemp, Warning,
 				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
+	}
+	if (Settings->Keys["Start scaling"] == key)
+	{
+		TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+
+		FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+		FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+
+		Sequencer->Pause();
+		Sequencer->SetGlobalTime(lowerValue);
+
+		TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
+		FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
+		FFrameNumber DeleteKeysTo = CurrentRange_.GetUpperBoundValue();
+
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
+			motionHandler->ResetNiagaraState();
+		}
+
+		FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+		params.Frame = highValue;
+		Sequencer->PlayTo(params);
+		IsScalingStarted = true;
+	
+		PreviousPosition = FSlateApplication::Get().GetCursorPos();
+
+		Sequencer->UpdatePlaybackRange();
+		Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
+		Sequencer->NotifyBindingsChanged();
 	}
 	if (Settings->Keys["Stop recording and optimize"] == key)
 	{

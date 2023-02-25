@@ -1005,6 +1005,35 @@ void MotionHandler::InsertCurrentKeyValuesToSequencer()
 		}
 	}
 }
+void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
+{
+	if (!ValidMotionHandler)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't set key, motion handler is not valid"));
+		return;
+	}
+	double valueToSet = 0;
+	if (Data.SelectedMode == Mode::X)
+	{
+		valueToSet = value.X;
+	}
+	else if (Data.SelectedMode == Mode::XInverted)
+	{
+		valueToSet = value.X * -1;
+	}
+	else if (Data.SelectedMode == Mode::Y)
+	{
+		valueToSet = value.Y;
+	}
+	else if (Data.SelectedMode == Mode::YInverted)
+	{
+		valueToSet = value.Y * -1;
+	}
+
+	valueToSet = valueToSet * 0.00972;
+
+	MAccelerator->Accelerate(valueToSet, keyTime);
+}
 bool MotionHandler::operator==(MotionHandler& handler)
 {
 	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&

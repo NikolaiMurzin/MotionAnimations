@@ -23,23 +23,24 @@ public:
 
 private:
 	void MoveKeys(FFrameNumber moveFrom, FFrameNumber moveBy);
-	void MoveKey(FFrameNumber moveFrom, FFrameNumber moveBy);
 	int FindNearestKeyBy(FFrameNumber frame);
 	void PasteKeys();
 
+	bool IsFirstExecution;
+
+	void UpdateKey(int keyIndex, FFrameNumber time);
+	FFrameNumber HowMuchCanMove(int keyIndex, FFrameNumber moveBy);
+
 	TRange<FFrameNumber> Range;
 
-	TArray<FKeyHandle> Keys;
-	TArray<FFrameNumber> KeyTimes;
-	
+	TArrayView<const FFrameNumber> Times;
+	TArrayView<const FMovieSceneDoubleValue> DoubleValues;
+	TArrayView<const FMovieSceneFloatValue> FloatValues;
+	TArrayView<int const> IntValues;
 
-	float LatestMultiply;
+	FFrameNumber TotalMovement;
 
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneIntegerChannel* IntegerChannel;
-
-	FMovieSceneFloatChannel* FloatChannelDup;
-	FMovieSceneDoubleChannel* DoubleChannelDup;
-	FMovieSceneIntegerChannel* IntegerChannelDup;
 };

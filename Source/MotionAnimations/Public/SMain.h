@@ -61,6 +61,7 @@ public:
 	void RefreshSettings();
 
 	bool IsRecordedStarted;
+	bool IsScalingStarted = false;
 
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
@@ -92,12 +93,11 @@ public:
 
 	TArray<TSharedPtr<MotionHandler>> MotionHandlers;
 	void AddMotionHandlers();
-	void ExecuteMotionHandlers(bool isInTickMode);
+	void ExecuteMotionHandlers(FVector2D value);
 	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
 	float fps = 24;
 	double TimeFromLatestTestExecution;
-	void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 
 	float DefaultScale = 0.05;
 

@@ -23,21 +23,23 @@ public:
 	void Reinit();
 
 private:
-	int FindNearestKeyBy(FFrameNumber frame);
-	void UpdateKey(int keyIndex, FFrameNumber time);
-	FFrameNumber HowMuchCanMove(int keyIndex, FFrameNumber moveBy);
+	int FindNearestKeyBy(FFrameNumber frame, TArray<FFrameNumber> keyTimes) const;
+	void UpdateOrAddKey(int keyIndexInOldTimes, FFrameNumber time);
+	FFrameNumber GetNewPosition(int keyIndex, FFrameNumber moveBy) const;
 	void BackChannelToOriginalState();
 
 
 	bool IsFirstExecution;
-	int LatestIndexSetted;
+	int CurrentKeyInOldTimes;
+	int TotalSum;
 
 
 	TRange<FFrameNumber> Range;
 
-	TArray<FFrameNumber> Times;
-	TArray<FMovieSceneDoubleValue> DoubleValues;
-	TArray<FMovieSceneFloatValue> FloatValues;
+	TArray<FFrameNumber> OldKeyTimes;
+	TArray<FMovieSceneDoubleValue> OldDoubleValues;
+	TArray<FMovieSceneFloatValue> OldFloatValues;
+	TArray<FFrameNumber> newKeyTimes;
 	TArray<int const> IntValues;
 
 	FFrameNumber PreviousMove;

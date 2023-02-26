@@ -594,17 +594,28 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			motionHandler->ReInitAccelerator();
 		}
 	}
+
+	TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
+	FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
+	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
+	auto stopSequencerAndBackToFirstFrame = [&]()
+	{
+		Sequencer->Pause();
+		Sequencer->SetGlobalTime(lowerValue);
+	};
+	auto playSequencerToLastFrame = [&]()
+	{
+		FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
+		params.Frame = highValue;
+		Sequencer->PlayTo(params);
+	};
+
 	if (Settings->Keys["Start recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
 
-			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
-
-			Sequencer->Pause();
-			Sequencer->SetGlobalTime(lowerValue);
+			stopSequencerAndBackToFirstFrame();
 
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
@@ -620,9 +631,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->ResetNiagaraState();
 			}
 
-			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
-			params.Frame = highValue;
-			Sequencer->PlayTo(params);
+			playSequencerToLastFrame();
+
 			IsRecordedStarted = true;
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 
@@ -633,18 +643,12 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		else
 		{
 			UE_LOG(LogTemp, Warning,
-				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
+			TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
 	if (Settings->Keys["Start scaling"] == key)
 	{
-		TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
-
-		FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-		FFrameNumber highValue = playbackRange.GetUpperBoundValue();
-
-		Sequencer->Pause();
-		Sequencer->SetGlobalTime(lowerValue);
+		stopSequencerAndBackToFirstFrame();
 
 		TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 		FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
@@ -657,9 +661,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			motionHandler->ResetNiagaraState();
 		}
 
-		FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
-		params.Frame = highValue;
-		Sequencer->PlayTo(params);
+		playSequencerToLastFrame();
+
 		IsScalingStarted = true;
 		PreviousPosition = FSlateApplication::Get().GetCursorPos();
 
@@ -684,8 +687,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->ResetNiagaraState();
 			}
-			Sequencer->SetGlobalTime(SelectedSequence->GetMovieScene()->GetPlaybackRange().GetLowerBoundValue());
-			Sequencer->Pause();
+
+			stopSequencerAndBackToFirstFrame();
 		}
 		else
 		{
@@ -697,20 +700,14 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-			TRange<FFrameNumber> playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
-			FFrameNumber lowerValue = playbackRange.GetLowerBoundValue();
-			FFrameNumber highValue = playbackRange.GetUpperBoundValue();
-			Sequencer->Pause();
-			Sequencer->SetGlobalTime(lowerValue);
-			FMovieSceneSequencePlaybackParams params = FMovieSceneSequencePlaybackParams();
-			params.Frame = highValue;
+			stopSequencerAndBackToFirstFrame();
 
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->ResetNiagaraState();
 			}
 
-			Sequencer->PlayTo(params);
+			playSequencerToLastFrame();
 
 			Sequencer->UpdatePlaybackRange();
 			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);

@@ -110,6 +110,9 @@ public:
 
 	FReply OpenSettingsWindow();
 
+	void OnToleranceChangeRaw(double value);
+	double OptimizationTolerance = 0.01;
+
 private:
 	TRange<FFrameNumber> CustomRange;
 	TArray<ULevelSequence*> Sequences;

@@ -819,7 +819,7 @@ void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
 		IntegerChannel->DeleteKeysFrom(InTime, false);
 	}
 }
-void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
+void MotionHandler::Optimize(TRange<FFrameNumber> InRange, double tolerance)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Optimize Called"));
 	if (!IsValidMotionHandler())
@@ -829,7 +829,7 @@ void MotionHandler::Optimize(TRange<FFrameNumber> InRange)
 	FKeyDataOptimizationParams params = FKeyDataOptimizationParams();
 	params.bAutoSetInterpolation = true;
 	params.Range = InRange;
-	params.Tolerance = 0.01;
+	params.Tolerance = tolerance;
 	params.DisplayRate = FFrameRate();
 	params.DisplayRate.Numerator = 24;
 	params.DisplayRate.Denominator = 1;
@@ -1030,13 +1030,13 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 
 	MAccelerator->Accelerate(valueToSet, keyTime);
 }
-void MotionHandler::ResetAccelerator()
+void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 {
-	MAccelerator->Reset();
+	MAccelerator->Reset(range);
 }
-void MotionHandler::ReInitAccelerator()
+void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
-	MAccelerator->Reinit();
+	MAccelerator->Reinit(range);
 }
 bool MotionHandler::operator==(MotionHandler& handler)
 	{

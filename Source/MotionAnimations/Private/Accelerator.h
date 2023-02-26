@@ -15,12 +15,12 @@
 class Accelerator
 {
 public:
-	Accelerator(FMovieSceneFloatChannel* _FloatChannel = nullptr, FMovieSceneDoubleChannel* _DoubleChannel = nullptr, FMovieSceneIntegerChannel* _IntegerChannel = nullptr);
+	Accelerator(FMovieSceneFloatChannel* _FloatChannel = nullptr, FMovieSceneDoubleChannel* _DoubleChannel = nullptr, FMovieSceneIntegerChannel* _IntegerChannel = nullptr, TRange<FFrameNumber> range = TRange<FFrameNumber>().Empty());
 	~Accelerator();
 	void Accelerate(int value, FFrameNumber from);
 	void ChangeRange(TRange<FFrameNumber> range);
-	void Reset();
-	void Reinit();
+	void Reset(TRange<FFrameNumber> range);
+	void Reinit(TRange<FFrameNumber> range);
 
 private:
 	int FindNearestKeyBy(FFrameNumber frame, TArray<FFrameNumber> keyTimes) const;
@@ -28,11 +28,8 @@ private:
 	FFrameNumber GetNewPosition(int keyIndex, FFrameNumber moveBy) const;
 	void BackChannelToOriginalState();
 
-
 	bool IsFirstExecution;
 	int CurrentKeyInOldTimes;
-	int TotalSum;
-
 
 	TRange<FFrameNumber> Range;
 
@@ -42,6 +39,7 @@ private:
 	TArray<FFrameNumber> newKeyTimes;
 	TArray<int const> IntValues;
 
+	FFrameNumber StartFrom;
 	FFrameNumber PreviousMove;
 
 	FMovieSceneFloatChannel* FloatChannel;

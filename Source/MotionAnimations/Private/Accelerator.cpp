@@ -10,9 +10,9 @@
 #include <cmath>
 
 Accelerator::Accelerator(
-	FMovieSceneFloatChannel* floatChannel, FMovieSceneDoubleChannel* doubleChannel, FMovieSceneIntegerChannel* integerChannel)
+	FMovieSceneFloatChannel* floatChannel, FMovieSceneDoubleChannel* doubleChannel, FMovieSceneIntegerChannel* integerChannel, TRange<FFrameNumber> range)
 {
-	Range = TRange<FFrameNumber>();
+	Range = range;
 	IsFirstExecution = true;
 
 	FloatChannel = floatChannel;
@@ -26,7 +26,7 @@ Accelerator::Accelerator(
 
 	CurrentKeyInOldTimes = 0;
 
-	Reinit();
+	Reinit(Range);
 }
 
 Accelerator::~Accelerator()
@@ -41,10 +41,11 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 		return;
 	}
 
-	auto thereNoKeysStartFrom = [&](FFrameNumber compare) -> bool {
+	auto thereNoKeysStartFrom = [&](FFrameNumber compare) -> bool
+	{
 		if (newKeyTimes.Num() > 0)
 		{
-			return newKeyTimes.Last() <= compare; 
+			return newKeyTimes.Last() <= compare;
 		}
 		else
 		{
@@ -60,9 +61,9 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 		DoubleChannel->AutoSetTangents();
 	};
 
-	auto needToUpdateExistKey = [&]() -> bool { return !thereNoKeysStartFrom(currentPosition); };
-
 	int nearestKeyInNewTimes = FindNearestKeyBy(currentPosition, newKeyTimes);
+
+	auto needToUpdateExistKey = [&]() -> bool { return !thereNoKeysStartFrom(currentPosition) && nearestKeyInNewTimes != -1; };
 
 	if (needToUpdateExistKey())
 	{
@@ -109,7 +110,6 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 }
 FFrameNumber Accelerator::GetNewPosition(int keyIndexInOldTimes, FFrameNumber moveBy) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Move by value is  %d"), moveBy.Value);
 	auto noElementWithThatKeyInOldTimes = [&]() -> bool { return !OldKeyTimes.IsValidIndex(keyIndexInOldTimes); };
 	if (noElementWithThatKeyInOldTimes())
 	{
@@ -121,8 +121,10 @@ FFrameNumber Accelerator::GetNewPosition(int keyIndexInOldTimes, FFrameNumber mo
 	{
 		latestKeyPositionInNewTimes = newKeyTimes.Last();
 	}
-	UE_LOG(LogTemp, Warning, TEXT("new key times len is %d"), newKeyTimes.Num());
-	UE_LOG(LogTemp, Warning, TEXT("new key times last element is %d"), latestKeyPositionInNewTimes.Value);
+	else
+	{
+		latestKeyPositionInNewTimes = OldKeyTimes[0]; // that's for init not from lower bound of range, but from first key of our times
+	}
 
 	FFrameNumber differenceInOldTimes = FFrameNumber();
 	differenceInOldTimes.Value = 0;
@@ -134,12 +136,27 @@ FFrameNumber Accelerator::GetNewPosition(int keyIndexInOldTimes, FFrameNumber mo
 	}
 	if (moveBy > 0)
 	{
-		FFrameNumber newPosition = latestKeyPositionInNewTimes + moveBy + differenceInOldTimes;
-		UE_LOG(LogTemp, Warning, TEXT("moveBy bigger than zero , soo %d"), newPosition.Value);
+		FFrameNumber newPosition = latestKeyPositionInNewTimes + differenceInOldTimes + moveBy;
 		return newPosition;
 	}
-	FFrameNumber newPosition = latestKeyPositionInNewTimes + moveBy + differenceInOldTimes;
-	UE_LOG(LogTemp, Warning, TEXT("return plain latestKeyPositionInNewTimes coz moveBy was < 0 %d"), newPosition.Value);
+	if (moveBy < 0)
+	{
+		FFrameNumber newPosition = latestKeyPositionInNewTimes + differenceInOldTimes + moveBy;
+		if (newPosition < latestKeyPositionInNewTimes)
+		{
+			auto getTheMostSmallerValueThatWeCanSet = [&]() -> FFrameNumber { return latestKeyPositionInNewTimes += 100; };
+			UE_LOG(LogTemp, Warning, TEXT("newPosition is lower latestKeyPositionInNewTimes so %d"),
+				getTheMostSmallerValueThatWeCanSet().Value);
+			return getTheMostSmallerValueThatWeCanSet();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("newPosition is bigger latestKeyPositionInNewTimes  %d"), newPosition.Value);
+			return newPosition;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Move by value is  %d"), moveBy.Value);
+	}
+	FFrameNumber newPosition = latestKeyPositionInNewTimes + differenceInOldTimes + moveBy;
 	return newPosition;
 }
 void Accelerator::UpdateOrAddKey(int keyIndexInOldTimes, FFrameNumber time)
@@ -188,8 +205,14 @@ int Accelerator::FindNearestKeyBy(
 	}
 	return index;
 }
-void Accelerator::Reset()
+void Accelerator::Reset(TRange<FFrameNumber> range = TRange<FFrameNumber>())
 {
+	FFrameNumber deleteKeysFrom = Range.GetLowerBoundValue();
+	if (!range.IsEmpty())
+	{
+		deleteKeysFrom = range.GetLowerBoundValue();
+	}
+	Range = range;
 	if (FloatChannel != nullptr)
 	{
 	}
@@ -197,37 +220,49 @@ void Accelerator::Reset()
 	{
 		if (OldKeyTimes.IsValidIndex(1))
 		{
-			DoubleChannel->DeleteKeysFrom(OldKeyTimes[1], false);
+			DoubleChannel->DeleteKeysFrom(Range.GetLowerBoundValue(), false);
 		}
 	}
 	else if (IntegerChannel != nullptr)
 	{
 	}
 	newKeyTimes.Reset();
-	TotalSum = 0;
 	CurrentKeyInOldTimes = 0;
 }
-void Accelerator::Reinit()
+void Accelerator::Reinit(TRange<FFrameNumber> range)
 {
 	if (FloatChannel != nullptr)
 	{
 	}
 	else if (DoubleChannel != nullptr)
 	{
+		Range = range;
+
 		OldKeyTimes.Reset();
-		OldKeyTimes.Append(DoubleChannel->GetTimes());
 		OldDoubleValues.Reset();
-		OldDoubleValues.Append(DoubleChannel->GetValues());
+
+		if (!range.IsEmpty())
+		{
+			TArrayView<const FFrameNumber> times = DoubleChannel->GetTimes();
+			TArrayView<const FMovieSceneDoubleValue> values = DoubleChannel->GetValues();
+			for (int i = 0; i < times.Num(); i++)
+			{
+				if (times[i].Value >= range.GetLowerBoundValue().Value)
+				{
+					int secondindex = times.Num() - i;
+					OldKeyTimes.Append(times.Slice(i, secondindex));
+					OldDoubleValues.Append(values.Slice(i, values.Num() - i));
+					break;
+				}
+			}
+		}
+		else
+		{
+			OldKeyTimes.Append(DoubleChannel->GetTimes());
+			OldDoubleValues.Append(DoubleChannel->GetValues());
+		}
 
 		newKeyTimes.Reset();
-
-		if (OldKeyTimes.Num() > 0)
-		{
-			FFrameNumber lower = OldKeyTimes[0];
-			FFrameNumber high = OldKeyTimes.Last().Value;
-			Range.SetLowerBound(lower);
-			Range.SetUpperBound(high);
-		}
 	}
 	else if (IntegerChannel != nullptr)
 	{

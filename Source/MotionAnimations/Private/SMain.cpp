@@ -170,7 +170,20 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 																	.OnCheckStateChanged(this, &SMain::OnIsCustomRangeChanged)
 
 	]
-											 .AutoWidth()] +
+											 .AutoWidth() +
+										 SHorizontalBox::Slot()
+											 [SNew(SHorizontalBox) +
+												 SHorizontalBox::Slot()[SNew(STextBlock)
+																			.Text(FText::FromString("Set optimization tolerance"))]
+													 .Padding(FMargin(0.0f, 2.5f, 2.5f, 0.0f))
+													 .AutoWidth() +
+												 SHorizontalBox::Slot()[SNew(SSpinBox<double>)
+																			.Value(this->OptimizationTolerance)
+																			.OnValueChanged(this, &SMain::OnToleranceChangeRaw)]]
+												 .FillWidth(0.3f)
+												 .Padding(FMargin(0.f, 0.f, 10.f, 0.0f))
+												 .HAlign(HAlign_Right)]
+						.AutoHeight() +
 					SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
 					SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)]]
 					.Padding(FMargin(10.f, 0.f, 0.f, 5.f)) +
@@ -591,7 +604,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		AddMotionHandlers();
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-			motionHandler->ReInitAccelerator();
+			motionHandler->ReInitAccelerator(GetCurrentRange());
 		}
 	}
 
@@ -600,8 +613,11 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	FFrameNumber highValue = playbackRange.GetUpperBoundValue();
 	auto stopSequencerAndBackToFirstFrame = [&]()
 	{
-		Sequencer->Pause();
-		Sequencer->SetGlobalTime(lowerValue);
+		if (Sequencer != nullptr)
+		{
+			Sequencer->Pause();
+			Sequencer->SetGlobalTime(lowerValue);
+		}
 	};
 	auto playSequencerToLastFrame = [&]()
 	{
@@ -614,7 +630,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
-
 			stopSequencerAndBackToFirstFrame();
 
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
@@ -643,7 +658,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		else
 		{
 			UE_LOG(LogTemp, Warning,
-			TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
+				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
 	if (Settings->Keys["Start scaling"] == key)
@@ -657,7 +672,9 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
-			motionHandler->ResetAccelerator();
+			lowerCurrentValue.Value += 1000;
+			CurrentRange_.SetLowerBound(lowerCurrentValue);
+			motionHandler->ResetAccelerator(CurrentRange_);
 			motionHandler->ResetNiagaraState();
 		}
 
@@ -683,7 +700,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				motionHandler->Optimize(CurrentRange_);
+				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
 				motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->ResetNiagaraState();
 			}
@@ -763,4 +780,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			CustomRange.SetUpperBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}
 	}
+}
+void SMain::OnToleranceChangeRaw(double value)
+{
+	OptimizationTolerance = value;
 }

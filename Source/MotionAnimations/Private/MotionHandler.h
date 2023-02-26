@@ -24,6 +24,7 @@
 #include "Sequencer/Public/ISequencer.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 #include "UObject/NameTypes.h"
+#include "Misc/FrameNumber.h"
 #include "Accelerator.h"
 
 class MotionHandler
@@ -47,7 +48,7 @@ public:
 
 	double GetValueFromTime(FFrameNumber InTime);
 
-	void Optimize(TRange<FFrameNumber> InRange);
+	void Optimize(TRange<FFrameNumber> InRange, double tolerance);
 
 	bool IsValidMotionHandler();
 	bool ValidMotionHandler;	// for check latest execute of function IsValidMotionHandler();
@@ -100,8 +101,8 @@ public:
 	void ResetNiagaraState();
 
 	void Accelerate(FVector2D value, FFrameNumber keyTime);
-	void ResetAccelerator();
-	void ReInitAccelerator();
+	void ResetAccelerator(TRange<FFrameNumber> range);
+	void ReInitAccelerator(TRange<FFrameNumber> range);
 
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
@@ -123,4 +124,5 @@ private:
 	FMovieSceneIntegerChannel* IntegerChannel = nullptr;
 
 	Accelerator* MAccelerator;
+	double AccelerateLastValue;
 };

@@ -674,6 +674,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			motionHandler->PreviousValue = (double) motionHandler->GetValueFromTime(lowerCurrentValue);
 			lowerCurrentValue.Value += 1000;
 			CurrentRange_.SetLowerBound(lowerCurrentValue);
+			// motionHandler->Populate(CurrentRange_, 0.1, 0.1);
 			motionHandler->ResetAccelerator(CurrentRange_);
 			motionHandler->ResetNiagaraState();
 		}

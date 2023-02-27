@@ -104,6 +104,8 @@ public:
 	void ResetAccelerator(TRange<FFrameNumber> range);
 	void ReInitAccelerator(TRange<FFrameNumber> range);
 
+	void Populate(TRange<FFrameNumber> range, FFrameNumber interval);
+
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 	void SyncMaterialTrack(FFrameNumber InTime);

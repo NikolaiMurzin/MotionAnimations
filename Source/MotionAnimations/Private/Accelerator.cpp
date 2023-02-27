@@ -81,6 +81,9 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 			{
 				if (DoubleChannel != nullptr)
 				{
+					FFrameNumber deleteFrom = oldPosition;
+					deleteFrom.Value -= 50;
+					UE_LOG(LogTemp, Warning, TEXT("Trying to update position: %d"), deleteFrom.Value);
 					DoubleChannel->DeleteKeysFrom(oldPosition, false);
 					setNewKey(newPosition);
 				}

@@ -1038,6 +1038,22 @@ void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
 	MAccelerator->Reinit(range);
 }
+void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
+{
+	if (FloatChannel != nullptr)
+	{
+	}
+	else if (DoubleChannel != nullptr)
+	{
+		float value;
+		// go with some intevral and evaluate and paste new keys at times with given interval
+		DoubleChannel->Evaluate(range.GetLowerBoundValue(), value);
+		UE_LOG(LogTemp, Warning, TEXT("evaluated value is %f"), value);
+	}
+	else if (IntegerChannel != nullptr)
+	{
+	}
+}
 bool MotionHandler::operator==(MotionHandler& handler)
 	{
 	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&

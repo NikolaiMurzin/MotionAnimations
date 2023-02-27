@@ -24,12 +24,13 @@ public:
 
 private:
 	int FindNearestKeyBy(FFrameNumber frame, TArray<FFrameNumber> keyTimes) const;
-	void UpdateOrAddKey(int keyIndexInOldTimes, FFrameNumber time);
-	FFrameNumber GetNewPosition(int keyIndex, FFrameNumber moveBy) const;
+	FFrameNumber GetNewPosition(int keyIndex, int keyIndexInNewTimes, FFrameNumber moveBy) const;
 	void BackChannelToOriginalState();
 
 	bool IsFirstExecution;
 	int CurrentKeyInOldTimes;
+
+	int LatestKeyUpdatedInNewKeyTimes;
 
 	TRange<FFrameNumber> Range;
 

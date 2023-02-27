@@ -1032,10 +1032,16 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 }
 void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 {
+	FFrameNumber from = range.GetLowerBoundValue();
+	from.Value += 1000;
+	range.SetLowerBound(from);
 	MAccelerator->Reset(range);
 }
 void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
+	FFrameNumber from = range.GetLowerBoundValue();
+	from.Value += 1000;
+	range.SetLowerBound(from);
 	MAccelerator->Reinit(range);
 }
 void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
@@ -1045,10 +1051,16 @@ void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		float value;
 		// go with some intevral and evaluate and paste new keys at times with given interval
-		DoubleChannel->Evaluate(range.GetLowerBoundValue(), value);
-		UE_LOG(LogTemp, Warning, TEXT("evaluated value is %f"), value);
+		FFrameNumber curr = range.GetLowerBoundValue();
+		while (curr < range.GetUpperBoundValue())
+		{
+			float value;
+			DoubleChannel->Evaluate(curr, value);
+			DoubleChannel->GetData().UpdateOrAddKey(curr, FMovieSceneDoubleValue(value));
+			curr += interval;
+		}
+		DoubleChannel->AutoSetTangents();
 	}
 	else if (IntegerChannel != nullptr)
 	{

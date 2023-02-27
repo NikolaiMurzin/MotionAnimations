@@ -18,32 +18,18 @@ public:
 	Accelerator(FMovieSceneFloatChannel* _FloatChannel = nullptr, FMovieSceneDoubleChannel* _DoubleChannel = nullptr, FMovieSceneIntegerChannel* _IntegerChannel = nullptr, TRange<FFrameNumber> range = TRange<FFrameNumber>().Empty());
 	~Accelerator();
 	void Accelerate(int value, FFrameNumber from);
-	void ChangeRange(TRange<FFrameNumber> range);
 	void Reset(TRange<FFrameNumber> range);
-	void Reinit(TRange<FFrameNumber> range);
+	void UpdateBackup(TRange <FFrameNumber> range = TRange<FFrameNumber>());
 
 private:
 	int FindNearestKeyBy(FFrameNumber frame, TArray<FFrameNumber> keyTimes) const;
-	FFrameNumber GetNewPosition(int keyIndex, int keyIndexInNewTimes, FFrameNumber moveBy) const;
-	void BackChannelToOriginalState();
-
-	bool IsFirstExecution;
-	int CurrentKeyInOldTimes;
-
-	int LatestKeyUpdatedInNewKeyTimes;
 
 	TRange<FFrameNumber> Range;
-
-	TArray<FFrameNumber> OldKeyTimes;
-	TArray<FMovieSceneDoubleValue> OldDoubleValues;
-	TArray<FMovieSceneFloatValue> OldFloatValues;
-	TArray<FFrameNumber> newKeyTimes;
-	TArray<int const> IntValues;
-
-	FFrameNumber StartFrom;
-	FFrameNumber PreviousMove;
 
 	FMovieSceneFloatChannel* FloatChannel;
 	FMovieSceneDoubleChannel* DoubleChannel;
 	FMovieSceneIntegerChannel* IntegerChannel;
+
+	TArray<FKeyHandle> keysBackup;
+	TArray<FFrameNumber> framesBackup;
 };

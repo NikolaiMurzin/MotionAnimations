@@ -1039,10 +1039,7 @@ void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 }
 void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
-	FFrameNumber from = range.GetLowerBoundValue();
-	from.Value += 1000;
-	range.SetLowerBound(from);
-	MAccelerator->Reinit(range);
+	MAccelerator->UpdateBackup(range);
 }
 void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 {

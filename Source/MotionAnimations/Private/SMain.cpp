@@ -604,7 +604,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		AddMotionHandlers();
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-			motionHandler->ReInitAccelerator(GetCurrentRange());
+			TRange<FFrameNumber> range = GetCurrentRange();
+			motionHandler->ReInitAccelerator(range);
 		}
 	}
 	TRange<FFrameNumber> playbackRange;

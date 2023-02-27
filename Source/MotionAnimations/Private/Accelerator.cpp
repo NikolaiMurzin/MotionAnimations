@@ -34,39 +34,45 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 	TArray<FKeyHandle> keys;
 	TRange<FFrameNumber> range = Range;
 	range.SetLowerBoundValue(currentPosition); // we need to start from current position and perform all operations from current position
-	DoubleChannel->GetKeys(range, &times, &keys);
-	for (FFrameNumber& time : times)
-	{
-		time.Value *= 1 + value * 0.01;
-	}
-	DoubleChannel->SetKeyTimes(keys, times);
-}
-int Accelerator::FindNearestKeyBy(
-	FFrameNumber frame, TArray<FFrameNumber> keyTimes) const	// return key with that FFrameNumber or next key
-{
-	int index = -1;
-	for (int i = 0; i < keyTimes.Num(); i++)
-	{
-		if (keyTimes[i] >= frame)
+	auto changetimes = [&]() {
+		for (FFrameNumber& time : times)
 		{
-			return i;
+			time.Value *= 1 + value * 0.01;
 		}
+	};
+	if (DoubleChannel != nullptr)
+	{
+		DoubleChannel->GetKeys(range, &times, &keys);
+		changetimes();
+		DoubleChannel->SetKeyTimes(keys, times);
 	}
-	return index;
+	else if (FloatChannel != nullptr)
+	{
+		FloatChannel->GetKeys(range, &times, &keys);
+		changetimes();
+		FloatChannel->SetKeyTimes(keys, times);
+	}
+	else if (IntegerChannel != nullptr)
+	{
+		IntegerChannel->GetKeys(range, &times, &keys);
+		changetimes();
+		IntegerChannel->SetKeyTimes(keys, times);
+	}
 }
 void Accelerator::Reset(TRange<FFrameNumber> range = TRange<FFrameNumber>())
 {
 	Range = range;
 	if (FloatChannel != nullptr)
 	{
+		FloatChannel->SetKeyTimes(keysBackup, framesBackup);
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Keys backup num is %d"), keysBackup.Num());
 		DoubleChannel->SetKeyTimes(keysBackup, framesBackup);
 	}
 	else if (IntegerChannel != nullptr)
 	{
+		IntegerChannel->SetKeyTimes(keysBackup, framesBackup);
 	}
 }
 void Accelerator::UpdateBackup(TRange<FFrameNumber> range)
@@ -79,4 +85,12 @@ void Accelerator::UpdateBackup(TRange<FFrameNumber> range)
 	{
 		DoubleChannel->GetKeys(range, &framesBackup, &keysBackup);
 	}
+	else if(FloatChannel != nullptr)
+	{
+		FloatChannel->GetKeys(range, &framesBackup, &keysBackup);
+	}
+	else if (IntegerChannel != nullptr)
+	{
+		IntegerChannel->GetKeys(range, &framesBackup, &keysBackup);
+	} 
 }

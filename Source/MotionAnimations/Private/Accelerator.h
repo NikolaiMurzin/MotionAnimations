@@ -22,8 +22,6 @@ public:
 	void UpdateBackup(TRange <FFrameNumber> range = TRange<FFrameNumber>());
 
 private:
-	int FindNearestKeyBy(FFrameNumber frame, TArray<FFrameNumber> keyTimes) const;
-
 	TRange<FFrameNumber> Range;
 
 	FMovieSceneFloatChannel* FloatChannel;

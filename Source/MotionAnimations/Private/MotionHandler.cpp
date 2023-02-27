@@ -61,6 +61,9 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 
 	OnCurrentIndexValueChanged.BindRaw(this, &MotionHandler::OnCurrentIndexValueChangedRaw);
 
+	OnLowerBoundValueChanged.BindRaw(this, &MotionHandler::OnLowerBoundValueChangedRaw);
+	OnUpperBoundValueChanged.BindRaw(this, &MotionHandler::OnUpperBoundValueChangedRaw);
+
 	PreviousValue = 0;
 	IsFirstUpdate = true;
 
@@ -1026,9 +1029,16 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 		valueToSet = value.Y * -1;
 	}
 
-	valueToSet = valueToSet * Data.Scale;
+	double val = valueToSet;
+
+	valueToSet = valueToSet * Data.Scale + AccelerateLastValue;
 
 	MAccelerator->Accelerate(valueToSet, keyTime);
+	AccelerateLastValue = val;
+
+	SyncMaterialTrack(keyTime);
+	SyncControlRigWithChannelValue(keyTime);
+	SyncNiagaraParam(keyTime);
 }
 void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 {

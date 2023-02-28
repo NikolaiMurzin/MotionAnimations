@@ -124,6 +124,10 @@ SMain::~SMain()
 				OnKeyDownEvent->RemoveAll(this);
 			}
 		}
+		if (SelectedSectionsChangedEvent != nullptr)
+		{
+			SelectedSectionsChangedEvent->RemoveAll(this);
+		}
 	}
 }
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
@@ -355,6 +359,9 @@ void SMain::RefreshSequencer()
 				OnCloseEvent = &(Sequencer->OnCloseEvent());
 				OnCloseEvent->AddRaw(this, &SMain::OnCloseEventRaw);
 
+				SelectedSectionsChangedEvent = &(Sequencer->GetSelectionChangedSections());
+				SelectedSectionsChangedEvent->AddRaw(this, &SMain::SelectedSectionsChangedRaw);
+
 				LoadMotionHandlersFromDisk(MotionHandlers);
 				ListViewWidget->RequestListRefresh();
 				IsSequencerRelevant = true;
@@ -366,6 +373,18 @@ void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
 {
 	IsSequencerRelevant = false;
 }
+void SMain::SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections)
+{
+		RefreshSequencer();
+		AddMotionHandlers();
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			TRange<FFrameNumber> range = GetCurrentRange();
+			motionHandler->ReInitAccelerator(range);
+			motionHandler->ReInitMotionEditor();
+		}
+}
+
 void SMain::RefreshSequences()
 {
 	Sequences = TArray<ULevelSequence*>();
@@ -518,6 +537,31 @@ void SMain::OnGlobalTimeChanged()
 			}
 		}
 	}
+	if (IsEditStarted)
+	{
+		if (IsCustomRange)
+		{
+			FFrameNumber CurrentTime = Sequencer->GetLocalTime().Time.FrameNumber;
+			if (CurrentTime.Value >= CustomRange.GetLowerBoundValue().Value && CurrentTime.Value <= CustomRange.GetUpperBoundValue().Value)
+			{
+				FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+				nextFrame.Value += 1000;
+				for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+				{
+					motionHandler->EditPosition(nextFrame, vectorChange);
+				}
+			}
+		}
+		else
+		{
+			FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
+			nextFrame.Value += 1000;
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+			{
+				motionHandler->EditPosition(nextFrame, vectorChange);
+			}
+		}
+	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 };
 void SMain::ExecuteMotionHandlers(FVector2D value)
@@ -573,6 +617,7 @@ void SMain::OnStopPlay()
 	IsStarted = false;
 	IsRecordedStarted = false;
 	IsScalingStarted = false;
+	IsEditStarted = false;
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
@@ -606,6 +651,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		{
 			TRange<FFrameNumber> range = GetCurrentRange();
 			motionHandler->ReInitAccelerator(range);
+			motionHandler->ReInitMotionEditor();
 		}
 	}
 	TRange<FFrameNumber> playbackRange;
@@ -631,7 +677,23 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		params.Frame = highValue;
 		Sequencer->PlayTo(params);
 	};
-
+	/*if (Settings->Keys["Start edit"] == key)
+	{
+		stopSequencerAndBackToFirstFrame();
+		for (TSharedPtr<MotionHandler> handler : ListViewWidget->GetSelectedItems())
+		{
+			TRange<FFrameNumber> range = GetCurrentRange();
+			FFrameNumber lower = range.GetLowerBoundValue();
+			lower.Value += 1000;
+			range.SetLowerBoundValue(lower);
+			handler->ResetMotionEditor(range);
+			handler->ResetNiagaraState();
+		}
+		IsRecordedStarted = false;
+		IsScalingStarted = false;
+		IsEditStarted = true;
+		playSequencerToLastFrame();
+	} */
 	if (Settings->Keys["Start recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
@@ -654,6 +716,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 
 			playSequencerToLastFrame();
 
+			IsScalingStarted = false;
+			IsEditStarted = false;
 			IsRecordedStarted = true;
 			PreviousPosition = FSlateApplication::Get().GetCursorPos();
 
@@ -683,6 +747,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		playSequencerToLastFrame();
 
 		IsScalingStarted = true;
+		IsEditStarted = false;
+		IsRecordedStarted = false;
 		PreviousPosition = FSlateApplication::Get().GetCursorPos();
 
 		Sequencer->UpdatePlaybackRange();
@@ -705,7 +771,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			stopSequencerAndBackToFirstFrame();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-			motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
+				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
 				motionHandler->ResetNiagaraState();
 			}

@@ -36,6 +36,7 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Delete item", "F11"));
 	Keys.Add(TTuple<FString, FString>("Refresh sequencer", "Q"));
 	Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
+	/*Keys.Add(TTuple<FString, FString>("Start edit", "W")); */
 	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
 	Keys.Add(TTuple<FString, FString>("Stop recording and optimize", "D"));
 	Keys.Add(TTuple<FString, FString>("Preview animation", "A"));

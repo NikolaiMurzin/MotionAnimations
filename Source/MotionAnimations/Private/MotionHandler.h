@@ -26,6 +26,7 @@
 #include "UObject/NameTypes.h"
 #include "Misc/FrameNumber.h"
 #include "Accelerator.h"
+#include "MotionEditor.h"
 
 class MotionHandler
 {
@@ -42,6 +43,8 @@ public:
 	void SetMaterialTrack(UMovieSceneTrack* MovieSceneTrack_);
 	void SetNiagaraTrack(UMovieSceneTrack* NiagaraTrack_);
 	void CastChannel();
+
+	void EditPosition(FFrameNumber InTime, FVector2D InputVector);
 
 	void DeleteAllKeysFrom(FFrameNumber InTime);
 	void DeleteKeysWithin(TRange<FFrameNumber> InRange);
@@ -106,6 +109,9 @@ public:
 
 	void Populate(TRange<FFrameNumber> range, FFrameNumber interval);
 
+	void ResetMotionEditor(TRange<FFrameNumber> range);
+	void ReInitMotionEditor();
+
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime);
 	void SyncMaterialTrack(FFrameNumber InTime);
@@ -127,4 +133,6 @@ private:
 
 	Accelerator* MAccelerator;
 	double AccelerateLastValue;
+
+	MotionEditor* MMotionEditor;
 };

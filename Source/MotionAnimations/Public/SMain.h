@@ -25,6 +25,7 @@
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Settings.h"
+#include "ISequencer.h"
 
 /**
  *
@@ -62,6 +63,7 @@ public:
 
 	bool IsRecordedStarted;
 	bool IsScalingStarted = false;
+	bool IsEditStarted = false;
 
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
@@ -77,6 +79,9 @@ public:
 	FOnCloseEvent* OnCloseEvent;
 	bool IsSequencerRelevant;
 	void OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_);
+
+	ISequencer::FOnSelectionChangedSections* SelectedSectionsChangedEvent;
+	void SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections);
 
 	FSlateApplication::FOnApplicationPreInputKeyDownListener* OnKeyDownEvent;
 	void OnKeyDownGlobal(const FKeyEvent& event);

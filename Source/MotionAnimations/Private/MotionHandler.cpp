@@ -25,6 +25,7 @@
 #include "MovieScene/Parameters/MovieSceneNiagaraVectorParameterTrack.h"
 #include "MovieSceneSequence.h"
 #include "MovieSceneTrack.h"
+#include "MotionEditor.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraTypes.h"
@@ -122,6 +123,7 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
 	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
+	MMotionEditor = new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel);
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -161,6 +163,7 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
 	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
+	MMotionEditor = new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel);
 }
 MotionHandler::~MotionHandler()
 {
@@ -526,6 +529,47 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	SyncNiagaraParam(InTime);
 
 	PreviousValue = valueToSet;
+}
+void MotionHandler::EditPosition(FFrameNumber InTime, FVector2D InputVector)
+{
+	if (!ValidMotionHandler)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't set key, motion handler is not valid"));
+		return;
+	}
+	double valueToSet = 0;
+	if (Data.SelectedMode == Mode::X)
+	{
+		valueToSet = InputVector.X;
+	}
+	else if (Data.SelectedMode == Mode::XInverted)
+	{
+		valueToSet = InputVector.X * -1;
+	}
+	else if (Data.SelectedMode == Mode::Y)
+	{
+		valueToSet = InputVector.Y;
+	}
+	else if (Data.SelectedMode == Mode::YInverted)
+	{
+		valueToSet = InputVector.Y * -1;
+	}
+	valueToSet *= Data.Scale;
+
+	MMotionEditor->Edit(InTime, valueToSet);
+
+	SyncMaterialTrack(InTime);
+	SyncControlRigWithChannelValue(InTime);
+	SyncNiagaraParam(InTime);
+}
+void MotionHandler::ResetMotionEditor(TRange<FFrameNumber> range)
+{
+
+	MMotionEditor->Reset(range);
+}
+void MotionHandler::ReInitMotionEditor()
+{
+	MMotionEditor->ReInit();
 }
 void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 {
@@ -1012,22 +1056,7 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 		return;
 	}
 	double valueToSet = 0;
-	if (Data.SelectedMode == Mode::X)
-	{
-		valueToSet = value.X;
-	}
-	else if (Data.SelectedMode == Mode::XInverted)
-	{
-		valueToSet = value.X * -1;
-	}
-	else if (Data.SelectedMode == Mode::Y)
-	{
-		valueToSet = value.Y;
-	}
-	else if (Data.SelectedMode == Mode::YInverted)
-	{
-		valueToSet = value.Y * -1;
-	}
+	valueToSet = value.X; // take from x by default
 
 	double val = valueToSet;
 

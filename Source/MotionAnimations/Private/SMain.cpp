@@ -698,16 +698,18 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			FFrameNumber higherCurrentValue = CurrentRange_.GetUpperBoundValue();
 			FFrameNumber lowerCurrentValueCopy = lowerCurrentValue;
 			lowerCurrentValueCopy.Value += 1000;
+			higherCurrentValue.Value += 2000;
+			CurrentRange_.SetUpperBoundValue(higherCurrentValue);
 			CurrentRange_.SetLowerBoundValue(lowerCurrentValueCopy);
 
+			stopSequencerAndBackToFirstFrame();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
+			motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
-				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->ResetNiagaraState();
 			}
 
-			stopSequencerAndBackToFirstFrame();
 		}
 		else
 		{

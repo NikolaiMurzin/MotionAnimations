@@ -379,6 +379,10 @@ void SMain::SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections)
 		AddMotionHandlers();
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
+
+			motionHandler->AddOrUpdateKeyValueInSequencer(); // autosave
+			motionHandler->SaveData();
+
 			TRange<FFrameNumber> range = GetCurrentRange();
 			motionHandler->ReInitAccelerator(range);
 			motionHandler->ReInitMotionEditor();

@@ -35,9 +35,21 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 	TRange<FFrameNumber> range = Range;
 	range.SetLowerBoundValue(currentPosition); // we need to start from current position and perform all operations from current position
 	auto changetimes = [&]() {
-		for (FFrameNumber& time : times)
+		for (int i = 0; i < times.Num(); i++)
 		{
-			time.Value *= 1 + value * 0.01;
+			if (i != 0) // if it's not first element;
+			{
+				int valueOfFirst = times[i - 1].Value;
+				int expectedValue = times[i].Value * (1 + value * 0.01);
+				if (expectedValue < valueOfFirst) // if value that we will set is lower than previous
+				{
+					times[i].Value = times[i - 1].Value + 10; // then set value of previous element + 10
+				}
+				else
+				{
+					times[i].Value *= 1 + value * 0.01;
+				}
+			}
 		}
 	};
 	if (DoubleChannel != nullptr)
@@ -62,6 +74,9 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 void Accelerator::Reset(TRange<FFrameNumber> range = TRange<FFrameNumber>())
 {
 	Range = range;
+	TArray<FFrameNumber> times;
+	TArray<FKeyHandle> keys;
+
 	if (FloatChannel != nullptr)
 	{
 		FloatChannel->SetKeyTimes(keysBackup, framesBackup);

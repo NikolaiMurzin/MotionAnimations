@@ -1060,7 +1060,7 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 
 	double val = valueToSet;
 
-	valueToSet = valueToSet * Data.Scale + AccelerateLastValue;
+	valueToSet = valueToSet * Data.Scale + AccelerateLastValue * 0.01;
 
 	MAccelerator->Accelerate(valueToSet, keyTime);
 	AccelerateLastValue = val;

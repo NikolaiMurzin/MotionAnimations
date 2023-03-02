@@ -3,6 +3,7 @@
 #include "SMain.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryState.h"
 #include "Channels/MovieSceneBoolChannel.h"
 #include "Channels/MovieSceneChannelEditorData.h"
 #include "Channels/MovieSceneChannelProxy.h"
@@ -72,62 +73,39 @@ SMain::SMain()
 	OnStopEvent = nullptr;
 	OnCloseEvent = nullptr;
 	OnKeyDownEvent = nullptr;
+	SelectedSectionsChangedEvent = nullptr;
+
+	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+	OpenEditorEvent = &(UAssetEditorSubs->OnAssetEditorOpened());
+	OpenEditorEvent->AddRaw(this, &SMain::OnEditorOpened);
+
+
+	SelectedSequence = nullptr;
 
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	CustomRange = TRange<FFrameNumber>();
 	CustomRange.SetUpperBound(FFrameNumber());
 	CustomRange.SetLowerBound(FFrameNumber());
 
-	RefreshSequences();
-
 	FSlateApplication& app = FSlateApplication::Get();
 	OnKeyDownEvent = &(app.OnApplicationPreInputKeyDownListener());
 	OnKeyDownEvent->AddRaw(this, &SMain::OnKeyDownGlobal);
+
 }
 SMain::~SMain()
 {
 	delete Settings;
 	if (Sequencer != nullptr)
 	{
-		if (OnGlobalTimeChangedDelegate != nullptr)
-		{
-			if (OnGlobalTimeChangedDelegate != nullptr)
-			{
-				OnGlobalTimeChangedDelegate->RemoveAll(this);
-			}
-		}
-		if (OnPlayEvent != nullptr)
-		{
-			if (OnPlayEvent != nullptr)
-			{
-				OnPlayEvent->RemoveAll(this);
-			}
-		}
-		if (OnStopEvent != nullptr)
-		{
-			if (OnStopEvent != nullptr)
-			{
-				OnStopEvent->RemoveAll(this);
-			}
-		}
-		if (OnCloseEvent != nullptr)
-		{
-			if (OnCloseEvent != nullptr)
-			{
-				OnCloseEvent->RemoveAll(this);
-			}
-		}
-		if (OnKeyDownEvent != nullptr)
-		{
-			if (OnKeyDownEvent != nullptr)
-			{
-				OnKeyDownEvent->RemoveAll(this);
-			}
-		}
-		if (SelectedSectionsChangedEvent != nullptr)
-		{
-			SelectedSectionsChangedEvent->RemoveAll(this);
-		}
+		OnCloseEventRaw(TSharedRef<ISequencer>(Sequencer));
+	}
+	if (OpenEditorEvent != nullptr)
+	{
+		OpenEditorEvent->RemoveAll(this);
+	}
+	if (OnKeyDownEvent != nullptr)
+	{
+		OnKeyDownEvent->RemoveAll(this);
 	}
 }
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
@@ -145,24 +123,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 		.FillWidth(0.3f)
 		.HAlign(HAlign_Right)
 		.Padding(10.f)]] +
-		SScrollBox::Slot()[SNew(SHorizontalBox) +
-		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Current sequence:"))]
-		.AutoWidth()
-		.Padding(FMargin(0.f, 2.5f, 5.f, 0.f))
-		.AutoWidth() +
-		SHorizontalBox::Slot()[SNew(SComboBox<ULevelSequence*>)
-		.OptionsSource((&Sequences))
-		.OnGenerateWidget(this, &SMain::MakeSequenceWidget)
-		.OnSelectionChanged(this, &SMain::OnSequenceSelected)
-		.Content()[SNew(STextBlock).Text(this, &SMain::GetSelectedSequenceName)]]
-		.AutoWidth() +
-		SHorizontalBox::Slot()[SNew(SButton)
-		.Content()[SNew(STextBlock).Text(FText::FromString("Refresh Sequences"))]
-		.OnClicked(this, &SMain::OnRefreshSequencesClicked)]
-		.FillWidth(0.3f)
-		.HAlign(HAlign_Right)
-		.Padding(FMargin(0.f, 0.f, 10.f, 0.0f))]
-		.Padding(FMargin(10.f, 0.f, 0.0f, 5.f)) +
 		SScrollBox::Slot()
 		[SNew(SVerticalBox) +
 		SVerticalBox::Slot()[SNew(SHorizontalBox) +
@@ -205,11 +165,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
-TSharedRef<SWidget> SMain::MakeSequenceWidget(ULevelSequence* InSequence)
-{
-	return SNew(STextBlock).Text(FText::FromString(InSequence->GetDisplayName().ToString()));
-}
-
 TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return SNew(STableRow<TSharedPtr<MotionHandler>>, OwnerTable)
@@ -241,15 +196,6 @@ FText SMain::GetIsActive() const
 	}
 	return FText::FromString("Not active");
 };
-void SMain::OnSequenceSelected(ULevelSequence* Sequence, ESelectInfo::Type SelectInfo)
-{
-	ChangeSelectedSequence(Sequence);
-}
-FReply SMain::OnRefreshSequencesClicked()
-{
-	RefreshSequences();
-	return FReply::Handled();
-}
 
 FReply SMain::OpenSettingsWindow()
 {
@@ -263,18 +209,6 @@ FReply SMain::OpenSettingsWindow()
 void SMain::RefreshSettings()
 {
 	Settings->LoadSettingsFromDisk();
-}
-
-FText SMain::GetSelectedSequenceName() const
-{
-	if (SelectedSequence != nullptr)
-	{
-		if (SelectedSequence->IsValidLowLevel())
-		{
-			return SelectedSequence->GetDisplayName();
-		}
-	}
-	return FText();
 }
 
 ECheckBoxState SMain::GetIsCustomRange() const
@@ -324,25 +258,50 @@ FText SMain::GetCustomEndFrame() const
 	}
 	return FText::FromString("Custom end frame:");
 }
-
-FReply SMain::OnRefreshSequencer()
+void SMain::SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections)
 {
-	RefreshSequencer();
-	return FReply::Handled();
+	AddMotionHandlers();
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+	{
+		TRange<FFrameNumber> range = GetCurrentRange();
+		motionHandler->ReInitAccelerator(range);
+		motionHandler->ReInitMotionEditor();
+	}
 }
 
-// refresh Sequencer and load motion handlers from disk
+void SMain::OnEditorOpened(UObject* object)
+{
+	RefreshSequence();
+	RefreshSequencer();
+}
+
+void SMain::RefreshSequence()
+{
+	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+
+	TArray<UObject*> AssetsOne = UAssetEditorSubs->GetAllEditedAssets();
+
+	for (UObject* AssetData : AssetsOne)
+	{
+		UE_LOG(LogTemp, Warning, TEXT(""));
+		ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData);
+		if (Sequence)
+		{
+			SelectedSequence = Sequence;
+		}
+	}
+}
 void SMain::RefreshSequencer()
 {
-	if (IsSequencerRelevant)
-	{
-		return;
-	}
 	if (SelectedSequence != nullptr)
 	{
 		Sequencer = nullptr;
+
 		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
+
+		TArray<UObject*> Assets = UAssetEditorSubs->GetAllEditedAssets();
+
 		ILevelSequenceEditorToolkit* LevelSequenceEditor = (ILevelSequenceEditorToolkit*)AssetEditor;
 		if (LevelSequenceEditor != nullptr)
 		{
@@ -365,60 +324,48 @@ void SMain::RefreshSequencer()
 
 				LoadMotionHandlersFromDisk(MotionHandlers);
 				ListViewWidget->RequestListRefresh();
-				IsSequencerRelevant = true;
 			};
 		}
 	}
 }
 void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
 {
-	IsSequencerRelevant = false;
-}
-void SMain::SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections)
-{
-	RefreshSequencer();
-	AddMotionHandlers();
-	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+	if (OnGlobalTimeChangedDelegate != nullptr)
 	{
-		TRange<FFrameNumber> range = GetCurrentRange();
-		motionHandler->ReInitAccelerator(range);
-		motionHandler->ReInitMotionEditor();
-	}
-}
-
-void SMain::RefreshSequences()
-{
-	Sequences = TArray<ULevelSequence*>();
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	TArray<FAssetData> SequenceAssets;
-	AssetRegistryModule.Get().GetAssetsByClass(ULevelSequence::StaticClass()->GetFName(), SequenceAssets);
-
-	for (const FAssetData& AssetData : SequenceAssets)
-	{
-		ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData.GetAsset());
-		if (Sequence)
+		if (OnGlobalTimeChangedDelegate != nullptr)
 		{
-			Sequences.Add(Sequence);	// Do something with the sequence here
+			OnGlobalTimeChangedDelegate->RemoveAll(this);
 		}
 	}
-	if (Sequences.Num() > 0)
+	if (OnPlayEvent != nullptr)
 	{
-		ChangeSelectedSequence(Sequences[0]);
+		if (OnPlayEvent != nullptr)
+		{
+			OnPlayEvent->RemoveAll(this);
+		}
 	}
-}
-void SMain::ChangeSelectedSequence(ULevelSequence* Sequence_)
-{
-	if (Sequence_ != nullptr)
+	if (OnStopEvent != nullptr)
 	{
-		SelectedSequence = Sequence_;
-		IsSequencerRelevant = false;
+		if (OnStopEvent != nullptr)
+		{
+			OnStopEvent->RemoveAll(this);
+		}
 	}
+	if (OnCloseEvent != nullptr)
+	{
+		if (OnCloseEvent != nullptr)
+		{
+			OnCloseEvent->RemoveAll(this);
+		}
+	}
+	if (SelectedSectionsChangedEvent != nullptr)
+	{
+		SelectedSectionsChangedEvent->RemoveAll(this);
+	}
+	SelectedSequence = nullptr;
+	Sequencer = nullptr;
+	MotionHandlers.Reset();
 }
-FReply SMain::OnRefreshBindings()
-{
-	AddMotionHandlers();
-	return FReply::Handled();
-};
 void SMain::AddMotionHandlers()
 {
 	if (Sequencer != nullptr && SelectedSequence != nullptr)
@@ -644,9 +591,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			MotionHandlers.Remove(handler);
 		}
 	}
-	if (Settings->Keys["Refresh sequencer"] == key)
+	if (Settings->Keys["Update motion handlers"] == key)
 	{
-		RefreshSequencer();
 		// reInit accelerator for selected motion handlers
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{

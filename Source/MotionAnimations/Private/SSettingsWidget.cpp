@@ -14,7 +14,7 @@ SSettingsWidget::SSettingsWidget()
 
 
 	OnKeyDownEvent = &(FSlateApplication::Get().OnApplicationPreInputKeyDownListener());
-	OnKeyDownEvent->AddRaw(this, &SSettingsWidget::OnKeyDown);
+	OnKeyDownEvent->AddRaw(this, &SSettingsWidget::OnKeyDownRaw);
 
 	// todo need to try to set it to button and then change that style
 	ClickedButtonStyle = new FButtonStyle();
@@ -82,7 +82,7 @@ void SSettingsWidget::RebuildMainBox()
 		MainBox->AddSlot().AutoHeight()[Block];
 	}
 }
-void SSettingsWidget::OnKeyDown(const FKeyEvent& event)
+void SSettingsWidget::OnKeyDownRaw(const FKeyEvent& event)
 {
 	FString key = event.GetKey().ToString();
 	if (SelectedFunction != "")

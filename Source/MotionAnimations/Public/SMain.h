@@ -4,6 +4,7 @@
 
 #include "Channels/MovieSceneChannelHandle.h"
 #include "Containers/Array.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 #include "CoreFwd.h"
 #include "CoreMinimal.h"
 #include "Delegates/DelegateCombinations.h"
@@ -25,6 +26,7 @@
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Settings.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 #include "ISequencer.h"
 
 /**
@@ -45,25 +47,18 @@ public:
 	void Construct(const FArguments& InArgs);
 
 	FText GetIsActive() const;
-	void RefreshSequences();
-	void ChangeSelectedSequence(ULevelSequence* Sequence_);
-	TSharedRef<SWidget> MakeSequenceWidget(ULevelSequence*);
-	void OnSequenceSelected(ULevelSequence* sequence, ESelectInfo::Type SelectInfo);
-	FText GetSelectedSequenceName() const;
-	FReply OnRefreshSequencesClicked();
 
-	bool IsKeysEnabled = false;
-
+	void RefreshSequence();
 	void RefreshSequencer();
-	FReply OnRefreshSequencer();
-
-	FReply OnRefreshBindings();
-
 	void RefreshSettings();
 
+	bool IsKeysEnabled = false;
 	bool IsRecordedStarted;
 	bool IsScalingStarted = false;
 	bool IsEditStarted = false;
+
+	UAssetEditorSubsystem::FAssetEditorOpenEvent* OpenEditorEvent;
+	void OnEditorOpened(UObject* object);
 
 	DECLARE_MULTICAST_DELEGATE(FOnGlobalTimeChanged)
 	FOnGlobalTimeChanged* OnGlobalTimeChangedDelegate;
@@ -77,7 +72,6 @@ public:
 	void OnStartPlay();
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnCloseEvent, TSharedRef<ISequencer>);
 	FOnCloseEvent* OnCloseEvent;
-	bool IsSequencerRelevant;
 	void OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_);
 
 	ISequencer::FOnSelectionChangedSections* SelectedSectionsChangedEvent;
@@ -101,9 +95,6 @@ public:
 	void ExecuteMotionHandlers(FVector2D value);
 	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
-	float fps = 24;
-	double TimeFromLatestTestExecution;
-
 	float DefaultScale = 0.05;
 
 	bool IsCustomRange = false;
@@ -120,7 +111,6 @@ public:
 
 private:
 	TRange<FFrameNumber> CustomRange;
-	TArray<ULevelSequence*> Sequences;
 	ULevelSequence* SelectedSequence;
 	FSettings* Settings;
 	ISequencer* Sequencer;

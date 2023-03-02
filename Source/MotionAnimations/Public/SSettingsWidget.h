@@ -29,7 +29,7 @@ public:
 	FOnChangeKeyEvent* OnChangeKeyEvent = new FOnChangeKeyEvent();
 
 	FSlateApplication::FOnApplicationPreInputKeyDownListener* OnKeyDownEvent;
-	void OnKeyDown(const FKeyEvent& event);
+	void OnKeyDownRaw(const FKeyEvent& event);
 
 	FSettings* Settings;
 

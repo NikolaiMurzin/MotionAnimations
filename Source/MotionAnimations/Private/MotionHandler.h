@@ -109,6 +109,8 @@ public:
 
 	void Populate(TRange<FFrameNumber> range, FFrameNumber interval);
 
+	bool HasData();
+
 	void ResetMotionEditor(TRange<FFrameNumber> range);
 	void ReInitMotionEditor();
 

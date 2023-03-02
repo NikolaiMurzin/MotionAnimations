@@ -331,6 +331,7 @@ FReply SMain::OnRefreshSequencer()
 	return FReply::Handled();
 }
 
+// refresh Sequencer and load motion handlers from disk
 void SMain::RefreshSequencer()
 {
 	if (IsSequencerRelevant)
@@ -375,18 +376,14 @@ void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
 }
 void SMain::SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections)
 {
-		RefreshSequencer();
-		AddMotionHandlers();
-		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
-		{
-
-			motionHandler->AddOrUpdateKeyValueInSequencer(); // autosave
-			motionHandler->SaveData();
-
-			TRange<FFrameNumber> range = GetCurrentRange();
-			motionHandler->ReInitAccelerator(range);
-			motionHandler->ReInitMotionEditor();
-		}
+	RefreshSequencer();
+	AddMotionHandlers();
+	for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+	{
+		TRange<FFrameNumber> range = GetCurrentRange();
+		motionHandler->ReInitAccelerator(range);
+		motionHandler->ReInitMotionEditor();
+	}
 }
 
 void SMain::RefreshSequences()
@@ -650,12 +647,26 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	if (Settings->Keys["Refresh sequencer"] == key)
 	{
 		RefreshSequencer();
-		AddMotionHandlers();
+		// reInit accelerator for selected motion handlers
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			TRange<FFrameNumber> range = GetCurrentRange();
 			motionHandler->ReInitAccelerator(range);
-			motionHandler->ReInitMotionEditor();
+			// motionHandler->ReInitMotionEditor();
+		}
+		// remove motion handlers that are empty
+		TArray<TSharedPtr<MotionHandler>> toRemove;
+		for (TSharedPtr<MotionHandler> motionHandler : MotionHandlers)
+		{
+			if (!motionHandler->HasData())
+			{
+				toRemove.Add(motionHandler);
+			}
+		}
+		for (TSharedPtr<MotionHandler> motionHandler : toRemove)
+		{
+				motionHandler->DeleteData();
+				MotionHandlers.Remove(motionHandler);
 		}
 	}
 	TRange<FFrameNumber> playbackRange;

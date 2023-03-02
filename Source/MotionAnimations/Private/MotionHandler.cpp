@@ -493,7 +493,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
-		valueToSet = (float) valueToSet;
+		valueToSet = (float)valueToSet;
 		if (!FloatChannel->HasAnyData())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
@@ -504,7 +504,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
-		valueToSet = (double) valueToSet;
+		valueToSet = (double)valueToSet;
 		if (!DoubleChannel->HasAnyData())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of double channel"));
@@ -515,7 +515,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
-		valueToSet = (int32) valueToSet;
+		valueToSet = (int32)valueToSet;
 		if (!IntegerChannel->HasAnyData())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
@@ -565,11 +565,11 @@ void MotionHandler::EditPosition(FFrameNumber InTime, FVector2D InputVector)
 void MotionHandler::ResetMotionEditor(TRange<FFrameNumber> range)
 {
 
-	MMotionEditor->Reset(range);
+	// MMotionEditor->Reset(range);
 }
 void MotionHandler::ReInitMotionEditor()
 {
-	MMotionEditor->ReInit();
+	// MMotionEditor->ReInit();
 }
 void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 {
@@ -582,8 +582,8 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("motion handler is not valid, maybe you forget to select "
-					 "control in sequencer when tried to init motion "
-					 "handler?"));
+					"control in sequencer when tried to init motion "
+					"handler?"));
 			return;
 		}
 		ERigControlType controlType = controlElement->Settings.ControlType;
@@ -1048,6 +1048,7 @@ void MotionHandler::InsertCurrentKeyValuesToSequencer()
 		}
 	}
 }
+
 void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 {
 	if (!ValidMotionHandler)
@@ -1103,10 +1104,26 @@ void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 	}
 }
 bool MotionHandler::operator==(MotionHandler& handler)
-	{
+{
 	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&
-			Data.ChannelDisplayText.ToString() == handler.Data.ChannelDisplayText.ToString() &&
-			Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName);
+		Data.ChannelDisplayText.ToString() == handler.Data.ChannelDisplayText.ToString() &&
+		Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName);
+}
+bool MotionHandler::HasData()
+{
+	if (FloatChannel != nullptr)
+	{
+		return FloatChannel->GetNumKeys() >= 1 || !Data.KeyValues.IsEmpty();
+	}
+	else if (DoubleChannel != nullptr)
+	{
+		return DoubleChannel->GetNumKeys() >= 1 || !Data.KeyValues.IsEmpty();
+	}
+	else if (IntegerChannel != nullptr)
+	{
+		return IntegerChannel->GetNumKeys() >= 1 || !Data.KeyValues.IsEmpty();
+	}
+	return false;
 }
 void MotionHandler::OnScaleValueChangedRaw(double value)
 {
@@ -1128,3 +1145,4 @@ void MotionHandler::OnTextChangedRaw(const FText& value)
 {
 	Data.CustomName = value;
 }
+

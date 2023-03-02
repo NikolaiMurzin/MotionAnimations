@@ -1,3 +1,5 @@
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
+
 #include "MotionHandler.h"
 
 #include "Channels/MovieSceneBoolChannel.h"

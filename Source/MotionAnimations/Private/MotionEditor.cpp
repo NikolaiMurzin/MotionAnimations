@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
+
 #include "MotionEditor.h"
 
 #include "Channels/MovieSceneChannelProxy.h"

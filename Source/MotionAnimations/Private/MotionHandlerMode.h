@@ -1,3 +1,5 @@
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
+
 #pragma once
 
 #include "Containers/UnrealString.h"

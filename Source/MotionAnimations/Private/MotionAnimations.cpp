@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
 
 #include "MotionAnimations.h"
 

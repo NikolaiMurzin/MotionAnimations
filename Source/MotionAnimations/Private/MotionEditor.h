@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 
 #include "Channels/MovieSceneChannelProxy.h"
-#include "Channels/MovieSceneDoubleChannel.h"
-#include "Channels/MovieSceneFloatChannel.h"
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
+
 #include "Channels/MovieSceneIntegerChannel.h"
 
 /**

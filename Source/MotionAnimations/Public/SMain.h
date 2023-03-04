@@ -96,6 +96,8 @@ public:
 	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
 	float DefaultScale = 0.05;
+	double PopulateValue = 1000;
+	void OnPopulateValueChangedRaw(double val);
 
 	bool IsCustomRange = false;
 	ECheckBoxState GetIsCustomRange() const;

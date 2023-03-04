@@ -63,6 +63,7 @@ public:
 	ISequencer* Sequencer;
 	UMovieScene* MovieScene;
 	UMovieSceneTrack* MovieSceneTrack;
+	UMovieSceneSection* MovieSceneSection;
 
 	FGuid GetObjectFGuid();
 	Mode GetSelectedMode();
@@ -99,7 +100,13 @@ public:
 	FOnTextChanged OnTextChanged;
 	void OnTextChangedRaw(const FText& value);
 
+	DECLARE_DELEGATE_OneParam(FOnSetIndexChanged, int32);
+	FOnSetIndexChanged OnSetIndexChanged;
+	void OnSetIndexChangedRaw(int32 value);
+
 	FMovieSceneChannelHandle ChannelHandle;
+	FMovieSceneChannelHandle GetActualChannelHandle();
+
 
 	FMotionHandlerData Data;
 

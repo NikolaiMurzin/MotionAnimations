@@ -61,11 +61,10 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 
 	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
 	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
-
 	OnCurrentIndexValueChanged.BindRaw(this, &MotionHandler::OnCurrentIndexValueChangedRaw);
-
 	OnLowerBoundValueChanged.BindRaw(this, &MotionHandler::OnLowerBoundValueChangedRaw);
 	OnUpperBoundValueChanged.BindRaw(this, &MotionHandler::OnUpperBoundValueChangedRaw);
+	OnSetIndexChanged.BindRaw(this, &MotionHandler::OnSetIndexChangedRaw);
 
 	PreviousValue = 0;
 	IsFirstUpdate = true;
@@ -96,24 +95,25 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 			break;
 		}
 	}
-	UMovieSceneSection* section = nullptr;
+	MovieSceneSection= nullptr;
 	if (MovieSceneTrack == nullptr)
 	{
 		return;
 	}
+	// init MovieSceneSection
 	for (UMovieSceneSection* Section_ : MovieSceneTrack->GetAllSections())
 	{
 		if (Section_->GetRowIndex() == Data.SectionRowIndex)
 		{
-			section = Section_;
+			MovieSceneSection = Section_;
 			break;
 		}
 	}
-	if (section == nullptr)
+	if (MovieSceneSection == nullptr)
 	{
 		return;
 	}
-	FMovieSceneChannelProxy& channelProxy = section->GetChannelProxy();
+	FMovieSceneChannelProxy& channelProxy = MovieSceneSection->GetChannelProxy();
 	ChannelHandle = channelProxy.MakeHandle(FName(Data.ChannelTypeName), Data.ChannelIndex);
 	if (ChannelHandle.Get() == nullptr)
 	{
@@ -136,6 +136,10 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	IsFirstUpdate = true;
 	MovieScene = Sequence_->GetMovieScene();
 	MovieSceneTrack = MovieSceneTrack_;
+
+	MovieSceneSection = KeyArea->GetOwningSection();
+
+
 	MovieSceneControlRigParameterTrack = nullptr;
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
@@ -146,17 +150,22 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	OnCurrentIndexValueChanged.BindRaw(this, &MotionHandler::OnCurrentIndexValueChangedRaw);
 	OnLowerBoundValueChanged.BindRaw(this, &MotionHandler::OnLowerBoundValueChangedRaw);
 	OnUpperBoundValueChanged.BindRaw(this, &MotionHandler::OnUpperBoundValueChangedRaw);
+	OnSetIndexChanged.BindRaw(this, &MotionHandler::OnSetIndexChangedRaw);
 
 	FString TrackName_ = MovieSceneTrack_->GetTrackName().ToString();
 	int32 RowIndex = KeyArea->GetOwningSection()->GetRowIndex();
+
 	FString ChannelTypeName = KeyArea->GetChannel().GetChannelTypeName().ToString();
 	int32 ChannelIndex = KeyArea->GetChannel().GetChannelIndex();
 
 	ChannelHandle = KeyArea->GetChannel();
 	FString MovieSceneTrackName = MovieSceneTrack_->GetDisplayName().ToString();
 	FString ChannelName = ChannelHandle.GetMetaData()->DisplayText.ToString();
-	FString DataCustomNameString = MovieSceneTrackName + "." + ChannelName;
-	FText DataCustomName = FText::FromString(DataCustomNameString);
+
+	// FString DataCustomNameString = MovieSceneTrackName + "." + ChannelName;
+
+	FName keyAreaName = KeyArea->GetName();
+	FText DataCustomName = FText::FromString(keyAreaName.ToString());
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
 		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText,
 		KeyArea->GetName().ToString(), MovieSceneTrackName);
@@ -586,6 +595,12 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 				TEXT("motion handler is not valid, maybe you forget to select "
 					"control in sequencer when tried to init motion "
 					"handler?"));
+			return;
+		}
+		if (FloatChannel == nullptr)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("motion handler is not valid, it's float channel is null"));
 			return;
 		}
 		ERigControlType controlType = controlElement->Settings.ControlType;
@@ -1059,7 +1074,7 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 		return;
 	}
 	double valueToSet = 0;
-	valueToSet = value.X; // take from x by default
+	valueToSet = value.X * -1; // take from x by default
 
 	double val = valueToSet;
 
@@ -1087,6 +1102,15 @@ void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 {
 	if (FloatChannel != nullptr)
 	{
+		FFrameNumber curr = range.GetLowerBoundValue();
+		while (curr < range.GetUpperBoundValue())
+		{
+			float value;
+			FloatChannel->Evaluate(curr, value);
+			FloatChannel->GetData().UpdateOrAddKey(curr, FMovieSceneFloatValue(value));
+			curr += interval;
+		}
+		FloatChannel->AutoSetTangents();
 	}
 	else if (DoubleChannel != nullptr)
 	{
@@ -1094,7 +1118,7 @@ void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 		FFrameNumber curr = range.GetLowerBoundValue();
 		while (curr < range.GetUpperBoundValue())
 		{
-			float value;
+			double value;
 			DoubleChannel->Evaluate(curr, value);
 			DoubleChannel->GetData().UpdateOrAddKey(curr, FMovieSceneDoubleValue(value));
 			curr += interval;
@@ -1103,6 +1127,15 @@ void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 	}
 	else if (IntegerChannel != nullptr)
 	{
+		FFrameNumber curr = range.GetLowerBoundValue();
+		while (curr < range.GetUpperBoundValue())
+		{
+			int value;
+			IntegerChannel->Evaluate(curr, value);
+			IntegerChannel->GetData().UpdateOrAddKey(curr, value);
+			curr += interval;
+		}
+		FloatChannel->AutoSetTangents();
 	}
 }
 bool MotionHandler::operator==(MotionHandler& handler)
@@ -1147,4 +1180,12 @@ void MotionHandler::OnTextChangedRaw(const FText& value)
 {
 	Data.CustomName = value;
 }
-
+void MotionHandler::OnSetIndexChangedRaw(int32 value)
+{
+	Data.SetIndex = value;
+}
+FMovieSceneChannelHandle MotionHandler::GetActualChannelHandle()
+{
+	FMovieSceneChannelProxy& channelProxy = MovieSceneSection->GetChannelProxy();
+	return channelProxy.MakeHandle(FName(Data.ChannelTypeName),Data.ChannelIndex);
+}

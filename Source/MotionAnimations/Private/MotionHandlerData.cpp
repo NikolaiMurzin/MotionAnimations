@@ -44,6 +44,7 @@ FMotionHandlerData::FMotionHandlerData(double Scale_, FGuid ObjectFGuid_, FStrin
 	ChannelDisplayText = ChannelDisplayText_;
 	KeyAreaName = KeyAreaName_;
 	TrackDisplayName = TrackDisplayName_;
+	SetIndex = -1;
 }
 bool FMotionHandlerData::Save()
 {

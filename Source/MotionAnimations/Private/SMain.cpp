@@ -1,7 +1,9 @@
 // Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
 
 #include "SMain.h"
+#include "InputCoreTypes.h"
 
+#include "Components/InputComponent.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetRegistry/AssetRegistryState.h"
 #include "Channels/MovieSceneBoolChannel.h"
@@ -74,6 +76,8 @@ SMain::SMain()
 	OnCloseEvent = nullptr;
 	OnKeyDownEvent = nullptr;
 	SelectedSectionsChangedEvent = nullptr;
+	Sequencer = nullptr;
+	SelectedSequence = nullptr;
 
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 	OpenEditorEvent = &(UAssetEditorSubs->OnAssetEditorOpened());
@@ -95,10 +99,6 @@ SMain::SMain()
 SMain::~SMain()
 {
 	delete Settings;
-	if (Sequencer != nullptr)
-	{
-		OnCloseEventRaw(TSharedRef<ISequencer>(Sequencer));
-	}
 	if (OpenEditorEvent != nullptr)
 	{
 		OpenEditorEvent->RemoveAll(this);
@@ -143,10 +143,26 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 		.AutoWidth() +
 		SHorizontalBox::Slot()[SNew(SSpinBox<double>)
 		.Value(this->OptimizationTolerance)
-		.OnValueChanged(this, &SMain::OnToleranceChangeRaw)]]
+		.OnValueChanged(this, &SMain::OnToleranceChangeRaw)]
+		]
 	.FillWidth(0.3f)
 		.Padding(FMargin(0.f, 0.f, 10.f, 0.0f))
-		.HAlign(HAlign_Right)]
+		.HAlign(HAlign_Right)
+		+
+		SHorizontalBox::Slot()[SNew(SHorizontalBox) +
+		SHorizontalBox::Slot()[SNew(STextBlock)
+		.Text(FText::FromString("Populate value"))]
+		.Padding(FMargin(0.0f, 2.5f, 2.5f, 0.0f))
+		.AutoWidth() +
+		SHorizontalBox::Slot()[SNew(SSpinBox<double>)
+		.Value(this->PopulateValue)
+		.OnValueChanged(this, &SMain::OnPopulateValueChangedRaw)
+		]
+		]
+		.FillWidth(0.3f)
+		.Padding(FMargin(0.f, 0.f, 10.f, 0.0f))
+		.HAlign(HAlign_Right)
+		]
 		.AutoHeight() +
 		SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomStartFromFrame)] +
 		SVerticalBox::Slot()[SNew(STextBlock).Text(this, &SMain::GetCustomEndFrame)]]
@@ -156,8 +172,11 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& 
 		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Current index"))] +
 		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Selected Mode"))] +
 		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Lower bound value"))] +
-		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Upper bound value"))]]
-		.Padding(FMargin(10.f, 5.f, 0.f, 5.f)) +
+		SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Upper bound value"))]
+		+ SHorizontalBox::Slot()[SNew(STextBlock).Text(FText::FromString("Set"))]
+		]
+		.Padding(FMargin(10.f, 5.f, 0.f, 5.f))
+		+
 		SScrollBox::Slot()[SAssignNew(ListViewWidget, SListView<TSharedPtr<MotionHandler>>)
 		.ItemHeight(24)
 		.ListItemsSource(&MotionHandlers)
@@ -185,7 +204,10 @@ TSharedRef<ITableRow> SMain::OnGenerateRowForList(TSharedPtr<MotionHandler> Item
 		SHorizontalBox::Slot()
 		[SNew(SSpinBox<double>).Value(Item->Data.LowerBoundValue).OnValueChanged(Item->OnLowerBoundValueChanged)] +
 		SHorizontalBox::Slot()
-		[SNew(SSpinBox<double>).Value(Item->Data.UpperBoundValue).OnValueChanged(Item->OnUpperBoundValueChanged)]];
+		[SNew(SSpinBox<double>).Value(Item->Data.UpperBoundValue).OnValueChanged(Item->OnUpperBoundValueChanged)] +
+		SHorizontalBox::Slot()
+		[SNew(SSpinBox<int32>).Value(Item->Data.SetIndex).OnValueChanged(Item->OnSetIndexChanged)]
+		];
 }
 
 FText SMain::GetIsActive() const
@@ -392,21 +414,24 @@ void SMain::AddMotionHandlers()
 		{
 			bool IsObjectAlreadyAdded = false;
 
-			TSharedPtr<MotionHandler> motionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
+			TSharedPtr<MotionHandler> newMotionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
 				KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
+
+			TArray<TSharedPtr<MotionHandler>> selectedHandlers = ListViewWidget->GetSelectedItems();
 
 			for (TSharedPtr<MotionHandler> handler : MotionHandlers)
 			{
-				if (*handler == *motionHandler)
+				if (*handler == *newMotionHandler )
 				{
 					IsObjectAlreadyAdded = true;
+
 					selectionSet.Add(handler);
 				}
 			}
 			if (!IsObjectAlreadyAdded)
 			{
-				MotionHandlers.Add(motionHandler);
-				selectionSet.Add(motionHandler);
+				MotionHandlers.Add(newMotionHandler);
+				selectionSet.Add(newMotionHandler);
 			}
 			ListViewWidget->ClearSelection();
 			ListViewWidget->SetItemSelection(selectionSet, true, ESelectInfo::Type::Direct);
@@ -569,6 +594,25 @@ void SMain::OnStopPlay()
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
+	TSharedPtr<SWidget> CurrentFocusedWidget = FSlateApplication::Get().GetCursorUser()->GetFocusedWidget();
+
+	if (CurrentFocusedWidget.IsValid())
+	{
+		TSharedPtr<SWindow> SelectedWindow = FSlateApplication::Get().FindWidgetWindow(CurrentFocusedWidget.ToSharedRef());
+		if (SelectedWindow.IsValid())
+		{
+			if (SelectedWindow->GetParentWindow() != nullptr) // if it isn't main window
+			{
+				return;
+			}
+		}
+		FString type = CurrentFocusedWidget->GetTypeAsString();
+		
+		if (CurrentFocusedWidget != nullptr && type == "SEditableText") // if user now focused on Editable text;
+		{
+			return;
+		}
+	}
 	FString key = event.GetKey().ToString();
 	if (Settings->Keys.Num() < 14)	  // there should be at least 14 settings
 	{
@@ -611,8 +655,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		}
 		for (TSharedPtr<MotionHandler> motionHandler : toRemove)
 		{
-				motionHandler->DeleteData();
-				MotionHandlers.Remove(motionHandler);
+			motionHandler->DeleteData();
+			MotionHandlers.Remove(motionHandler);
 		}
 	}
 	TRange<FFrameNumber> playbackRange;
@@ -638,23 +682,21 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		params.Frame = highValue;
 		Sequencer->PlayTo(params);
 	};
-	/*if (Settings->Keys["Start edit"] == key)
+	if (Settings->Keys["Populate"] == key)
 	{
-		stopSequencerAndBackToFirstFrame();
 		for (TSharedPtr<MotionHandler> handler : ListViewWidget->GetSelectedItems())
 		{
 			TRange<FFrameNumber> range = GetCurrentRange();
 			FFrameNumber lower = range.GetLowerBoundValue();
-			lower.Value += 1000;
 			range.SetLowerBoundValue(lower);
-			handler->ResetMotionEditor(range);
-			handler->ResetNiagaraState();
+			FFrameNumber interval;
+			interval.Value = PopulateValue;
+			handler->Populate(range, interval);
 		}
 		IsRecordedStarted = false;
 		IsScalingStarted = false;
-		IsEditStarted = true;
-		playSequencerToLastFrame();
-	} */
+		IsEditStarted = false;
+	}
 	if (Settings->Keys["Start recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
@@ -811,8 +853,67 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			CustomRange.SetUpperBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}
 	}
+	auto refreshSelection = [&](int setNumber)
+	{
+		if (Sequencer == nullptr)
+		{
+			return;
+		}
+		Sequencer->EmptySelection();
+		for (TSharedPtr<MotionHandler> mh : MotionHandlers)
+		{
+			if (mh->Data.SetIndex == setNumber)
+			{
+				TArray<FMovieSceneChannelHandle> channels;
+				FMovieSceneChannelHandle handle = mh->GetActualChannelHandle();
+				channels.Add(handle);
+				TArrayView<const FMovieSceneChannelHandle> channelsView = TArrayView<const FMovieSceneChannelHandle>(channels);
+				Sequencer->SelectByChannels(mh->MovieSceneSection, channelsView, false, true);
+			}
+		}
+	};
+	if (Settings->Keys["select 1 set"] == key)
+	{
+		refreshSelection(1);
+	}
+	else if (Settings->Keys["select 2 set"] == key)
+	{
+		refreshSelection(2);
+	}
+	else if (Settings->Keys["select 3 set"] == key)
+	{
+		refreshSelection(3);
+	}
+	else if (Settings->Keys["select 4 set"] == key)
+	{
+		refreshSelection(4);
+	}
+	else if (Settings->Keys["select 5 set"] == key)
+	{
+		refreshSelection(5);
+	}
+	else if (Settings->Keys["select 6 set"] == key)
+	{
+		refreshSelection(6);
+	}
+	else if (Settings->Keys["select 7 set"] == key)
+	{
+		refreshSelection(7);
+	}
+	else if (Settings->Keys["select 8 set"] == key)
+	{
+		refreshSelection(8);
+	}
+	else if (Settings->Keys["select 9 set"] == key)
+	{
+		refreshSelection(9);
+	}
 }
 void SMain::OnToleranceChangeRaw(double value)
 {
 	OptimizationTolerance = value;
+}
+void SMain::OnPopulateValueChangedRaw(double val)
+{
+	PopulateValue = val;
 }

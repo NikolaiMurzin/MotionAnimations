@@ -36,7 +36,7 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Delete item", "F11"));
 	Keys.Add(TTuple<FString, FString>("Update motion handlers", "Q"));
 	Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
-	/*Keys.Add(TTuple<FString, FString>("Start edit", "W")); */
+	Keys.Add(TTuple<FString, FString>("Populate", "P"));
 	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
 	Keys.Add(TTuple<FString, FString>("Stop recording and optimize", "D"));
 	Keys.Add(TTuple<FString, FString>("Preview animation", "A"));
@@ -48,6 +48,15 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Select -y axis", "V"));
 	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
 	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
+	Keys.Add(TTuple<FString, FString>("select 1 set", "One"));
+	Keys.Add(TTuple<FString, FString>("select 2 set", "Two"));
+	Keys.Add(TTuple<FString, FString>("select 3 set", "Three"));
+	Keys.Add(TTuple<FString, FString>("select 4 set", "Four"));
+	Keys.Add(TTuple<FString, FString>("select 5 set", "Five"));
+	Keys.Add(TTuple<FString, FString>("select 6 set", "Six"));
+	Keys.Add(TTuple<FString, FString>("select 7 set", "Seven"));
+	Keys.Add(TTuple<FString, FString>("select 8 set", "Eight"));
+	Keys.Add(TTuple<FString, FString>("select 9 set", "Nine"));
 }
 bool FSettings::Save()
 {

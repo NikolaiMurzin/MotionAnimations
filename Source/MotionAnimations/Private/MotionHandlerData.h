@@ -48,6 +48,8 @@ public:
 	FString KeyAreaName;
 
 	UPROPERTY()
+	int32 SetIndex; // in which set it's located, if -1 then no sets;
+	UPROPERTY()
 	int32 CurrentIndex;
 	UPROPERTY()
 	double UpperBoundValue = 0;

@@ -129,6 +129,8 @@ private:
 	void SyncNiagaraParam(FFrameNumber InTime);
 
 	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack = nullptr;
+	UControlRig* controlRig = nullptr;
+	FRigControlElement* controlElement = nullptr;
 	UMovieSceneMaterialTrack* MovieSceneMaterialTrack = nullptr;
 	UMovieSceneNiagaraTrack* MovieSceneNiagaraTrack = nullptr;
 	UMovieSceneNiagaraParameterTrack* MovieSceneNiagaraParameterTrack = nullptr;

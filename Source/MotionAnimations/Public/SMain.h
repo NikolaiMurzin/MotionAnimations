@@ -92,7 +92,7 @@ public:
 
 	TArray<TSharedPtr<MotionHandler>> MotionHandlers;
 	void AddMotionHandlers();
-	void ExecuteMotionHandlers(FVector2D value);
+	void ExecuteMotionHandlers(FVector2D value, FFrameNumber frame);
 	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
 	float DefaultScale = 0.05;

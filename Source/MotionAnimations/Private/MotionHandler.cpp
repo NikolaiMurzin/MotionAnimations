@@ -205,6 +205,7 @@ void MotionHandler::SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_)
 
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
+		controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
 		TArray<FName> currentControlSelectionArr = MovieSceneControlRigParameterTrack->GetControlRig()->CurrentControlSelection();
 		if (currentControlSelectionArr.Num() > 0)
 		{
@@ -587,8 +588,10 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's control rig"));
-		UControlRig* controlRig = MovieSceneControlRigParameterTrack->GetControlRig();
-		FRigControlElement* controlElement = controlRig->FindControl(FName(Data.ControlSelection));
+		if (controlElement == nullptr)
+		{
+			controlElement = controlRig->FindControl(FName(Data.ControlSelection));
+		}
 		if (controlElement == nullptr)
 		{
 			UE_LOG(LogTemp, Warning,

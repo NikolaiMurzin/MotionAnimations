@@ -305,7 +305,6 @@ void SMain::RefreshSequence()
 
 	for (UObject* AssetData : AssetsOne)
 	{
-		UE_LOG(LogTemp, Warning, TEXT(""));
 		ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData);
 		if (Sequence)
 		{
@@ -421,7 +420,7 @@ void SMain::AddMotionHandlers()
 
 			for (TSharedPtr<MotionHandler> handler : MotionHandlers)
 			{
-				if (*handler == *newMotionHandler )
+				if (*handler == *newMotionHandler)
 				{
 					IsObjectAlreadyAdded = true;
 
@@ -482,31 +481,30 @@ void SMain::OnGlobalTimeChanged()
 {
 	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 	FVector2D vectorChange = PreviousPosition - currentPosition;
+	FFrameNumber CurrentFrame = Sequencer->GetGlobalTime().Time.FrameNumber;
 	if (IsRecordedStarted)
 	{
 		if (IsCustomRange)
 		{
-			FFrameNumber CurrentTime = Sequencer->GetLocalTime().Time.FrameNumber;
-			if (CurrentTime.Value >= CustomRange.GetLowerBoundValue().Value &&
-				CurrentTime.Value <= CustomRange.GetUpperBoundValue().Value)
+			if (CurrentFrame.Value >= CustomRange.GetLowerBoundValue().Value &&
+				CurrentFrame.Value <= CustomRange.GetUpperBoundValue().Value)
 			{
-				ExecuteMotionHandlers(vectorChange);
+				ExecuteMotionHandlers(vectorChange, CurrentFrame);
 			}
 		}
 		else
 		{
-			ExecuteMotionHandlers(vectorChange);
+			ExecuteMotionHandlers(vectorChange, CurrentFrame);
 		}
 	}
 	if (IsScalingStarted)
 	{
 		if (MotionHandlers.Num() > 0)
 		{
-			FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-			nextFrame.Value += 1000;
+			CurrentFrame.Value += 1000;
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
-				motionHandler->Accelerate(vectorChange, nextFrame);
+				motionHandler->Accelerate(vectorChange, CurrentFrame);
 			}
 		}
 	}
@@ -537,15 +535,14 @@ void SMain::OnGlobalTimeChanged()
 	}
 	PreviousPosition = FSlateApplication::Get().GetCursorPos();
 };
-void SMain::ExecuteMotionHandlers(FVector2D value)
+void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 {
-	FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
-	nextFrame.Value += 1000;
+	frame.Value += 1000;
 	if (MotionHandlers.Num() > 0)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-			motionHandler->SetKey(nextFrame, value);
+			motionHandler->SetKey(frame, value);
 		}
 	}
 }
@@ -607,7 +604,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			}
 		}
 		FString type = CurrentFocusedWidget->GetTypeAsString();
-		
+
 		if (CurrentFocusedWidget != nullptr && type == "SEditableText") // if user now focused on Editable text;
 		{
 			return;
@@ -616,7 +613,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	FString key = event.GetKey().ToString();
 	if (Settings->Keys.Num() < 14)	  // there should be at least 14 settings
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Something with your settings file!"));
+		UE_LOG(LogTemp, Warning, TEXT("Something wrong with your settings file! Try to remove it from /{PluginDir}/Settings/ and start again, it will generate it"));
 		return;
 	}
 	if (Settings->Keys["Activate"] == key)

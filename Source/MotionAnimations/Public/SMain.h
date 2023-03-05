@@ -95,7 +95,7 @@ public:
 	void ExecuteMotionHandlers(FVector2D value, FFrameNumber frame);
 	void LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers);
 
-	float DefaultScale = 0.05;
+	float DefaultScale = 5;
 	double PopulateValue = 1000;
 	void OnPopulateValueChangedRaw(double val);
 

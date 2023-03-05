@@ -124,13 +124,18 @@ public:
 	void ReInitMotionEditor();
 
 private:
-	void SyncControlRigWithChannelValue(FFrameNumber InTime);
-	void SyncMaterialTrack(FFrameNumber InTime);
-	void SyncNiagaraParam(FFrameNumber InTime);
+	void SyncControlRigWithChannelValue(FFrameNumber InTime, float value);
+	void SyncMaterialTrack(FFrameNumber InTime, float value);
+	void SyncNiagaraParam(FFrameNumber InTime, float value);
 
 	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack = nullptr;
 	UControlRig* controlRig = nullptr;
 	FRigControlElement* controlElement = nullptr;
+	ERigControlType controlType;
+	FRigControlValue controlValue;
+	FRigControlValue controlValueMin;
+	FRigControlValue controlValueMax;
+
 	UMovieSceneMaterialTrack* MovieSceneMaterialTrack = nullptr;
 	UMovieSceneNiagaraTrack* MovieSceneNiagaraTrack = nullptr;
 	UMovieSceneNiagaraParameterTrack* MovieSceneNiagaraParameterTrack = nullptr;

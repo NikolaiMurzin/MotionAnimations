@@ -281,7 +281,7 @@ void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
 		}
 	}
 }
-void MotionHandler::SyncNiagaraParam(FFrameNumber InTime)
+void MotionHandler::SyncNiagaraParam(FFrameNumber InTime, float value)
 {
 	if (MovieSceneNiagaraParameterTrack == nullptr)
 	{
@@ -291,8 +291,6 @@ void MotionHandler::SyncNiagaraParam(FFrameNumber InTime)
 	{
 		if (FloatChannel != nullptr)
 		{
-			float value;
-			FloatChannel->Evaluate(InTime, value);
 			if (NiagaraComponent != nullptr)
 			{
 				FNiagaraVariable var = MovieSceneNiagaraParameterTrack->GetParameter();
@@ -371,7 +369,7 @@ void MotionHandler::ResetNiagaraState()
 		UE_LOG(LogTemp, Warning, TEXT("Reset niagara called"));
 	}
 }
-void MotionHandler::SyncMaterialTrack(FFrameNumber InTime)
+void MotionHandler::SyncMaterialTrack(FFrameNumber InTime, float value)
 {
 	if (MovieSceneMaterialTrack == nullptr)
 	{
@@ -386,8 +384,6 @@ void MotionHandler::SyncMaterialTrack(FFrameNumber InTime)
 		{
 			return;
 		}
-		float value;
-		FloatChannel->Evaluate(InTime, value);
 		if (ChannelDisplayText.Equals("R") || ChannelDisplayText.Equals("G") || ChannelDisplayText.Equals("B") ||
 			ChannelDisplayText.Equals("A"))
 		{
@@ -489,7 +485,9 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		valueToSet = InputVector.Y * -1;
 	}
 
-	valueToSet = valueToSet * Data.Scale + PreviousValue;
+	double Scale = Data.Scale / 100;
+
+	valueToSet = valueToSet * Scale + PreviousValue;
 
 	if (Data.UpperBoundValue != Data.LowerBoundValue)	 // if it's equal then user don't won't to use bounds
 	{
@@ -536,9 +534,9 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		TMovieSceneChannelData<int> ChannelData = IntegerChannel->GetData();
 		ChannelData.UpdateOrAddKey(InTime, valueToSet);
 	}
-	SyncMaterialTrack(InTime);
-	SyncControlRigWithChannelValue(InTime);
-	SyncNiagaraParam(InTime);
+	SyncMaterialTrack(InTime, valueToSet);
+	SyncControlRigWithChannelValue(InTime, valueToSet);
+	SyncNiagaraParam(InTime, valueToSet);
 
 	PreviousValue = valueToSet;
 }
@@ -566,13 +564,14 @@ void MotionHandler::EditPosition(FFrameNumber InTime, FVector2D InputVector)
 	{
 		valueToSet = InputVector.Y * -1;
 	}
-	valueToSet *= Data.Scale;
+	double Scale = Data.Scale / 100;
+	valueToSet *= Scale;
 
 	MMotionEditor->Edit(InTime, valueToSet);
 
-	SyncMaterialTrack(InTime);
-	SyncControlRigWithChannelValue(InTime);
-	SyncNiagaraParam(InTime);
+	SyncMaterialTrack(InTime, valueToSet);
+	SyncControlRigWithChannelValue(InTime, valueToSet);
+	SyncNiagaraParam(InTime, valueToSet);
 }
 void MotionHandler::ResetMotionEditor(TRange<FFrameNumber> range)
 {
@@ -583,15 +582,20 @@ void MotionHandler::ReInitMotionEditor()
 {
 	// MMotionEditor->ReInit();
 }
-void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
+void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime, float valueOfChannel)
 {
 	if (IsValid(MovieSceneControlRigParameterTrack))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("It's control rig"));
 		if (controlElement == nullptr)
 		{
 			controlElement = controlRig->FindControl(FName(Data.ControlSelection));
+			controlType = controlElement->Settings.ControlType;
+			controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
+			controlValueMin = controlElement->Settings.MinimumValue;
+			controlValueMax = controlElement->Settings.MaximumValue;
 		}
+
+
 		if (controlElement == nullptr)
 		{
 			UE_LOG(LogTemp, Warning,
@@ -606,13 +610,9 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 				TEXT("motion handler is not valid, it's float channel is null"));
 			return;
 		}
-		ERigControlType controlType = controlElement->Settings.ControlType;
-		FRigControlValue controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
-		FRigControlValue controlValueMin = controlElement->Settings.MinimumValue;
-		FRigControlValue controlValueMax = controlElement->Settings.MaximumValue;
-		float valueOfChannel = 0;
-		FloatChannel->Evaluate(InTime, valueOfChannel);
+
 		FString ChannelDisplayText = Data.ChannelDisplayText.ToString();
+
 		if (controlType == ERigControlType::Float)
 		{
 			controlRig->SetControlValue(
@@ -622,57 +622,65 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		{
 			FEulerTransform eulerValue;
 			eulerValue.FromFTransform(controlValue.GetAsTransform(ERigControlType::EulerTransform, ERigControlAxis::X));
-			UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
-			FRotator rotator = rotation.Rotator();
-			FVector location = eulerValue.GetLocation();
-			FVector scale = eulerValue.GetScale3D();
 
 			/* ue log max and min values todo */
 			if (ChannelDisplayText == "Location.X")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.X = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Y")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.Y = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Z")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.Z = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Roll = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Pitch = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Yaw = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Scale.X")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.X = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Y")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.Y = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Z")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.Z = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
@@ -681,38 +689,44 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		else if (controlType == ERigControlType::TransformNoScale)
 		{
 			FTransformNoScale nValue = controlValue.GetAsTransform(ERigControlType::TransformNoScale, ERigControlAxis::X);
-			FVector location = nValue.Location;
-			UE::Math::TQuat<double> rotation = nValue.Rotation;
-			FRotator rotator = rotation.Rotator();
 			if (ChannelDisplayText == "Location.X")
 			{
+				FVector location = nValue.Location;
 				location.X = valueOfChannel;
 				nValue.Location = location;
 			}
 			else if (ChannelDisplayText == "Location.Y")
 			{
+				FVector location = nValue.Location;
 				location.Y = valueOfChannel;
 				nValue.Location = location;
 			}
 			else if (ChannelDisplayText == "Location.Z")
 			{
+				FVector location = nValue.Location;
 				location.Z = valueOfChannel;
 				nValue.Location = location;
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
+				UE::Math::TQuat<double> rotation = nValue.Rotation;
+				FRotator rotator = rotation.Rotator();
 				rotator.Roll = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
+				UE::Math::TQuat<double> rotation = nValue.Rotation;
+				FRotator rotator = rotation.Rotator();
 				rotator.Pitch = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
+				UE::Math::TQuat<double> rotation = nValue.Rotation;
+				FRotator rotator = rotation.Rotator();
 				rotator.Yaw = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				nValue.Rotation = rotation;
@@ -721,67 +735,72 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime)
 		else if (controlType == ERigControlType::Transform)
 		{
 			FTransform eulerValue = controlValue.GetAsTransform(ERigControlType::Transform, ERigControlAxis::X);
-			FVector location = eulerValue.GetLocation();
-			UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
-			FVector scale = eulerValue.GetScale3D();
-			FRotator rotator = rotation.Rotator();
 			if (ChannelDisplayText == "Location.X")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.X = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Y")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.Y = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Location.Z")
 			{
+				FVector location = eulerValue.GetLocation();
 				location.Z = valueOfChannel;
 				eulerValue.SetLocation(location);
 			}
 			else if (ChannelDisplayText == "Rotation.Roll")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Roll = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Pitch")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Pitch = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Rotation.Yaw")
 			{
+				UE::Math::TQuat<double> rotation = eulerValue.GetRotation();
+				FRotator rotator = rotation.Rotator();
 				rotator.Yaw = valueOfChannel;
 				rotation = UE::Math::TQuat<double>::MakeFromRotator(rotator);
 				eulerValue.SetRotation(rotation);
 			}
 			else if (ChannelDisplayText == "Scale.X")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.X = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Y")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.Y = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
 			else if (ChannelDisplayText == "Scale.Z")
 			{
+				FVector scale = eulerValue.GetScale3D();
 				scale.Z = valueOfChannel;
 				eulerValue.SetScale3D(scale);
 			}
-			controlRig->SetControlValue(FName(Data.ControlSelection), eulerValue, true, FRigControlModifiedContext(), true, true);
+			controlRig->SetControlValue(FName(Data.ControlSelection), eulerValue, true, FRigControlModifiedContext(), false, false);
 		}
 		else if (controlType == ERigControlType::Vector2D)
 		{
 			FString eulerValue = controlValue.ToString<FVector2D>();
-
 			FVector currentValue = GetVectorFromString(*eulerValue);
-			FVector minValue = GetVectorFromString(*controlValueMin.ToString<FVector2D>());
-			FVector maxValue = GetVectorFromString(*controlValueMax.ToString<FVector2D>());
 
 			FVector2D vec = FVector2D();
 			if (ChannelDisplayText == "X")
@@ -1081,14 +1100,16 @@ void MotionHandler::Accelerate(FVector2D value, FFrameNumber keyTime)
 
 	double val = valueToSet;
 
-	valueToSet = valueToSet * Data.Scale + AccelerateLastValue * 0.01;
+	double Scale = Data.Scale / 100;
+	valueToSet = valueToSet * Scale + AccelerateLastValue * 0.01;
 
 	MAccelerator->Accelerate(valueToSet, keyTime);
-	AccelerateLastValue = val;
 
-	SyncMaterialTrack(keyTime);
-	SyncControlRigWithChannelValue(keyTime);
-	SyncNiagaraParam(keyTime);
+	SyncMaterialTrack(keyTime, valueToSet);
+	SyncControlRigWithChannelValue(keyTime, valueToSet);
+	SyncNiagaraParam(keyTime, valueToSet);
+
+	AccelerateLastValue = val;
 }
 void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 {

@@ -590,7 +590,6 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime, float va
 		{
 			controlElement = controlRig->FindControl(FName(Data.ControlSelection));
 			controlType = controlElement->Settings.ControlType;
-			controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
 			controlValueMin = controlElement->Settings.MinimumValue;
 			controlValueMax = controlElement->Settings.MaximumValue;
 		}
@@ -611,6 +610,7 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime, float va
 			return;
 		}
 
+		controlValue = controlRig->GetControlValue(FName(Data.ControlSelection));
 		FString ChannelDisplayText = Data.ChannelDisplayText.ToString();
 
 		if (controlType == ERigControlType::Float)

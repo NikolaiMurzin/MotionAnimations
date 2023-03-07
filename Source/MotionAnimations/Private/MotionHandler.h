@@ -146,7 +146,6 @@ private:
 
 	FMovieSceneFloatChannel* FloatChannel = nullptr;
 	FMovieSceneDoubleChannel* DoubleChannel = nullptr;
-	FMovieSceneBoolChannel* BoolChannel = nullptr;
 	FMovieSceneIntegerChannel* IntegerChannel = nullptr;
 
 	Accelerator* MAccelerator;

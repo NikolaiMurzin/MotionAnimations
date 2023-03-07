@@ -83,9 +83,6 @@ SMain::SMain()
 	OpenEditorEvent = &(UAssetEditorSubs->OnAssetEditorOpened());
 	OpenEditorEvent->AddRaw(this, &SMain::OnEditorOpened);
 
-
-	SelectedSequence = nullptr;
-
 	MotionHandlers = TArray<TSharedPtr<MotionHandler>>();
 	CustomRange = TRange<FFrameNumber>();
 	CustomRange.SetUpperBound(FFrameNumber());
@@ -98,6 +95,10 @@ SMain::SMain()
 }
 SMain::~SMain()
 {
+	if (SettingsWindow.IsValid())
+	{
+		SettingsWindow.Get()->DestroyWindowImmediately();
+	}
 	delete Settings;
 	if (OpenEditorEvent != nullptr)
 	{
@@ -107,6 +108,7 @@ SMain::~SMain()
 	{
 		OnKeyDownEvent->RemoveAll(this);
 	}
+	UnbindSequencerEvents();
 }
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION void SMain::Construct(const FArguments& InArgs)
 {
@@ -221,11 +223,23 @@ FText SMain::GetIsActive() const
 
 FReply SMain::OpenSettingsWindow()
 {
-	TSharedRef<SWindow> SettingsWindow = SNew(SWindow).Title(FText::FromString(TEXT("Settings"))).ClientSize(FVector2D(400, 500));
+	// if we already have window
+	if (SettingsWindow.IsValid())
+	{
+		SettingsWindow->BringToFront();
+		return FReply::Handled();
+	}
 	TSharedRef<SSettingsWidget> SettingsWidget = SNew(SSettingsWidget);
 	SettingsWidget.Get().OnChangeKeyEvent->AddRaw(this, &SMain::RefreshSettings);
+
+	SettingsWindow = SNew(SWindow).Title(FText::FromString(TEXT("Settings"))).ClientSize(FVector2D(400, 500));
 	SettingsWindow->SetContent(SettingsWidget);
-	FSlateApplication::Get().AddWindow(SettingsWindow);
+	SettingsWindow = FSlateApplication::Get().AddWindow(SettingsWindow.ToSharedRef());
+	SettingsWindow->SetOnWindowClosed(FOnWindowClosed::CreateLambda([&](const TSharedRef<SWindow>& ClosedWindow)
+		{
+			SettingsWindow = nullptr;
+		}));
+
 	return FReply::Handled();
 }
 void SMain::RefreshSettings()
@@ -297,6 +311,33 @@ void SMain::OnEditorOpened(UObject* object)
 	RefreshSequencer();
 }
 
+void SMain::UnbindSequencerEvents()
+{
+	if (Sequencer != nullptr)
+	{
+		if (OnGlobalTimeChangedDelegate != nullptr)
+		{
+			OnGlobalTimeChangedDelegate->RemoveAll(this);
+		}
+		if (OnPlayEvent != nullptr)
+		{
+			OnPlayEvent->RemoveAll(this);
+		}
+		if (OnStopEvent != nullptr)
+		{
+			OnStopEvent->RemoveAll(this);
+		}
+		if (OnCloseEvent != nullptr)
+		{
+			OnCloseEvent->RemoveAll(this);
+		}
+		if (SelectedSectionsChangedEvent != nullptr)
+		{
+			SelectedSectionsChangedEvent->RemoveAll(this);
+		}
+	}
+}
+
 void SMain::RefreshSequence()
 {
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
@@ -351,38 +392,7 @@ void SMain::RefreshSequencer()
 }
 void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
 {
-	if (OnGlobalTimeChangedDelegate != nullptr)
-	{
-		if (OnGlobalTimeChangedDelegate != nullptr)
-		{
-			OnGlobalTimeChangedDelegate->RemoveAll(this);
-		}
-	}
-	if (OnPlayEvent != nullptr)
-	{
-		if (OnPlayEvent != nullptr)
-		{
-			OnPlayEvent->RemoveAll(this);
-		}
-	}
-	if (OnStopEvent != nullptr)
-	{
-		if (OnStopEvent != nullptr)
-		{
-			OnStopEvent->RemoveAll(this);
-		}
-	}
-	if (OnCloseEvent != nullptr)
-	{
-		if (OnCloseEvent != nullptr)
-		{
-			OnCloseEvent->RemoveAll(this);
-		}
-	}
-	if (SelectedSectionsChangedEvent != nullptr)
-	{
-		SelectedSectionsChangedEvent->RemoveAll(this);
-	}
+	UnbindSequencerEvents();
 	SelectedSequence = nullptr;
 	Sequencer = nullptr;
 	MotionHandlers.Reset();
@@ -393,49 +403,58 @@ void SMain::AddMotionHandlers()
 	{
 		TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 		Sequencer->GetSelectedKeyAreas(KeyAreas);
-		TArray<FGuid> SelectedObjects = TArray<FGuid>();
-		Sequencer->GetSelectedObjects(SelectedObjects);
 		TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
 		Sequencer->GetSelectedTracks(SelectedTracks);
-		if (SelectedObjects.Num() < 1 || SelectedTracks.Num() < 1)
+		if (SelectedTracks.Num() < 1)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("You are not selected any tracks or objects"));
 			return;
 		}
-		/* UMovieSceneControlRigParameterTrack* controlRigTrack =
-		Cast<UMovieSceneControlRigParameterTrack>(SelectedTracks[0]); if
-		(IsValid(conolRigTrack))
-		{
-		  UE_LOG(LogTemp, Warning, TEXT("IT'S CONTROL rig TRACK!"));
-		} */
 		TArray<TSharedPtr<MotionHandler>> selectionSet;
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
 			bool IsObjectAlreadyAdded = false;
 
-			TSharedPtr<MotionHandler> newMotionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
-				KeyArea, DefaultScale, Sequencer, SelectedSequence, SelectedTracks[0], SelectedObjects[0], Mode::X));
-
-			TArray<TSharedPtr<MotionHandler>> selectedHandlers = ListViewWidget->GetSelectedItems();
-
-			for (TSharedPtr<MotionHandler> handler : MotionHandlers)
-			{
-				if (*handler == *newMotionHandler)
+			UMovieSceneSection* section = KeyArea->GetOwningSection();
+			auto forWhichTrackThatSection = [&]() -> UMovieSceneTrack* {
+				for (UMovieSceneTrack* Track : SelectedTracks)
 				{
-					IsObjectAlreadyAdded = true;
+					TArray<UMovieSceneSection*> Sections = Track->GetAllSections();
+					if (Sections.Contains(section))
+					{
+						return Track;
+						break;
+					}
+				}
+				return nullptr;
+			};
+			UMovieSceneTrack* mySectionTrack = forWhichTrackThatSection();
+			if (mySectionTrack)
+			{
+				FGuid objectGuid = mySectionTrack->FindObjectBindingGuid();
 
-					selectionSet.Add(handler);
+				TSharedPtr<MotionHandler> newMotionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
+					KeyArea, DefaultScale, Sequencer, SelectedSequence, mySectionTrack, objectGuid, Mode::X));
+
+				for (TSharedPtr<MotionHandler> alreadyAddedHandler : MotionHandlers)
+				{
+					if (*alreadyAddedHandler == *newMotionHandler)
+					{
+						IsObjectAlreadyAdded = true;
+						selectionSet.Add(alreadyAddedHandler);
+					}
+				}
+
+				if (!IsObjectAlreadyAdded)
+				{
+					MotionHandlers.Add(newMotionHandler);
+					selectionSet.Add(newMotionHandler);
 				}
 			}
-			if (!IsObjectAlreadyAdded)
-			{
-				MotionHandlers.Add(newMotionHandler);
-				selectionSet.Add(newMotionHandler);
-			}
-			ListViewWidget->ClearSelection();
-			ListViewWidget->SetItemSelection(selectionSet, true, ESelectInfo::Type::Direct);
-			ListViewWidget->RequestListRefresh();
 		}
+		ListViewWidget->ClearSelection();
+		ListViewWidget->SetItemSelection(selectionSet, true, ESelectInfo::Type::Direct);
+		ListViewWidget->RequestListRefresh();
 	}
 }
 void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers)
@@ -591,18 +610,15 @@ void SMain::OnStopPlay()
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
-	TSharedPtr<SWidget> CurrentFocusedWidget = FSlateApplication::Get().GetCursorUser()->GetFocusedWidget();
+	// if we have opened SettingsWindow
+	if (SettingsWindow.IsValid() && SettingsWindow->IsActive())
+	{
+		return;
+	}
 
+	TSharedPtr<SWidget> CurrentFocusedWidget = FSlateApplication::Get().GetCursorUser()->GetFocusedWidget();
 	if (CurrentFocusedWidget.IsValid())
 	{
-		TSharedPtr<SWindow> SelectedWindow = FSlateApplication::Get().FindWidgetWindow(CurrentFocusedWidget.ToSharedRef());
-		if (SelectedWindow.IsValid())
-		{
-			if (SelectedWindow->GetParentWindow() != nullptr) // if it isn't main window
-			{
-				return;
-			}
-		}
 		FString type = CurrentFocusedWidget->GetTypeAsString();
 
 		if (CurrentFocusedWidget != nullptr && type == "SEditableText") // if user now focused on Editable text;

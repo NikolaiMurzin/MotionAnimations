@@ -74,6 +74,8 @@ public:
 	FOnCloseEvent* OnCloseEvent;
 	void OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_);
 
+	void UnbindSequencerEvents();
+
 	ISequencer::FOnSelectionChangedSections* SelectedSectionsChangedEvent;
 	void SelectedSectionsChangedRaw(TArray<UMovieSceneSection*> sections);
 
@@ -107,6 +109,8 @@ public:
 	FText GetCustomEndFrame() const;
 
 	FReply OpenSettingsWindow();
+	TSharedPtr<SWindow> SettingsWindow;
+	bool IsSettingsOpen;
 
 	void OnToleranceChangeRaw(double value);
 	double OptimizationTolerance = 0.01;

@@ -189,7 +189,7 @@ bool MotionHandler::IsValidMotionHandler()
 		return false;
 	}
 	bool ChannelNullPtr =
-		(FloatChannel == nullptr && DoubleChannel == nullptr && BoolChannel == nullptr && IntegerChannel == nullptr);
+		(FloatChannel == nullptr && DoubleChannel == nullptr && IntegerChannel == nullptr);
 	bool IsValid_ = !ChannelNullPtr;
 	if (!IsValid_)
 	{
@@ -233,7 +233,6 @@ void MotionHandler::SetMaterialTrack(UMovieSceneTrack* MovieSceneTrack_)
 	if (MovieSceneMaterialTrack_ != nullptr && IsValid(MovieSceneMaterialTrack_))
 	{
 		MovieSceneMaterialTrack = MovieSceneMaterialTrack_;
-		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneMaterialTrack"));
 	}
 }
 void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
@@ -241,14 +240,9 @@ void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
 	UMovieSceneParticleParameterTrack* MovieSceneParticleTrack_ = Cast<UMovieSceneParticleParameterTrack>(MovieSceneTrack_);
 	UMovieSceneNiagaraTrack* MovieSceneNiagaraTrack_ = Cast<UMovieSceneNiagaraTrack>(MovieSceneTrack_);
 	UMovieSceneNiagaraParameterTrack* MovieSceneNiagaraParameterTrack_ = Cast<UMovieSceneNiagaraParameterTrack>(MovieSceneTrack_);
-	if (IsValid(MovieSceneParticleTrack_))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneParticleTrack"));
-	}
 	if (IsValid(MovieSceneNiagaraTrack_))
 	{
 		MovieSceneNiagaraTrack = MovieSceneNiagaraTrack_;
-		UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneNiagaraTrack"));
 
 		UObject* Obj = Sequencer->FindSpawnedObjectOrTemplate(Data.ObjectFGuid);
 		if (Obj != nullptr)
@@ -257,14 +251,12 @@ void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
 			if (NiagaraComponent_ != nullptr)
 			{
 				NiagaraComponent = NiagaraComponent_;
-				UE_LOG(LogTemp, Warning, TEXT("find niagara component"));
 			}
 		}
 
 		// for determine which type of param we have
 		if (IsValid(MovieSceneNiagaraParameterTrack_))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("It's Valid MovieSceneNiagaraParameterTrack_"));
 			MovieSceneNiagaraParameterTrack = MovieSceneNiagaraParameterTrack_;
 			UMovieSceneNiagaraFloatParameterTrack* MovieSceneNiagaraFloatTrack_ =
 				Cast<UMovieSceneNiagaraFloatParameterTrack>(MovieSceneNiagaraParameterTrack_);
@@ -338,21 +330,18 @@ void MotionHandler::SyncNiagaraParam(FFrameNumber InTime, float value)
 						vec.X = value;
 						vec.Y = YValue;
 						vec.Z = ZValue;
-						UE_LOG(LogTemp, Warning, TEXT("X"));
 					}
 					else if (axis == "Y")
 					{
 						vec.X = XValue;
 						vec.Y = value;
 						vec.Z = ZValue;
-						UE_LOG(LogTemp, Warning, TEXT("Y"));
 					}
 					else if (axis == "Z")
 					{
 						vec.X = XValue;
 						vec.Y = YValue;
 						vec.Z = value;
-						UE_LOG(LogTemp, Warning, TEXT("Z"));
 					}
 					NiagaraComponent->SetVectorParameter(var.GetName(), vec);
 				}
@@ -366,7 +355,6 @@ void MotionHandler::ResetNiagaraState()
 	{
 		NiagaraComponent->DeactivateImmediate();
 		NiagaraComponent->ActivateSystem();
-		UE_LOG(LogTemp, Warning, TEXT("Reset niagara called"));
 	}
 }
 void MotionHandler::SyncMaterialTrack(FFrameNumber InTime, float value)
@@ -379,7 +367,6 @@ void MotionHandler::SyncMaterialTrack(FFrameNumber InTime, float value)
 	{
 		FName ParameterName = FName(*Data.ChannelDisplayText.ToString());
 		FString ChannelDisplayText = Data.ChannelDisplayText.ToString();
-		UE_LOG(LogTemp, Warning, TEXT("Data Channel DisplayText is  %s"), *ChannelDisplayText);
 		if (FloatChannel == nullptr)
 		{
 			return;
@@ -424,7 +411,6 @@ void MotionHandler::SyncMaterialTrack(FFrameNumber InTime, float value)
 		else
 		{
 			MovieSceneMaterialTrack->AddScalarParameterKey(ParameterName, InTime, value);
-			UE_LOG(LogTemp, Warning, TEXT("Set value to Movie Scene Material Scalar Track!"));
 		}
 	}
 }
@@ -437,10 +423,6 @@ void MotionHandler::CastChannel()
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
 		DoubleChannel = ChannelHandle.Cast<FMovieSceneDoubleChannel>().Get();
-	}
-	else if (Data.ChannelTypeName == "MovieSceneBoolChannel")
-	{
-		BoolChannel = ChannelHandle.Cast<FMovieSceneBoolChannel>().Get();
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
@@ -501,6 +483,7 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		}
 	}
 
+
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
 		valueToSet = (float)valueToSet;
@@ -509,8 +492,8 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
 			return;
 		}
-		TMovieSceneChannelData<FMovieSceneFloatValue> ChannelData = FloatChannel->GetData();
-		ChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
+		TMovieSceneChannelData<FMovieSceneFloatValue>FloatChannelData = FloatChannel->GetData();
+		FloatChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
 	{
@@ -520,8 +503,8 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of double channel"));
 			return;
 		}
-		TMovieSceneChannelData<FMovieSceneDoubleValue> ChannelData = DoubleChannel->GetData();
-		ChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
+		TMovieSceneChannelData<FMovieSceneDoubleValue>DoubleChannelData = DoubleChannel->GetData();
+		DoubleChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
 	}
 	else if (Data.ChannelTypeName == "MovieSceneIntegerChannel")
 	{
@@ -531,8 +514,8 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			UE_LOG(LogTemp, Warning, TEXT("Can't get data of float channel"));
 			return;
 		}
-		TMovieSceneChannelData<int> ChannelData = IntegerChannel->GetData();
-		ChannelData.UpdateOrAddKey(InTime, valueToSet);
+		TMovieSceneChannelData<int>IntegerChannelData = IntegerChannel->GetData();
+		IntegerChannelData.UpdateOrAddKey(InTime, valueToSet);
 	}
 	SyncMaterialTrack(InTime, valueToSet);
 	SyncControlRigWithChannelValue(InTime, valueToSet);
@@ -589,9 +572,12 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime, float va
 		if (controlElement == nullptr)
 		{
 			controlElement = controlRig->FindControl(FName(Data.ControlSelection));
-			controlType = controlElement->Settings.ControlType;
-			controlValueMin = controlElement->Settings.MinimumValue;
-			controlValueMax = controlElement->Settings.MaximumValue;
+			if (controlElement != nullptr)
+			{
+				controlType = controlElement->Settings.ControlType;
+				controlValueMin = controlElement->Settings.MinimumValue;
+				controlValueMax = controlElement->Settings.MaximumValue;
+			}
 		}
 
 
@@ -823,14 +809,12 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 	{
 		return double(0);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Get value from time called"));
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
 		if (FloatChannel != nullptr && FloatChannel->HasAnyData())
 		{
 			float result = 0;
 			FloatChannel->Evaluate(InTime, result);
-			UE_LOG(LogTemp, Warning, TEXT("Get value from time returned"));
 			return result;
 		}
 	}
@@ -840,7 +824,6 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 		{
 			double result = 0;
 			DoubleChannel->Evaluate(InTime, result);
-			UE_LOG(LogTemp, Warning, TEXT("Get value from time returned"));
 			return result;
 		}
 	}
@@ -850,7 +833,6 @@ double MotionHandler::GetValueFromTime(FFrameNumber InTime)
 		{
 			int32 result = 0;
 			IntegerChannel->Evaluate(InTime, result);
-			UE_LOG(LogTemp, Warning, TEXT("Get value from time returned"));
 			return result;
 		}
 	}
@@ -862,7 +844,6 @@ void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Delete keys within called"));
 	TArray<FKeyHandle> KeyHandles = TArray<FKeyHandle>();
 	if (Data.ChannelTypeName == "MovieSceneFloatChannel")
 	{
@@ -888,7 +869,6 @@ void MotionHandler::DeleteKeysWithin(TRange<FFrameNumber> InRange)
 			IntegerChannel->DeleteKeys(TArrayView<const FKeyHandle>(KeyHandles));
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Delete keys within returned"));
 }
 void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
 {
@@ -907,7 +887,6 @@ void MotionHandler::DeleteAllKeysFrom(FFrameNumber InTime)
 }
 void MotionHandler::Optimize(TRange<FFrameNumber> InRange, double tolerance)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Optimize Called"));
 	if (!IsValidMotionHandler())
 	{
 		return;
@@ -997,7 +976,6 @@ void MotionHandler::AddOrUpdateKeyValueInSequencer()
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Add new key values!"));
 	if (Data.KeyValues.Contains(Data.CurrentIndex))
 	{
 		UpdateCurrentKeyValues();
@@ -1166,7 +1144,7 @@ bool MotionHandler::operator==(MotionHandler& handler)
 {
 	return (Data.GetName() == handler.Data.GetName() && Data.ControlSelection == handler.Data.ControlSelection &&
 		Data.ChannelDisplayText.ToString() == handler.Data.ChannelDisplayText.ToString() &&
-		Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName);
+		Data.KeyAreaName == handler.Data.KeyAreaName && Data.TrackDisplayName == handler.Data.TrackDisplayName && handler.Data.ObjectFGuid == Data.ObjectFGuid);
 }
 bool MotionHandler::HasData()
 {

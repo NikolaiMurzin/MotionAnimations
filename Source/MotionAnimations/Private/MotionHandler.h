@@ -39,7 +39,6 @@ public:
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
 	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_ = Mode::X);
-	~MotionHandler();
 	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);
 	void SetMaterialTrack(UMovieSceneTrack* MovieSceneTrack_);
@@ -148,8 +147,8 @@ private:
 	FMovieSceneDoubleChannel* DoubleChannel = nullptr;
 	FMovieSceneIntegerChannel* IntegerChannel = nullptr;
 
-	Accelerator* MAccelerator;
+	TSharedPtr<Accelerator> MAccelerator;
 	double AccelerateLastValue;
 
-	MotionEditor* MMotionEditor;
+	TSharedPtr<MotionEditor> MMotionEditor;
 };

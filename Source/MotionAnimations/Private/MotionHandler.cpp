@@ -124,8 +124,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	SetMaterialTrack(MovieSceneTrack);
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
-	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
-	MMotionEditor = new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel);
+	MAccelerator = TSharedPtr<Accelerator>(new Accelerator(FloatChannel, DoubleChannel, IntegerChannel));
+	MMotionEditor = TSharedPtr<MotionEditor>(new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel));
 }
 MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
@@ -173,15 +173,8 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	SetMaterialTrack(MovieSceneTrack);
 	SetNiagaraTrack(MovieSceneTrack);
 	CastChannel();
-	MAccelerator = new Accelerator(FloatChannel, DoubleChannel, IntegerChannel);
-	MMotionEditor = new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel);
-}
-MotionHandler::~MotionHandler()
-{
-	if (MAccelerator != nullptr)
-	{
-		delete MAccelerator;
-	}
+	MAccelerator = TSharedPtr<Accelerator>(new Accelerator(FloatChannel, DoubleChannel, IntegerChannel));
+	MMotionEditor = TSharedPtr<MotionEditor>(new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel));
 }
 
 bool MotionHandler::IsValidMotionHandler()
@@ -1101,7 +1094,10 @@ void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 }
 void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
-	MAccelerator->UpdateBackup(range);
+	if (MAccelerator)
+	{
+		MAccelerator->UpdateBackup(range);
+	}
 }
 void MotionHandler::Populate(TRange<FFrameNumber> range, FFrameNumber interval)
 {

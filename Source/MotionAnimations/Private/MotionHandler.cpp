@@ -178,7 +178,10 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 }
 MotionHandler::~MotionHandler()
 {
-	delete MAccelerator;
+	if (MAccelerator != nullptr)
+	{
+		delete MAccelerator;
+	}
 }
 
 bool MotionHandler::IsValidMotionHandler()

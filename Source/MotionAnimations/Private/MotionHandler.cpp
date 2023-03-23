@@ -73,6 +73,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
 
+	MAccelerator = nullptr;
+
 	if (Sequence == nullptr)
 	{
 		return;
@@ -139,11 +141,11 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 
 	MovieSceneSection = KeyArea->GetOwningSection();
 
-
 	MovieSceneControlRigParameterTrack = nullptr;
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
 
+	MAccelerator = nullptr;
 
 	OnScaleValueChanged.BindRaw(this, &MotionHandler::OnScaleValueChangedRaw);
 	OnTextChanged.BindRaw(this, &MotionHandler::OnTextChangedRaw);
@@ -1094,7 +1096,7 @@ void MotionHandler::ResetAccelerator(TRange<FFrameNumber> range)
 }
 void MotionHandler::ReInitAccelerator(TRange<FFrameNumber> range)
 {
-	if (MAccelerator)
+	if (MAccelerator != nullptr)
 	{
 		MAccelerator->UpdateBackup(range);
 	}

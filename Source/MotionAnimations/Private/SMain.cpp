@@ -428,17 +428,17 @@ void SMain::AddMotionHandlers()
 				}
 				return nullptr;
 			};
-			UMovieSceneTrack* mySectionTrack = forWhichTrackThatSection();
-			if (mySectionTrack)
+			UMovieSceneTrack*  trackOfThatSection = forWhichTrackThatSection();
+			if ( trackOfThatSection )
 			{
-				FGuid objectGuid = mySectionTrack->FindObjectBindingGuid();
+				FGuid objectGuid = trackOfThatSection ->FindObjectBindingGuid();
 
-				TSharedPtr<MotionHandler> newMotionHandler = TSharedPtr<MotionHandler>(new MotionHandler(
-					KeyArea, DefaultScale, Sequencer, SelectedSequence, mySectionTrack, objectGuid, Mode::X));
+				MotionHandler newMotionHandler = MotionHandler(
+					KeyArea, DefaultScale, Sequencer, SelectedSequence, trackOfThatSection , objectGuid, Mode::X);
 
 				for (TSharedPtr<MotionHandler> alreadyAddedHandler : MotionHandlers)
 				{
-					if (*alreadyAddedHandler == *newMotionHandler)
+					if (*alreadyAddedHandler == newMotionHandler)
 					{
 						IsObjectAlreadyAdded = true;
 						selectionSet.Add(alreadyAddedHandler);
@@ -447,8 +447,10 @@ void SMain::AddMotionHandlers()
 
 				if (!IsObjectAlreadyAdded)
 				{
-					MotionHandlers.Add(newMotionHandler);
-					selectionSet.Add(newMotionHandler);
+					TSharedPtr<MotionHandler> newMotionHandlerPtr = TSharedPtr<MotionHandler>(new MotionHandler(
+						KeyArea, DefaultScale, Sequencer, SelectedSequence, trackOfThatSection, objectGuid, Mode::X));
+					MotionHandlers.Add(newMotionHandlerPtr);
+					selectionSet.Add(newMotionHandlerPtr);
 				}
 			}
 		}
@@ -619,6 +621,15 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	TSharedPtr<SWidget> CurrentFocusedWidget = FSlateApplication::Get().GetCursorUser()->GetFocusedWidget();
 	if (CurrentFocusedWidget.IsValid())
 	{
+		TSharedPtr<SWindow> SelectedWindow = FSlateApplication::Get().FindWidgetWindow(CurrentFocusedWidget.ToSharedRef());
+		if (SelectedWindow.IsValid())
+		{
+			if (SelectedWindow->GetParentWindow() != nullptr)	 // if it isn't main window
+			{
+				return;
+			}
+		}
+
 		FString type = CurrentFocusedWidget->GetTypeAsString();
 
 		if (CurrentFocusedWidget != nullptr && type == "SEditableText") // if user now focused on Editable text;

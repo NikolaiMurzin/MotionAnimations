@@ -612,6 +612,11 @@ void SMain::OnStopPlay()
 }
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
+	// if no current opened sequencer
+	if (Sequencer == nullptr)
+	{
+		return;
+	}
 	// if we have opened SettingsWindow
 	if (SettingsWindow.IsValid() && SettingsWindow->IsActive())
 	{

@@ -113,7 +113,7 @@ public:
 	bool IsSettingsOpen;
 
 	void OnToleranceChangeRaw(double value);
-	double OptimizationTolerance = 0.01;
+	double OptimizationTolerance = 0;
 
 private:
 	TRange<FFrameNumber> CustomRange;

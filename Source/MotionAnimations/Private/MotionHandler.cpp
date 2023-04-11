@@ -73,6 +73,8 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
 
+	NiagaraComponent = nullptr;
+
 	MAccelerator = nullptr;
 
 	if (Sequence == nullptr)
@@ -144,6 +146,8 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	MovieSceneControlRigParameterTrack = nullptr;
 	MovieSceneMaterialTrack = nullptr;
 	MovieSceneNiagaraParameterTrack = nullptr;
+
+	NiagaraComponent = nullptr;
 
 	MAccelerator = nullptr;
 
@@ -246,7 +250,7 @@ void MotionHandler::SetNiagaraTrack(UMovieSceneTrack* MovieSceneTrack_)
 		if (Obj != nullptr)
 		{
 			UNiagaraComponent* NiagaraComponent_ = Cast<UNiagaraComponent>(Obj);
-			if (NiagaraComponent_ != nullptr)
+			if (IsValid(NiagaraComponent_))
 			{
 				NiagaraComponent = NiagaraComponent_;
 			}

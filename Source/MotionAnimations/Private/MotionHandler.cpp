@@ -353,7 +353,7 @@ void MotionHandler::SyncNiagaraParam(FFrameNumber InTime, float value)
 }
 void MotionHandler::ResetNiagaraState()
 {
-	if (NiagaraComponent != nullptr)
+	if (IsValid(NiagaraComponent))
 	{
 		NiagaraComponent->DeactivateImmediate();
 		NiagaraComponent->ActivateSystem();

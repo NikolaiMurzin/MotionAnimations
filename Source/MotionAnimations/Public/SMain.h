@@ -53,7 +53,7 @@ public:
 	void RefreshSettings();
 
 	bool IsKeysEnabled = false;
-	bool IsRecordedStarted;
+	bool IsRecordedStarted = false;
 	bool IsScalingStarted = false;
 	bool IsEditStarted = false;
 

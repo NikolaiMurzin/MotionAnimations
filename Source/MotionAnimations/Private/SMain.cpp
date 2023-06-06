@@ -59,6 +59,8 @@
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
 
+#include "ISequencerModule.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -517,6 +519,7 @@ void SMain::OnGlobalTimeChanged()
 		{
 			ExecuteMotionHandlers(vectorChange, CurrentFrame);
 		}
+		Sequencer->RequestEvaluate();
 	}
 	if (IsScalingStarted)
 	{
@@ -563,6 +566,18 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
+
+			FFrameNumber deleteFrom = frame;
+			deleteFrom.Value += 1;
+			FFrameNumber deleteTo = frame;
+			deleteTo.Value += 2000;
+			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
+			if (deleteTo >= upperRange)
+			{
+				deleteTo = upperRange;
+			}
+			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo)); // need to delete values that goes after current key on 5 seconds, so we will clean all frames continuously, not by once like before.
+
 			motionHandler->SetKey(frame, value);
 		}
 	}
@@ -730,20 +745,28 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
+			LatestSyncTime = FFrameNumber(0);
+
 			stopSequencerAndBackToFirstFrame();
 
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
-			FFrameNumber DeleteKeysTo = CurrentRange_.GetUpperBoundValue();
+			FFrameNumber upperValue = CurrentRange_.GetUpperBoundValue();
 
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
-				FFrameNumber DeleteKeysFrom = lowerCurrentValue;
-				DeleteKeysFrom.Value += 1000;
-				DeleteKeysTo.Value += 2000;
-				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(DeleteKeysFrom, DeleteKeysTo));
-				motionHandler->ResetNiagaraState();
+
+				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(1000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
+				// Sequencer keep update when after it's current time more or equal than 5 keys, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
+
+
+
+				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
+				deleteFrom.Value += 10000;
+				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
+				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
+
 			}
 
 			playSequencerToLastFrame();
@@ -751,7 +774,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			IsScalingStarted = false;
 			IsEditStarted = false;
 			IsRecordedStarted = true;
-			PreviousPosition = FSlateApplication::Get().GetCursorPos();
+
 
 			Sequencer->UpdatePlaybackRange();
 			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
@@ -805,8 +828,9 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
-				motionHandler->ResetNiagaraState();
 			}
+
+
 
 		}
 		else

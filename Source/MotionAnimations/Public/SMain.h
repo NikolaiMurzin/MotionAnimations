@@ -112,6 +112,8 @@ public:
 	TSharedPtr<SWindow> SettingsWindow;
 	bool IsSettingsOpen;
 
+	FFrameNumber LatestSyncTime;
+
 	void OnToleranceChangeRaw(double value);
 	double OptimizationTolerance = 0;
 

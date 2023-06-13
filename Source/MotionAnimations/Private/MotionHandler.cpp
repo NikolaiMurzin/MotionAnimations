@@ -496,10 +496,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 		}
 		TMovieSceneChannelData<FMovieSceneFloatValue>FloatChannelData = FloatChannel->GetData();
 
-		FFrameNumber time = InTime;
-		time.Value += 1000;
-		FloatChannelData.UpdateOrAddKey(time, FMovieSceneFloatValue(valueToSet)); // need to paste key after current time so if there will be lag and time will go faster, it will got this value
-
 		FloatChannelData.UpdateOrAddKey(InTime, FMovieSceneFloatValue(valueToSet));
 	}
 	else if (Data.ChannelTypeName == "MovieSceneDoubleChannel")
@@ -513,10 +509,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 
 		TMovieSceneChannelData<FMovieSceneDoubleValue>DoubleChannelData = DoubleChannel->GetData();
 
-		FFrameNumber time = InTime;
-		time.Value += 1000;
-		DoubleChannelData.UpdateOrAddKey(time, FMovieSceneDoubleValue(valueToSet));
-
 		DoubleChannelData.UpdateOrAddKey(InTime, FMovieSceneDoubleValue(valueToSet));
 
 	}
@@ -529,10 +521,6 @@ void MotionHandler::SetKey(FFrameNumber InTime, FVector2D InputVector)
 			return;
 		}
 		TMovieSceneChannelData<int>IntegerChannelData = IntegerChannel->GetData();
-
-		FFrameNumber time = InTime;
-		time.Value += 1000;
-		IntegerChannelData.UpdateOrAddKey(time, valueToSet);
 
 		IntegerChannelData.UpdateOrAddKey(InTime, valueToSet);
 	}

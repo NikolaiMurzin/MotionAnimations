@@ -638,9 +638,14 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		return;
 	}
 
+
+	// check if it's focused not in main window or it's focused on Editable text
 	TSharedPtr<SWidget> CurrentFocusedWidget = FSlateApplication::Get().GetCursorUser()->GetFocusedWidget();
 	if (CurrentFocusedWidget.IsValid())
 	{
+		FString type = CurrentFocusedWidget->GetTypeAsString();
+		UE_LOG(LogTemp, Warning, TEXT("type is is %s"), *type);
+
 		TSharedPtr<SWindow> SelectedWindow = FSlateApplication::Get().FindWidgetWindow(CurrentFocusedWidget.ToSharedRef());
 		if (SelectedWindow.IsValid())
 		{
@@ -650,9 +655,11 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			}
 		}
 
-		FString type = CurrentFocusedWidget->GetTypeAsString();
-
 		if (CurrentFocusedWidget != nullptr && type == "SEditableText") // if user now focused on Editable text;
+		{
+			return;
+		}
+		if (CurrentFocusedWidget != nullptr && type == "SViewport")
 		{
 			return;
 		}
@@ -786,7 +793,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
-	if (Settings->Keys["Start scaling"] == key)
+	/* if (Settings->Keys["Start scaling"] == key)
 	{
 		stopSequencerAndBackToFirstFrame();
 
@@ -809,7 +816,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		Sequencer->UpdatePlaybackRange();
 		Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
 		Sequencer->NotifyBindingsChanged();
-	}
+	} */
 	if (Settings->Keys["Stop recording and optimize"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)

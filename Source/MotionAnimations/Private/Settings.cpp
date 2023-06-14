@@ -32,10 +32,10 @@ FString FSettings::GetFilePath()
 
 void FSettings::SetDefaultSettings()
 {
-	Keys.Add(TTuple<FString, FString>("Activate", "F2"));
+	Keys.Add(TTuple<FString, FString>("Activate", "F3"));
 	Keys.Add(TTuple<FString, FString>("Delete item", "F11"));
 	Keys.Add(TTuple<FString, FString>("Update motion handlers", "Q"));
-	Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
+	// Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
 	Keys.Add(TTuple<FString, FString>("Populate", "P"));
 	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
 	Keys.Add(TTuple<FString, FString>("Stop recording and optimize", "D"));
@@ -48,15 +48,15 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Select -y axis", "V"));
 	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
 	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
-	Keys.Add(TTuple<FString, FString>("select 1 set", "One"));
-	Keys.Add(TTuple<FString, FString>("select 2 set", "Two"));
-	Keys.Add(TTuple<FString, FString>("select 3 set", "Three"));
-	Keys.Add(TTuple<FString, FString>("select 4 set", "Four"));
-	Keys.Add(TTuple<FString, FString>("select 5 set", "Five"));
-	Keys.Add(TTuple<FString, FString>("select 6 set", "Six"));
-	Keys.Add(TTuple<FString, FString>("select 7 set", "Seven"));
-	Keys.Add(TTuple<FString, FString>("select 8 set", "Eight"));
-	Keys.Add(TTuple<FString, FString>("select 9 set", "Nine"));
+	Keys.Add(TTuple<FString, FString>("select 1 set", "NumPadOne"));
+	Keys.Add(TTuple<FString, FString>("select 2 set", "NumPadTwo"));
+	Keys.Add(TTuple<FString, FString>("select 3 set", "NumPadThree"));
+	Keys.Add(TTuple<FString, FString>("select 4 set", "NumPadFour"));
+	Keys.Add(TTuple<FString, FString>("select 5 set", "NumPadFive"));
+	Keys.Add(TTuple<FString, FString>("select 6 set", "NumPadSix"));
+	Keys.Add(TTuple<FString, FString>("select 7 set", "NumPadSeven"));
+	Keys.Add(TTuple<FString, FString>("select 8 set", "NumPadEight"));
+	Keys.Add(TTuple<FString, FString>("select 9 set", "NumPadNine"));
 }
 bool FSettings::Save()
 {

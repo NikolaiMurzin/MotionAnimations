@@ -42,10 +42,10 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Preview animation", "A"));
 	Keys.Add(TTuple<FString, FString>("Save item", "F5"));
 	Keys.Add(TTuple<FString, FString>("Load keys from item to sequencer", "F6"));
-	Keys.Add(TTuple<FString, FString>("Select x axis", "Z"));
-	Keys.Add(TTuple<FString, FString>("Select -x axis", "X"));
-	Keys.Add(TTuple<FString, FString>("Select y axis", "C"));
-	Keys.Add(TTuple<FString, FString>("Select -y axis", "V"));
+	Keys.Add(TTuple<FString, FString>("Select x axis", "X"));
+	Keys.Add(TTuple<FString, FString>("Select -x axis", "C"));
+	Keys.Add(TTuple<FString, FString>("Select y axis", "V"));
+	Keys.Add(TTuple<FString, FString>("Select -y axis", "B"));
 	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
 	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
 	Keys.Add(TTuple<FString, FString>("select 1 set", "NumPadOne"));

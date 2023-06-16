@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -43,17 +43,17 @@ public class MotionAnimations : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-        "Niagara",
+                "Niagara",
                 "LevelSequence",
                 "LevelSequenceEditor",
                 "AssetRegistry",
                 "MovieScene",
-        "MovieSceneTools",
-        "MovieSceneTracks",
-        "ControlRig",
-        "RigVM",
-        "Json",
-        "JsonUtilities"
+                "MovieSceneTools",
+                "MovieSceneTracks",
+                "ControlRig",
+                "RigVM",
+                "Json",
+                "JsonUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
             );

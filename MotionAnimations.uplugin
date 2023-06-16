@@ -9,7 +9,7 @@
 	"CreatedBy": "NikolaiMurzin",
 	"CreatedByURL": "",
 	"DocsURL": "",
-	"MarketplaceURL": "",
+	"MarketplaceURL": "com.epicgames.launcher: //ue/marketplace/product/f12c40284b0e438582144811f86da006",
 	"SupportURL": "",
 	"CanContainContent": false,
 	"IsBetaVersion": true,
@@ -25,7 +25,7 @@
 			"Name": "MotionAnimations",
 			"Type": "Editor",
 			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [ "Win64","Mac", "Linux" ]
+			"WhitelistPlatforms": [ "Win64", "Mac", "Linux" ]
 		}
 	],
 	"Plugins": [

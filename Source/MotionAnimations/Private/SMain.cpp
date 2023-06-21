@@ -259,16 +259,23 @@ void SMain::OnIsCustomRangeChanged(ECheckBoxState NewState)
 }
 TRange<FFrameNumber> SMain::GetCurrentRange() const
 {
+	if (!SelectedSequence)
+	{
+		return TRange<FFrameNumber>();
+	}
 	if (IsCustomRange)
 	{
-		return CustomRange;
+		FFrameNumber lower = CustomRange.GetLowerBoundValue();
+		FFrameNumber upper = CustomRange.GetUpperBoundValue();
+		if (lower >= upper)
+		{
+			upper = SelectedSequence->GetMovieScene()->GetPlaybackRange().GetUpperBoundValue();
+		}
+		return TRange<FFrameNumber>(lower, upper);
 	}
 	else
 	{
-		if (SelectedSequence != nullptr)
-		{
-			return SelectedSequence->GetMovieScene()->GetPlaybackRange();
-		}
+		return SelectedSequence->GetMovieScene()->GetPlaybackRange();
 	}
 	return TRange<FFrameNumber>();
 }
@@ -276,11 +283,18 @@ FText SMain::GetCustomStartFromFrame() const
 {
 	if (IsCustomRange)
 	{
-		FFrameNumber lowerValue = GetCurrentRange().GetLowerBoundValue();
-		FString string = FString("Start frame: ");
-		FString value = FString::SanitizeFloat(lowerValue.Value);
-		string.Append(value);
-		return FText::FromString(string);
+		if (Sequencer != nullptr)
+		{
+			const FFrameRate rate = Sequencer->GetFocusedDisplayRate();
+			const FFrameNumber frame = CustomRange.GetLowerBoundValue();
+			float val = (rate.AsDecimal() / 24) * frame.Value;
+			val /= 1000;
+
+			FString value = FString::FromInt(int(val));
+			FString string = FString("Start frame: ");
+			string.Append(value);
+			return FText::FromString(string);
+		}
 	}
 	return FText::FromString("Custom start frame:");
 }
@@ -288,11 +302,20 @@ FText SMain::GetCustomEndFrame() const
 {
 	if (IsCustomRange)
 	{
-		FFrameNumber upper = GetCurrentRange().GetUpperBoundValue();
-		FString string = FString("End frame: ");
-		FString value = FString::SanitizeFloat(upper.Value);
-		string.Append(value);
-		return FText::FromString(string);
+		if (Sequencer != nullptr)
+		{
+			FString string = FString("End frame: ");
+
+			const FFrameRate rate = Sequencer->GetFocusedDisplayRate();
+			const FFrameNumber frame = CustomRange.GetUpperBoundValue();
+
+			float val = (rate.AsDecimal() / 24) * frame.Value;
+			val /= 1000;
+
+			FString value = FString::FromInt(int(val));
+			string.Append(value);
+			return FText::FromString(string);
+		}
 	}
 	return FText::FromString("Custom end frame:");
 }
@@ -509,10 +532,10 @@ void SMain::OnGlobalTimeChanged()
 	{
 		if (IsCustomRange)
 		{
-			FFrameNumber valueFromWhichStart = CustomRange.GetLowerBoundValue().Value;
+			FFrameNumber valueFromWhichStart = GetCurrentRange().GetLowerBoundValue().Value;
 			valueFromWhichStart -= 1000; // we should start from -1000 of CustomRange because when we execute Motion Handlers we make +1000 FFrameNumber;
 			if (CurrentFrame.Value >= valueFromWhichStart &&
-				CurrentFrame.Value <= CustomRange.GetUpperBoundValue().Value)
+				CurrentFrame.Value <= GetCurrentRange().GetUpperBoundValue().Value)
 			{
 				ExecuteMotionHandlers(vectorChange, CurrentFrame);
 			}
@@ -539,7 +562,7 @@ void SMain::OnGlobalTimeChanged()
 		if (IsCustomRange)
 		{
 			FFrameNumber CurrentTime = Sequencer->GetLocalTime().Time.FrameNumber;
-			if (CurrentTime.Value >= CustomRange.GetLowerBoundValue().Value && CurrentTime.Value <= CustomRange.GetUpperBoundValue().Value)
+			if (CurrentTime.Value >= GetCurrentRange().GetLowerBoundValue().Value && CurrentTime.Value <= GetCurrentRange().GetUpperBoundValue().Value)
 			{
 				FFrameNumber nextFrame = Sequencer->GetGlobalTime().Time.GetFrame();
 				nextFrame.Value += 1000;

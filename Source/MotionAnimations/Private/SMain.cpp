@@ -566,6 +566,18 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
+			FFrameNumber deleteFrom = frame;
+			deleteFrom.Value += 1;
+			FFrameNumber deleteTo = frame;
+			deleteTo.Value += 3000;
+			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
+			if (deleteTo >= upperRange)
+			{
+				deleteTo = upperRange;
+			}
+			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo)); // need to delete values that goes after current key on 5 seconds, so we will clean all frames continuously, not by once like before.
+
+				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 			motionHandler->SetKey(frame, value);
 		}
 	}
@@ -745,6 +757,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
 				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
+				deleteTo.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
 			}
 
@@ -759,12 +772,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 
 				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(1000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
-				// Sequencer keep update when after it's current time more or equal than 5 keys, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
-
-				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue(); // need to delete only from 5 frame so sequencer will keep updating
-				deleteFrom.Value += 5000;
-				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
-				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
+				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 
 			}
 

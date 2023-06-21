@@ -38,7 +38,7 @@ void FSettings::SetDefaultSettings()
 	// Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
 	Keys.Add(TTuple<FString, FString>("Populate", "P"));
 	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
-	Keys.Add(TTuple<FString, FString>("Stop recording and optimize", "D"));
+	Keys.Add(TTuple<FString, FString>("Stop recording", "D"));
 	Keys.Add(TTuple<FString, FString>("Preview animation", "A"));
 	Keys.Add(TTuple<FString, FString>("Save item", "F5"));
 	Keys.Add(TTuple<FString, FString>("Load keys from item to sequencer", "F6"));
@@ -48,6 +48,7 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Select -y axis", "B"));
 	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
 	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
+	Keys.Add(TTuple<FString, FString>("Optimize", "G"));
 	Keys.Add(TTuple<FString, FString>("select 1 set", "NumPadOne"));
 	Keys.Add(TTuple<FString, FString>("select 2 set", "NumPadTwo"));
 	Keys.Add(TTuple<FString, FString>("select 3 set", "NumPadThree"));

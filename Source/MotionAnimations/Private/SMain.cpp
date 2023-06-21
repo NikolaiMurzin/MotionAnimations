@@ -566,18 +566,6 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
-
-			FFrameNumber deleteFrom = frame;
-			deleteFrom.Value += 1;
-			FFrameNumber deleteTo = frame;
-			deleteTo.Value += 2000;
-			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
-			if (deleteTo >= upperRange)
-			{
-				deleteTo = upperRange;
-			}
-			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo)); // need to delete values that goes after current key on 5 seconds, so we will clean all frames continuously, not by once like before.
-
 			motionHandler->SetKey(frame, value);
 		}
 	}
@@ -644,7 +632,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	if (CurrentFocusedWidget.IsValid())
 	{
 		FString type = CurrentFocusedWidget->GetTypeAsString();
-		UE_LOG(LogTemp, Warning, TEXT("type is is %s"), *type);
 
 		TSharedPtr<SWindow> SelectedWindow = FSlateApplication::Get().FindWidgetWindow(CurrentFocusedWidget.ToSharedRef());
 		if (SelectedWindow.IsValid())
@@ -667,7 +654,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	FString key = event.GetKey().ToString();
 	if (Settings->Keys.Num() < 14)	  // there should be at least 14 settings
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Something wrong with your settings file! Try to remove it from /{PluginDir}/Settings/ and start again, it will generate it"));
+		UE_LOG(LogTemp, Warning, TEXT("Something wrong with your settings file! Try to remove it from {ProjectDir}/{PluginDir}/MotionAnimations/Settings/ and start again, it will re-generate it"));
 		return;
 	}
 	if (Settings->Keys["Activate"] == key)
@@ -754,6 +741,13 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		{
 			LatestSyncTime = FFrameNumber(0);
 
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+			{
+				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
+				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
+				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
+			}
+
 			stopSequencerAndBackToFirstFrame();
 
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
@@ -767,10 +761,8 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(1000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
 				// Sequencer keep update when after it's current time more or equal than 5 keys, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 
-
-
-				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
-				deleteFrom.Value += 10000;
+				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue(); // need to delete only from 5 frame so sequencer will keep updating
+				deleteFrom.Value += 5000;
 				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
 
@@ -817,28 +809,36 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
 		Sequencer->NotifyBindingsChanged();
 	} */
-	if (Settings->Keys["Stop recording and optimize"] == key)
+	if (Settings->Keys["Stop recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
 		{
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
-			FFrameNumber higherCurrentValue = CurrentRange_.GetUpperBoundValue();
-			FFrameNumber lowerCurrentValueCopy = lowerCurrentValue;
-			lowerCurrentValueCopy.Value += 1000;
-			higherCurrentValue.Value += 2000;
-			CurrentRange_.SetUpperBoundValue(higherCurrentValue);
-			CurrentRange_.SetLowerBoundValue(lowerCurrentValueCopy);
 
 			stopSequencerAndBackToFirstFrame();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
-				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
 			}
 
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
+		}
+	}
+	if (Settings->Keys["Optimize"] == key)
+	{
+		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		{
+			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 
-
+			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+			{
+				motionHandler->Optimize(CurrentRange_, OptimizationTolerance);
+			}
 		}
 		else
 		{

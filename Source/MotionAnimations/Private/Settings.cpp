@@ -48,6 +48,7 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Select -y axis", "B"));
 	Keys.Add(TTuple<FString, FString>("Set upper bound of custom range", "Y"));
 	Keys.Add(TTuple<FString, FString>("Set lower bound of custom range", "T"));
+	Keys.Add(TTuple<FString, FString>("Activate custom range", "U"));
 	Keys.Add(TTuple<FString, FString>("Optimize", "G"));
 	Keys.Add(TTuple<FString, FString>("select 1 set", "NumPadOne"));
 	Keys.Add(TTuple<FString, FString>("select 2 set", "NumPadTwo"));

@@ -936,6 +936,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			CustomRange.SetUpperBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}
 	}
+	else if (Settings->Keys["Activate custom range"] == key)
+	{
+		IsCustomRange = !IsCustomRange;
+	}
 	auto refreshSelection = [&](int setNumber)
 	{
 		if (Sequencer == nullptr)

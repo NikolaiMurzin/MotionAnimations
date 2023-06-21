@@ -509,7 +509,9 @@ void SMain::OnGlobalTimeChanged()
 	{
 		if (IsCustomRange)
 		{
-			if (CurrentFrame.Value >= CustomRange.GetLowerBoundValue().Value &&
+			FFrameNumber valueFromWhichStart = CustomRange.GetLowerBoundValue().Value;
+			valueFromWhichStart -= 1000; // we should start from -1000 of CustomRange because when we execute Motion Handlers we make +1000 FFrameNumber;
+			if (CurrentFrame.Value >= valueFromWhichStart &&
 				CurrentFrame.Value <= CustomRange.GetUpperBoundValue().Value)
 			{
 				ExecuteMotionHandlers(vectorChange, CurrentFrame);

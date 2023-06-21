@@ -768,6 +768,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
+				if (IsCustomRange)
+				{
+					deleteFrom.Value += 1;
+				}
 				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
 				deleteTo.Value += 1000;
 				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));

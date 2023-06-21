@@ -620,6 +620,16 @@ void SMain::OnStartPlay()
 }
 void SMain::OnStopPlay()
 {
+	if (IsRecordedStarted)
+	{
+		FFrameNumber deleteFrom = Sequencer->GetGlobalTime().Time.FrameNumber;
+		FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
+		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
+		{
+			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
+		}
+	}
+
 	IsStarted = false;
 	IsRecordedStarted = false;
 	IsScalingStarted = false;
@@ -823,11 +833,14 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		{
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
+			FFrameNumber upperValue = CurrentRange_.GetUpperBoundValue();
+
 
 			stopSequencerAndBackToFirstFrame();
 			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 			{
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
+
 			}
 
 		}

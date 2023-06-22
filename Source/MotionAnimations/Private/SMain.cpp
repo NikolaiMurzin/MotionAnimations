@@ -533,10 +533,13 @@ void SMain::OnGlobalTimeChanged()
 		if (IsCustomRange)
 		{
 			FFrameNumber valueFromWhichStart = GetCurrentRange().GetLowerBoundValue().Value;
-			valueFromWhichStart -= 1000; // we should start from -1000 of CustomRange because when we execute Motion Handlers we make +1000 FFrameNumber;
+			UE_LOG(LogTemp, Warning, TEXT("value from which start is %d"), valueFromWhichStart.Value);
+			UE_LOG(LogTemp, Warning, TEXT("value to which start is %d"), GetCurrentRange().GetUpperBoundValue().Value);
+			valueFromWhichStart -= 900; // we should start from -1000 of CustomRange because when we execute Motion Handlers we make +1000 FFrameNumber;
 			if (CurrentFrame.Value >= valueFromWhichStart &&
 				CurrentFrame.Value <= GetCurrentRange().GetUpperBoundValue().Value)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("trigger Execute motion handlers inside"));
 				ExecuteMotionHandlers(vectorChange, CurrentFrame);
 			}
 		}
@@ -544,7 +547,6 @@ void SMain::OnGlobalTimeChanged()
 		{
 			ExecuteMotionHandlers(vectorChange, CurrentFrame);
 		}
-		Sequencer->RequestEvaluate();
 	}
 	if (IsScalingStarted)
 	{
@@ -582,10 +584,11 @@ void SMain::OnGlobalTimeChanged()
 			}
 		}
 	}
-	PreviousPosition = FSlateApplication::Get().GetCursorPos();
+	PreviousPosition = currentPosition;
 };
 void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Execute motion handlers"));
 	frame.Value += 1000;
 	if (MotionHandlers.Num() > 0)
 	{
@@ -594,7 +597,7 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 			FFrameNumber deleteFrom = frame;
 			deleteFrom.Value += 1;
 			FFrameNumber deleteTo = frame;
-			deleteTo.Value += 3000;
+			deleteTo.Value += 1000;
 			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
 			if (deleteTo >= upperRange)
 			{
@@ -603,6 +606,7 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo)); // need to delete values that goes after current key on 5 seconds, so we will clean all frames continuously, not by once like before.
 
 				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
+
 			motionHandler->SetKey(frame, value);
 		}
 	}
@@ -648,13 +652,23 @@ void SMain::OnStopPlay()
 	if (IsRecordedStarted)
 	{
 		FFrameNumber deleteFrom = Sequencer->GetGlobalTime().Time.FrameNumber;
+		if (IsCustomRange)
+		{
+			if (deleteFrom.Value <= GetCurrentRange().GetLowerBoundValue())
+			{
+				IsStarted = false;
+				IsRecordedStarted = false;
+				IsScalingStarted = false;
+				IsEditStarted = false;
+				return;
+			}
+		}
 		FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
 		}
 	}
-
 	IsStarted = false;
 	IsRecordedStarted = false;
 	IsScalingStarted = false;
@@ -788,18 +802,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		{
 			LatestSyncTime = FFrameNumber(0);
 
-			for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
-			{
-				FFrameNumber deleteFrom = GetCurrentRange().GetLowerBoundValue();
-				if (IsCustomRange)
-				{
-					deleteFrom.Value += 1;
-				}
-				FFrameNumber deleteTo = GetCurrentRange().GetUpperBoundValue();
-				deleteTo.Value += 1000;
-				motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
-			}
-
 			stopSequencerAndBackToFirstFrame();
 
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
@@ -812,7 +814,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 
 				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(1000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
 				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
-
 			}
 
 			playSequencerToLastFrame();
@@ -820,11 +821,6 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			IsScalingStarted = false;
 			IsEditStarted = false;
 			IsRecordedStarted = true;
-
-
-			Sequencer->UpdatePlaybackRange();
-			Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
-			Sequencer->NotifyBindingsChanged();
 		}
 		else
 		{

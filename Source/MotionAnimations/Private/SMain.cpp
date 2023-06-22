@@ -667,6 +667,7 @@ void SMain::OnStopPlay()
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo));
+			motionHandler->ReInitAccelerator(GetCurrentRange());
 		}
 	}
 	IsStarted = false;
@@ -828,7 +829,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 				TEXT("No sequence selected! Or you selected wrong sequence, not the one that is open in sequencer"));
 		}
 	}
-	/* if (Settings->Keys["Start scaling"] == key)
+	if (Settings->Keys["Start scaling"] == key)
 	{
 		stopSequencerAndBackToFirstFrame();
 
@@ -851,7 +852,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		Sequencer->UpdatePlaybackRange();
 		Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
 		Sequencer->NotifyBindingsChanged();
-	} */
+	}
 	if (Settings->Keys["Stop recording"] == key)
 	{
 		if (SelectedSequence != nullptr && Sequencer != nullptr)
@@ -915,6 +916,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
 			motionHandler->AddOrUpdateKeyValueInSequencer();
+
+			TRange<FFrameNumber> range = GetCurrentRange();
+			motionHandler->ReInitAccelerator(range);
+
 			motionHandler->SaveData();
 		}
 	}

@@ -35,7 +35,7 @@ void FSettings::SetDefaultSettings()
 	Keys.Add(TTuple<FString, FString>("Activate", "F3"));
 	Keys.Add(TTuple<FString, FString>("Delete item", "F11"));
 	Keys.Add(TTuple<FString, FString>("Update motion handlers", "Q"));
-	// Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
+	Keys.Add(TTuple<FString, FString>("Start scaling", "R"));
 	Keys.Add(TTuple<FString, FString>("Populate", "P"));
 	Keys.Add(TTuple<FString, FString>("Start recording", "E"));
 	Keys.Add(TTuple<FString, FString>("Stop recording", "D"));

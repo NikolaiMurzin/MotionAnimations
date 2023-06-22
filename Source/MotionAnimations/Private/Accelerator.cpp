@@ -74,20 +74,56 @@ void Accelerator::Accelerate(int value, FFrameNumber currentPosition)
 void Accelerator::Reset(TRange<FFrameNumber> range = TRange<FFrameNumber>())
 {
 	Range = range;
-	TArray<FFrameNumber> times;
-	TArray<FKeyHandle> keys;
+	TArray<FFrameNumber> times = framesBackup;
+	TArray<FKeyHandle> keys = keysBackup;
 
+	int indexLow = -1;
+	for (FFrameNumber frame : framesBackup)
+	{
+		indexLow++;
+		if (frame.Value >= range.GetLowerBoundValue().Value)
+		{
+			break;
+		}
+	}
+	if (indexLow != 0)
+	{
+		int countToRemove = indexLow + 1;
+		if (countToRemove != 0)
+		{
+			times.RemoveAt(0, countToRemove, true);
+			keys.RemoveAt(0, countToRemove, true);
+		}
+	}
+	int indexHigh = -1;
+	for (FFrameNumber frame : times)
+	{
+		indexHigh++;
+		if (frame.Value >= range.GetUpperBoundValue().Value)
+		{
+			break;
+		}
+	}
+	if (indexHigh != 0)
+	{
+		int countToRemove = times.Num() - (indexHigh + 1);
+		if (countToRemove != 0)
+		{
+			times.RemoveAt(indexHigh, countToRemove, true);
+			keys.RemoveAt(indexHigh, countToRemove, true);
+		}
+	}
 	if (FloatChannel != nullptr)
 	{
-		FloatChannel->SetKeyTimes(keysBackup, framesBackup);
+		FloatChannel->SetKeyTimes(keys, times);
 	}
 	else if (DoubleChannel != nullptr)
 	{
-		DoubleChannel->SetKeyTimes(keysBackup, framesBackup);
+		DoubleChannel->SetKeyTimes(keys, times);
 	}
 	else if (IntegerChannel != nullptr)
 	{
-		IntegerChannel->SetKeyTimes(keysBackup, framesBackup);
+		IntegerChannel->SetKeyTimes(keys, times);
 	}
 }
 void Accelerator::UpdateBackup(TRange<FFrameNumber> range)

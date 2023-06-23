@@ -101,7 +101,7 @@ public:
 	double PopulateValue = 1000;
 	void OnPopulateValueChangedRaw(double val);
 
-	bool IsCustomRange = false;
+	bool IsCustomRange = true;
 	ECheckBoxState GetIsCustomRange() const;
 	void OnIsCustomRangeChanged(ECheckBoxState NewState);
 	TRange<FFrameNumber> GetCurrentRange() const;

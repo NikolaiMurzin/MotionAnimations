@@ -588,7 +588,6 @@ void SMain::OnGlobalTimeChanged()
 };
 void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Execute motion handlers"));
 	frame.Value += 1000;
 	if (MotionHandlers.Num() > 0)
 	{

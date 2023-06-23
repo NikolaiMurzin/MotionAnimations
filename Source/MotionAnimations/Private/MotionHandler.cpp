@@ -585,8 +585,15 @@ void MotionHandler::SyncControlRigWithChannelValue(FFrameNumber InTime, float va
 				controlValueMin = controlElement->Settings.MinimumValue;
 				controlValueMax = controlElement->Settings.MaximumValue;
 			}
+			else
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("motion handler is not valid, maybe you forget to select "
+						"control in sequencer when tried to init motion "
+						"handler?"));
+				return;
+			}
 		}
-
 
 		if (controlElement == nullptr)
 		{

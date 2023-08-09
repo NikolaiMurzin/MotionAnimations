@@ -533,13 +533,10 @@ void SMain::OnGlobalTimeChanged()
 		if (IsCustomRange)
 		{
 			FFrameNumber valueFromWhichStart = GetCurrentRange().GetLowerBoundValue().Value;
-			UE_LOG(LogTemp, Warning, TEXT("value from which start is %d"), valueFromWhichStart.Value);
-			UE_LOG(LogTemp, Warning, TEXT("value to which start is %d"), GetCurrentRange().GetUpperBoundValue().Value);
 			valueFromWhichStart -= 900; // we should start from -1000 of CustomRange because when we execute Motion Handlers we make +1000 FFrameNumber;
 			if (CurrentFrame.Value >= valueFromWhichStart &&
 				CurrentFrame.Value <= GetCurrentRange().GetUpperBoundValue().Value)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("trigger Execute motion handlers inside"));
 				ExecuteMotionHandlers(vectorChange, CurrentFrame);
 			}
 		}
@@ -596,7 +593,7 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 			FFrameNumber deleteFrom = frame;
 			deleteFrom.Value += 1;
 			FFrameNumber deleteTo = frame;
-			deleteTo.Value += 1000;
+			deleteTo.Value += 3000;
 			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
 			if (deleteTo >= upperRange)
 			{

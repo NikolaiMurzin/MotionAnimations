@@ -592,17 +592,28 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 		{
 			FFrameNumber deleteFrom = frame;
 			deleteFrom.Value += 1;
-			FFrameNumber deleteTo = frame;
-			deleteTo.Value += 3000;
 			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
-			if (deleteTo >= upperRange)
+			FFrameNumber deleteTo = frame;
+			if (IsValid(motionHandler->MovieSceneControlRigParameterTrack)) // if it's control rig
 			{
-				deleteTo = upperRange;
+				deleteTo.Value += 3000;
+				if (deleteTo >= upperRange)
+				{
+					deleteTo = upperRange;
+				}
+
+			}
+			else
+			{
+				deleteTo.Value += 1000;
+				if (deleteTo >= upperRange)
+				{
+					deleteTo = upperRange;
+				}
+				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 			}
 			motionHandler->DeleteKeysWithin(TRange<FFrameNumber>(deleteFrom, deleteTo)); // need to delete values that goes after current key on 5 seconds, so we will clean all frames continuously, not by once like before.
-
-				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
-
+			// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 			motionHandler->SetKey(frame, value);
 		}
 	}
@@ -809,7 +820,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			{
 				motionHandler->PreviousValue = (double)motionHandler->GetValueFromTime(lowerCurrentValue);
 
-				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(1000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
+				motionHandler->Populate(TRange<FFrameNumber>(lowerCurrentValue, upperValue), FFrameNumber(6000)); // we need to populate whole Current range so sequencer won't freeze and will keep update
 				// Sequencer keep update if there are keys in range 3000 from current time, if there are no keys, then it will freeze, and we won't see any changes when move our mouse.
 			}
 

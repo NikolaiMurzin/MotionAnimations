@@ -122,12 +122,13 @@ public:
 	void ResetMotionEditor(TRange<FFrameNumber> range);
 	void ReInitMotionEditor();
 
+	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack = nullptr;
+
 private:
 	void SyncControlRigWithChannelValue(FFrameNumber InTime, float value);
 	void SyncMaterialTrack(FFrameNumber InTime, float value);
 	void SyncNiagaraParam(FFrameNumber InTime, float value);
 
-	UMovieSceneControlRigParameterTrack* MovieSceneControlRigParameterTrack = nullptr;
 	UControlRig* controlRig = nullptr;
 	FRigControlElement* controlElement = nullptr;
 	ERigControlType controlType;

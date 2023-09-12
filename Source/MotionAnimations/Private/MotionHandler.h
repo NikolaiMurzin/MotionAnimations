@@ -23,7 +23,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "Sequencer/MovieSceneControlRigParameterTrack.h"
-#include "Sequencer/Public/ISequencer.h"
+#include "ISequencer.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 #include "UObject/NameTypes.h"
 #include "Misc/FrameNumber.h"

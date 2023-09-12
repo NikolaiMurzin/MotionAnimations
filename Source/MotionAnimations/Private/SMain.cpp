@@ -41,7 +41,6 @@
 #include "MovieSceneSection.h"
 #include "MovieSceneSequence.h"
 #include "SSettingsWidget.h"
-#include "Sequencer/Public/SequencerAddKeyOperation.h"
 #include "SequencerAddKeyOperation.h"
 #include "Settings.h"
 #include "SlateFwd.h"
@@ -428,13 +427,6 @@ void SMain::AddMotionHandlers()
 	{
 		TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 		Sequencer->GetSelectedKeyAreas(KeyAreas);
-		TArray<UMovieSceneTrack*> SelectedTracks = TArray<UMovieSceneTrack*>();
-		Sequencer->GetSelectedTracks(SelectedTracks);
-		if (SelectedTracks.Num() < 1)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("You are not selected any tracks or objects"));
-			return;
-		}
 		TArray<TSharedPtr<MotionHandler>> selectionSet;
 		for (const IKeyArea* KeyArea : KeyAreas)
 		{
@@ -442,16 +434,28 @@ void SMain::AddMotionHandlers()
 
 			UMovieSceneSection* section = KeyArea->GetOwningSection();
 			auto forWhichTrackThatSection = [&]() -> UMovieSceneTrack* {
-				for (UMovieSceneTrack* Track : SelectedTracks)
+
+				UMovieScene* movieScene = SelectedSequence->GetMovieScene();
+				if (movieScene)
 				{
-					TArray<UMovieSceneSection*> Sections = Track->GetAllSections();
-					if (Sections.Contains(section))
+					TArray<FMovieSceneBinding> bindings = movieScene->GetBindings();
+					for (FMovieSceneBinding binding : bindings)
 					{
-						return Track;
-						break;
+
+						TArray<UMovieSceneTrack*> allTracks = binding.GetTracks();
+						for (UMovieSceneTrack* Track : allTracks)
+						{
+							TArray<UMovieSceneSection*> Sections = Track->GetAllSections();
+							if (Sections.Contains(section))
+							{
+								return Track;
+								break;
+							}
+						}
 					}
 				}
 				return nullptr;
+
 			};
 			UMovieSceneTrack*  trackOfThatSection = forWhichTrackThatSection();
 			if ( trackOfThatSection )

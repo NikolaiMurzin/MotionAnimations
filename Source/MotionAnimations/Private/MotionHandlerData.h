@@ -17,7 +17,7 @@ struct FMotionHandlerData
 	GENERATED_BODY()
 public:
 	UPROPERTY()
-	double Scale;
+	double Scale = 1;
 	UPROPERTY()
 	FGuid ObjectFGuid;
 	UPROPERTY()
@@ -25,11 +25,11 @@ public:
 	UPROPERTY()
 	FString TrackDisplayName;
 	UPROPERTY()
-	int32 SectionRowIndex;
+	int32 SectionRowIndex = 0;
 	UPROPERTY()
 	FString ChannelTypeName;
 	UPROPERTY()
-	int32 ChannelIndex;
+	int32 ChannelIndex = 0;
 
 	UPROPERTY()
 	FString ControlSelection;
@@ -37,7 +37,7 @@ public:
 	FString SequenceName;
 	bool IsValidData;
 	UPROPERTY()
-	Mode SelectedMode;
+	Mode SelectedMode = Mode::X;
 	UPROPERTY()
 	FText CustomName;
 
@@ -48,9 +48,9 @@ public:
 	FString KeyAreaName;
 
 	UPROPERTY()
-	int32 SetIndex; // in which set it's located, if -1 then no sets;
+	int32 SetIndex = -1; // in which set it's located, if -1 then no sets;
 	UPROPERTY()
-	int32 CurrentIndex;
+	int32 CurrentIndex = 1;
 	UPROPERTY()
 	double UpperBoundValue = 0;
 	UPROPERTY()

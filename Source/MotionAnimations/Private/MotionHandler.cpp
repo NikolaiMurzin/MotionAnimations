@@ -162,15 +162,17 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 	int32 ChannelIndex = KeyArea->GetChannel().GetChannelIndex();
 
 	ChannelHandle = KeyArea->GetChannel();
+	const FMovieSceneChannelMetaData* metadata = ChannelHandle.GetMetaData();
+	FText customName = FText::FromString("");
+	if (metadata) {
+		customName = ChannelHandle.GetMetaData()->DisplayText;
+	}
 	FString MovieSceneTrackName = MovieSceneTrack_->GetDisplayName().ToString();
-	FString ChannelName = ChannelHandle.GetMetaData()->DisplayText.ToString();
-
-	// FString DataCustomNameString = MovieSceneTrackName + "." + ChannelName;
 
 	FName keyAreaName = KeyArea->GetName();
 	FText DataCustomName = FText::FromString(keyAreaName.ToString());
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
-		Sequence_->GetDisplayName().ToString(), DataCustomName, ChannelHandle.GetMetaData()->DisplayText,
+		Sequence_->GetDisplayName().ToString(), DataCustomName, customName,
 		KeyArea->GetName().ToString(), MovieSceneTrackName);
 	SetControlRigTrack(MovieSceneTrack);
 	SetMaterialTrack(MovieSceneTrack);

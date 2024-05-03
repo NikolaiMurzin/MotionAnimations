@@ -20,6 +20,7 @@
 #include "Editor/Sequencer/Public/IKeyArea.h"
 #include "Editor/Sequencer/Public/ISequencer.h"
 #include "Editor/Sequencer/Public/SequencerKeyParams.h"
+#include "Editor/MovieSceneTools/Private/Sections/CinematicShotSection.h"
 #include "Engine/AssetManager.h"
 #include "Engine/EngineTypes.h"
 #include "Framework/SlateDelegates.h"
@@ -78,7 +79,7 @@ SMain::SMain()
 	OnKeyDownEvent = nullptr;
 	SelectedSectionsChangedEvent = nullptr;
 	Sequencer = nullptr;
-	SelectedSequence = nullptr;
+	SelectedLevelSequence = nullptr;
 
 	UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 	OpenEditorEvent = &(UAssetEditorSubs->OnAssetEditorOpened());
@@ -256,9 +257,33 @@ void SMain::OnIsCustomRangeChanged(ECheckBoxState NewState)
 {
 	IsCustomRange = !IsCustomRange;
 }
+UMovieScene* SMain::GetCurrentMovieScene() const {
+	UMovieScene* OpenMovieScene = nullptr;
+
+    // Get the Sequencer module
+    ISequencerModule& SequencerModule = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer");
+
+    // Get the active Sequencer (if any)
+    ISequencer* ActiveSequencer = Sequencer;
+
+    if (ActiveSequencer)
+    {
+        // Get the currently open movie scene associated with the active Sequencer
+        UMovieSceneSequence* MovieSceneSequence = ActiveSequencer->GetFocusedMovieSceneSequence();
+
+        if (MovieSceneSequence)
+        {
+            OpenMovieScene = MovieSceneSequence->GetMovieScene();
+        }
+    }
+
+    return OpenMovieScene;
+}
+
 TRange<FFrameNumber> SMain::GetCurrentRange() const
 {
-	if (!SelectedSequence)
+	UMovieScene* currentMovieScene = GetCurrentMovieScene();
+	if (!currentMovieScene)
 	{
 		return TRange<FFrameNumber>();
 	}
@@ -268,13 +293,13 @@ TRange<FFrameNumber> SMain::GetCurrentRange() const
 		FFrameNumber upper = CustomRange.GetUpperBoundValue();
 		if (lower >= upper)
 		{
-			upper = SelectedSequence->GetMovieScene()->GetPlaybackRange().GetUpperBoundValue();
+			upper = currentMovieScene->GetPlaybackRange().GetUpperBoundValue();
 		}
 		return TRange<FFrameNumber>(lower, upper);
 	}
 	else
 	{
-		return SelectedSequence->GetMovieScene()->GetPlaybackRange();
+		return currentMovieScene->GetPlaybackRange();
 	}
 	return TRange<FFrameNumber>();
 }
@@ -373,18 +398,18 @@ void SMain::RefreshSequence()
 		ULevelSequence* Sequence = Cast<ULevelSequence>(AssetData);
 		if (Sequence)
 		{
-			SelectedSequence = Sequence;
+			SelectedLevelSequence = Sequence;
 		}
 	}
 }
 void SMain::RefreshSequencer()
 {
-	if (SelectedSequence != nullptr)
+	if (SelectedLevelSequence != nullptr)
 	{
 		Sequencer = nullptr;
 
 		UAssetEditorSubsystem* UAssetEditorSubs = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
-		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedSequence, false);
+		IAssetEditorInstance* AssetEditor = UAssetEditorSubs->FindEditorForAsset(SelectedLevelSequence, false);
 
 		TArray<UObject*> Assets = UAssetEditorSubs->GetAllEditedAssets();
 
@@ -417,13 +442,13 @@ void SMain::RefreshSequencer()
 void SMain::OnCloseEventRaw(TSharedRef<ISequencer> Sequencer_)
 {
 	UnbindSequencerEvents();
-	SelectedSequence = nullptr;
+	SelectedLevelSequence = nullptr;
 	Sequencer = nullptr;
 	MotionHandlers.Reset();
 }
 void SMain::AddMotionHandlers()
 {
-	if (Sequencer != nullptr && SelectedSequence != nullptr)
+	if (Sequencer != nullptr)
 	{
 		TArray<const IKeyArea*> KeyAreas = TArray<const IKeyArea*>();
 		Sequencer->GetSelectedKeyAreas(KeyAreas);
@@ -433,37 +458,13 @@ void SMain::AddMotionHandlers()
 			bool IsObjectAlreadyAdded = false;
 
 			UMovieSceneSection* section = KeyArea->GetOwningSection();
-			auto forWhichTrackThatSection = [&]() -> UMovieSceneTrack* {
-
-				UMovieScene* movieScene = SelectedSequence->GetMovieScene();
-				if (movieScene)
-				{
-					TArray<FMovieSceneBinding> bindings = movieScene->GetBindings();
-					for (FMovieSceneBinding binding : bindings)
-					{
-
-						TArray<UMovieSceneTrack*> allTracks = binding.GetTracks();
-						for (UMovieSceneTrack* Track : allTracks)
-						{
-							TArray<UMovieSceneSection*> Sections = Track->GetAllSections();
-							if (Sections.Contains(section))
-							{
-								return Track;
-								break;
-							}
-						}
-					}
-				}
-				return nullptr;
-
-			};
-			UMovieSceneTrack*  trackOfThatSection = forWhichTrackThatSection();
+			UMovieSceneTrack*  trackOfThatSection = (UMovieSceneTrack*)(section->GetOuter());
 			if ( trackOfThatSection )
 			{
 				FGuid objectGuid = trackOfThatSection ->FindObjectBindingGuid();
 
 				MotionHandler newMotionHandler = MotionHandler(
-					KeyArea, DefaultScale, Sequencer, SelectedSequence, trackOfThatSection , objectGuid, Mode::X);
+					KeyArea, DefaultScale, Sequencer,trackOfThatSection , objectGuid, Mode::X);
 
 				for (TSharedPtr<MotionHandler> alreadyAddedHandler : MotionHandlers)
 				{
@@ -477,7 +478,7 @@ void SMain::AddMotionHandlers()
 				if (!IsObjectAlreadyAdded)
 				{
 					TSharedPtr<MotionHandler> newMotionHandlerPtr = TSharedPtr<MotionHandler>(new MotionHandler(
-						KeyArea, DefaultScale, Sequencer, SelectedSequence, trackOfThatSection, objectGuid, Mode::X));
+						KeyArea, DefaultScale, Sequencer, trackOfThatSection, objectGuid, Mode::X));
 					MotionHandlers.Add(newMotionHandlerPtr);
 					selectionSet.Add(newMotionHandlerPtr);
 				}
@@ -490,11 +491,11 @@ void SMain::AddMotionHandlers()
 }
 void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handlers)
 {
-	if (Sequencer != nullptr && SelectedSequence != nullptr)
+	if (Sequencer != nullptr && SelectedLevelSequence != nullptr)
 	{
 		FString First = FPaths::ProjectPluginsDir();
 		FString PluginName_ = PluginName;
-		FString SequenceName = SelectedSequence->GetDisplayName().ToString();
+		FString SequenceName = SelectedLevelSequence->GetDisplayName().ToString();
 		FString SavesDir = FPaths::Combine(First, PluginName_, FString("Saved"), SequenceName);
 		TArray<FString> FilePaths = TArray<FString>();
 		FString FilesExtension = "";
@@ -502,7 +503,7 @@ void SMain::LoadMotionHandlersFromDisk(TArray<TSharedPtr<MotionHandler>>& handle
 		for (FString filename : FilePaths)
 		{
 			FString path = FPaths::Combine(SavesDir, filename);
-			TSharedPtr<MotionHandler> handler = TSharedPtr<MotionHandler>(new MotionHandler(Sequencer, SelectedSequence, path));
+			TSharedPtr<MotionHandler> handler = TSharedPtr<MotionHandler>(new MotionHandler(Sequencer, SelectedLevelSequence, path));
 			if (handler->IsValidMotionHandler())
 			{
 				bool IsObjectAlreadyAdded = false;
@@ -773,11 +774,50 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	TRange<FFrameNumber> playbackRange;
 	FFrameNumber lowerValue;
 	FFrameNumber highValue;
-	if (SelectedSequence != nullptr)
+	UMovieScene* currentMovieScene = GetCurrentMovieScene();
+	if (currentMovieScene != nullptr)
 	{
-		playbackRange = SelectedSequence->GetMovieScene()->GetPlaybackRange();
-		lowerValue = playbackRange.GetLowerBoundValue();
-		highValue = playbackRange.GetUpperBoundValue();
+		if (SelectedLevelSequence) {
+			UMovieScene* coreScene = SelectedLevelSequence->GetMovieScene();
+			if (coreScene) {
+				// Get the list of all sections in the MovieScene
+				TArray<UMovieSceneSection*> Sections = coreScene->GetAllSections();
+
+				// Iterate over each section (shot) in the MovieScene
+				for (UMovieSceneSection* Section : Sections)
+				{
+					// Check the type of the section (optional)
+					FString SectionType = Section->GetClass()->GetName();
+
+					// Get the start and end time of the section (shot)
+					FFrameNumber StartTime = Section->GetRange().GetLowerBoundValue();
+					FFrameNumber EndTime = Section->GetRange().GetUpperBoundValue();
+
+					UMovieSceneCinematicShotSection* CinematicShotSection = (UMovieSceneCinematicShotSection*)Section;
+					FString name = CinematicShotSection->GetShotDisplayName();
+					UMovieSceneSequence* sectionSequence = CinematicShotSection->GetSequence();
+					if (sectionSequence->GetMovieScene() == currentMovieScene) {
+						lowerValue = StartTime;
+						highValue = EndTime;
+					}
+
+
+					// You can also get other properties of the section as needed
+					// For example:
+					// FString SectionName = Section->GetSectionObject()->GetName();
+
+					// Output information about the section (shot)
+					UE_LOG(LogTemp, Display, TEXT("Section Type: %s, Start Time: %d, End Time: %d"),
+						*SectionType, StartTime.Value, EndTime.Value);
+				}
+
+			}
+		}
+		playbackRange = currentMovieScene->GetPlaybackRange();
+		if (!lowerValue.Value && !highValue.Value) {
+			highValue = playbackRange.GetUpperBoundValue();
+			lowerValue = playbackRange.GetLowerBoundValue();
+		}
 	}
 	auto stopSequencerAndBackToFirstFrame = [&]()
 	{
@@ -810,7 +850,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (Settings->Keys["Start recording"] == key)
 	{
-		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		if (Sequencer != nullptr)
 		{
 			LatestSyncTime = FFrameNumber(0);
 
@@ -866,7 +906,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (Settings->Keys["Stop recording"] == key)
 	{
-		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		if (Sequencer != nullptr)
 		{
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 			FFrameNumber lowerCurrentValue = CurrentRange_.GetLowerBoundValue();
@@ -889,7 +929,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (Settings->Keys["Optimize"] == key)
 	{
-		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		if (Sequencer != nullptr)
 		{
 			TRange<FFrameNumber> CurrentRange_ = GetCurrentRange();
 
@@ -906,7 +946,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	if (Settings->Keys["Preview animation"] == key)
 	{
-		if (SelectedSequence != nullptr && Sequencer != nullptr)
+		if (Sequencer != nullptr)
 		{
 			stopSequencerAndBackToFirstFrame();
 
@@ -963,14 +1003,14 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	}
 	else if (Settings->Keys["Set lower bound of custom range"] == key)
 	{
-		if (Sequencer != nullptr && SelectedSequence != nullptr)
+		if (Sequencer != nullptr && SelectedLevelSequence != nullptr)
 		{
 			CustomRange.SetLowerBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}
 	}
 	else if (Settings->Keys["Set upper bound of custom range"] == key)
 	{
-		if (Sequencer != nullptr && SelectedSequence != nullptr)
+		if (Sequencer != nullptr && SelectedLevelSequence != nullptr)
 		{
 			CustomRange.SetUpperBound(Sequencer->GetLocalTime().Time.FrameNumber);
 		}

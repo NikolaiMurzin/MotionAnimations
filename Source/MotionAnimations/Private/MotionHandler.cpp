@@ -128,14 +128,14 @@ MotionHandler::MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequen
 	MAccelerator = TSharedPtr<Accelerator>(new Accelerator(FloatChannel, DoubleChannel, IntegerChannel));
 	MMotionEditor = TSharedPtr<MotionEditor>(new MotionEditor(FloatChannel, DoubleChannel, IntegerChannel));
 }
-MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
+MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer* Sequencer_,
 	UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_)
 {
 	Sequencer = Sequencer_;
 	KeyArea = KeyArea_;
 	PreviousValue = 0;
 	IsFirstUpdate = true;
-	MovieScene = Sequence_->GetMovieScene();
+	MovieScene = MovieSceneTrack_->GetTypedOuter<UMovieScene>();
 	MovieSceneTrack = MovieSceneTrack_;
 
 	MovieSceneSection = KeyArea->GetOwningSection();
@@ -171,8 +171,41 @@ MotionHandler::MotionHandler(const IKeyArea* KeyArea_, double Scale, ISequencer*
 
 	FName keyAreaName = KeyArea->GetName();
 	FText DataCustomName = FText::FromString(keyAreaName.ToString());
+	UMovieSceneSequence* Sequence = nullptr;
+
+	if (MovieScene)
+	{
+		// Get the outer sequence object
+		UObject* OuterObject = MovieScene->GetOuter();
+
+		while (OuterObject)
+		{
+			// Check if the outer object is a UMovieSceneSequence
+			Sequence = Cast<UMovieSceneSequence>(OuterObject);
+			
+			if (Sequence)
+			{
+				// Found the sequence object
+				break;
+			}
+			
+			// Traverse up the outer object hierarchy
+			OuterObject = OuterObject->GetOuter();
+		}
+
+		if (!Sequence)
+		{
+			return;
+		}
+		else
+		{
+			// Now you have access to the UMovieSceneSequence object
+			// You can use this Sequence pointer as needed
+		}
+	}
+
 	Data = FMotionHandlerData(Scale, ObjectFGuid_, TrackName_, RowIndex, ChannelTypeName, ChannelIndex, Mode_,
-		Sequence_->GetDisplayName().ToString(), DataCustomName, customName,
+		Sequence->GetDisplayName().ToString(), DataCustomName, customName,
 		KeyArea->GetName().ToString(), MovieSceneTrackName);
 	SetControlRigTrack(MovieSceneTrack);
 	SetMaterialTrack(MovieSceneTrack);

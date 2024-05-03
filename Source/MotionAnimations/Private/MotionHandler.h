@@ -37,7 +37,7 @@ public:
 	bool IsFirstUpdate;
 
 	void SetKey(FFrameNumber InTime, FVector2D InputVector);
-	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_, UMovieSceneSequence* Sequence_,
+	MotionHandler(const IKeyArea* KeyAreas, double DefaultScale_, ISequencer* Sequencer_,
 		UMovieSceneTrack* MovieSceneTrack_, FGuid ObjectFGuid_, Mode Mode_ = Mode::X);
 	MotionHandler(ISequencer* Sequencer_, UMovieSceneSequence* Sequence, FString FilePath);
 	void SetControlRigTrack(UMovieSceneTrack* MovieSceneTrack_);

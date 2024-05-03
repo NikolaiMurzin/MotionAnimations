@@ -117,9 +117,11 @@ public:
 	void OnToleranceChangeRaw(double value);
 	double OptimizationTolerance = 0;
 
+	UMovieScene* GetCurrentMovieScene() const;
+
 private:
 	TRange<FFrameNumber> CustomRange;
-	ULevelSequence* SelectedSequence;
+	ULevelSequence* SelectedLevelSequence;
 	FSettings* Settings;
 	ISequencer* Sequencer;
 };

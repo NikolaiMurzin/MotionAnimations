@@ -260,16 +260,10 @@ void SMain::OnIsCustomRangeChanged(ECheckBoxState NewState)
 UMovieScene* SMain::GetCurrentMovieScene() const {
 	UMovieScene* OpenMovieScene = nullptr;
 
-    // Get the Sequencer module
-    ISequencerModule& SequencerModule = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer");
-
-    // Get the active Sequencer (if any)
-    ISequencer* ActiveSequencer = Sequencer;
-
-    if (ActiveSequencer)
+    if (Sequencer)
     {
         // Get the currently open movie scene associated with the active Sequencer
-        UMovieSceneSequence* MovieSceneSequence = ActiveSequencer->GetFocusedMovieSceneSequence();
+        UMovieSceneSequence* MovieSceneSequence = Sequencer->GetFocusedMovieSceneSequence();
 
         if (MovieSceneSequence)
         {
@@ -299,7 +293,13 @@ TRange<FFrameNumber> SMain::GetCurrentRange() const
 	}
 	else
 	{
-		return currentMovieScene->GetPlaybackRange();
+		UMovieScene* coreScene = SelectedLevelSequence->GetMovieScene();
+		if (coreScene != currentMovieScene) {
+			return GetRangeOfChildMovieScene();
+		}
+		else {
+			return currentMovieScene->GetPlaybackRange();
+		}
 	}
 	return TRange<FFrameNumber>();
 }
@@ -532,7 +532,10 @@ void SMain::OnGlobalTimeChanged()
 {
 	FVector2D currentPosition = FSlateApplication::Get().GetCursorPos();
 	FVector2D vectorChange = PreviousPosition - currentPosition;
-	FFrameNumber CurrentFrame = Sequencer->GetGlobalTime().Time.FrameNumber;
+	// if movie scene selected and this movie scene is child of parent movie scene, then check
+	// which frame it has in parent, and make + that frame
+	FFrameNumber CurrentFrame = Sequencer->GetLocalTime().Time.FrameNumber;
+
 	if (IsRecordedStarted)
 	{
 		if (IsCustomRange)
@@ -595,6 +598,12 @@ void SMain::ExecuteMotionHandlers(FVector2D value, FFrameNumber frame)
 	{
 		for (TSharedPtr<MotionHandler> motionHandler : ListViewWidget->GetSelectedItems())
 		{
+			UMovieScene* movieScene = motionHandler->MovieScene;
+			if (movieScene != GetCurrentMovieScene()) {
+				TRange<FFrameNumber> range = GetRangeOfChildMovieScene(movieScene);
+				frame.Value -= range.GetLowerBoundValue().Value;
+			};
+
 			FFrameNumber deleteFrom = frame;
 			deleteFrom.Value += 1;
 			FFrameNumber upperRange = GetCurrentRange().GetUpperBoundValue();
@@ -687,6 +696,40 @@ void SMain::OnStopPlay()
 	IsScalingStarted = false;
 	IsEditStarted = false;
 }
+TRange<FFrameNumber> SMain::GetRangeOfChildMovieScene(UMovieScene* movieScene) const {
+		UMovieScene* currentMovieScene = GetCurrentMovieScene();
+		if (movieScene) currentMovieScene = movieScene;
+		TRange<FFrameNumber> result;
+		if (SelectedLevelSequence) {
+			UMovieScene* coreScene = SelectedLevelSequence->GetMovieScene();
+			if (coreScene) {
+				// Get the list of all sections in the MovieScene
+				TArray<UMovieSceneSection*> Sections = coreScene->GetAllSections();
+
+				// Iterate over each section (shot) in the MovieScene
+				for (UMovieSceneSection* Section : Sections)
+				{
+					// Check the type of the section (optional)
+					FString SectionType = Section->GetClass()->GetName();
+
+					// Get the start and end time of the section (shot)
+					FFrameNumber StartTime = Section->GetRange().GetLowerBoundValue();
+					FFrameNumber EndTime = Section->GetRange().GetUpperBoundValue();
+
+					UMovieSceneCinematicShotSection* CinematicShotSection = (UMovieSceneCinematicShotSection*)Section;
+					FString name = CinematicShotSection->GetShotDisplayName();
+					UMovieSceneSequence* sectionSequence = CinematicShotSection->GetSequence();
+					if (sectionSequence->GetMovieScene() == currentMovieScene) {
+						result.SetLowerBound(StartTime);
+						result.SetUpperBound(EndTime);
+						break;
+					}
+				}
+
+			}
+		}
+		return result;
+}
 void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 {
 	// if no current opened sequencer
@@ -774,50 +817,10 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 	TRange<FFrameNumber> playbackRange;
 	FFrameNumber lowerValue;
 	FFrameNumber highValue;
-	UMovieScene* currentMovieScene = GetCurrentMovieScene();
-	if (currentMovieScene != nullptr)
-	{
-		if (SelectedLevelSequence) {
-			UMovieScene* coreScene = SelectedLevelSequence->GetMovieScene();
-			if (coreScene) {
-				// Get the list of all sections in the MovieScene
-				TArray<UMovieSceneSection*> Sections = coreScene->GetAllSections();
-
-				// Iterate over each section (shot) in the MovieScene
-				for (UMovieSceneSection* Section : Sections)
-				{
-					// Check the type of the section (optional)
-					FString SectionType = Section->GetClass()->GetName();
-
-					// Get the start and end time of the section (shot)
-					FFrameNumber StartTime = Section->GetRange().GetLowerBoundValue();
-					FFrameNumber EndTime = Section->GetRange().GetUpperBoundValue();
-
-					UMovieSceneCinematicShotSection* CinematicShotSection = (UMovieSceneCinematicShotSection*)Section;
-					FString name = CinematicShotSection->GetShotDisplayName();
-					UMovieSceneSequence* sectionSequence = CinematicShotSection->GetSequence();
-					if (sectionSequence->GetMovieScene() == currentMovieScene) {
-						lowerValue = StartTime;
-						highValue = EndTime;
-					}
-
-
-					// You can also get other properties of the section as needed
-					// For example:
-					// FString SectionName = Section->GetSectionObject()->GetName();
-
-					// Output information about the section (shot)
-					UE_LOG(LogTemp, Display, TEXT("Section Type: %s, Start Time: %d, End Time: %d"),
-						*SectionType, StartTime.Value, EndTime.Value);
-				}
-
-			}
-		}
-		playbackRange = currentMovieScene->GetPlaybackRange();
-		if (!lowerValue.Value && !highValue.Value) {
-			highValue = playbackRange.GetUpperBoundValue();
-			lowerValue = playbackRange.GetLowerBoundValue();
-		}
+	playbackRange = GetCurrentRange();
+	if (!lowerValue.Value && !highValue.Value) {
+		highValue = playbackRange.GetUpperBoundValue();
+		lowerValue = playbackRange.GetLowerBoundValue();
 	}
 	auto stopSequencerAndBackToFirstFrame = [&]()
 	{
@@ -904,6 +907,7 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 		Sequencer->NotifyMovieSceneDataChanged(EMovieSceneDataChangeType::RefreshAllImmediately);
 		Sequencer->NotifyBindingsChanged();
 	}
+	// 
 	if (Settings->Keys["Stop recording"] == key)
 	{
 		if (Sequencer != nullptr)
@@ -1026,17 +1030,17 @@ void SMain::OnKeyDownGlobal(const FKeyEvent& event)
 			return;
 		}
 		Sequencer->EmptySelection();
+		TArray<TSharedPtr<MotionHandler>> selectTo;
 		for (TSharedPtr<MotionHandler> mh : MotionHandlers)
 		{
 			if (mh->Data.SetIndex == setNumber)
 			{
-				TArray<FMovieSceneChannelHandle> channels;
-				FMovieSceneChannelHandle handle = mh->GetActualChannelHandle();
-				channels.Add(handle);
-				TArrayView<const FMovieSceneChannelHandle> channelsView = TArrayView<const FMovieSceneChannelHandle>(channels);
-				Sequencer->SelectByChannels(mh->MovieSceneSection, channelsView, false, true);
+				selectTo.Add(mh);
 			}
 		}
+		ListViewWidget->ClearSelection();
+		ListViewWidget->SetItemSelection(selectTo, true, ESelectInfo::Type::Direct);
+		ListViewWidget->RequestListRefresh();
 	};
 	if (Settings->Keys["select 1 set"] == key)
 	{

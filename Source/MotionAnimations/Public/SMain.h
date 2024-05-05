@@ -118,6 +118,7 @@ public:
 	double OptimizationTolerance = 0;
 
 	UMovieScene* GetCurrentMovieScene() const;
+	TRange<FFrameNumber> GetRangeOfChildMovieScene(UMovieScene* movieScene = nullptr) const;
 
 private:
 	TRange<FFrameNumber> CustomRange;

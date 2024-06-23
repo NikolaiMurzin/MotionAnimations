@@ -8,7 +8,7 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 
-extern const FString PluginName = "MotionAnimations";
+extern const FString PluginName;
 
 class FMotionAnimationsModule : public IModuleInterface
 {

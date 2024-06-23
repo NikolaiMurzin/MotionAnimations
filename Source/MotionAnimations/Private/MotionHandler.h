@@ -29,6 +29,8 @@
 #include "Misc/FrameNumber.h"
 #include "Accelerator.h"
 #include "MotionEditor.h"
+#include "Math/Range.h"
+
 
 class MotionHandler
 {

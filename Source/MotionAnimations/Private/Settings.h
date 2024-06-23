@@ -4,7 +4,12 @@
 
 #include "CoreMinimal.h"
 
+#include "Math/Range.h"
+
 #include "Settings.generated.h"
+
+
+
 /**
  * 
  */

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "Containers/UnrealString.h"
+#include "Math/Range.h"
+
 
 UENUM()
 enum class Mode : uint8

@@ -6,6 +6,8 @@
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
 #include "MotionAnimations.h"
+#include "Math/Range.h"
+
 
 FMotionHandlerData::FMotionHandlerData()
 {

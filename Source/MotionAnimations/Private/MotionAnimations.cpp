@@ -10,6 +10,10 @@
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
+#include "Math/Range.h"
+
+
+const FString PluginName = "MotionAnimations";
 
 static const FName MotionAnimationsTabName("MotionAnimations");
 

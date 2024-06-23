@@ -4,6 +4,8 @@
 
 #include "Brushes/SlateColorBrush.h"
 #include "SlateOptMacros.h"
+#include "Math/Range.h"
+
 #include "Widgets/Layout/SScrollBox.h"
 
 SSettingsWidget::SSettingsWidget()

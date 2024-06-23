@@ -8,6 +8,10 @@
 // Copyright 2023 Nikolai Anatolevich Murzin. All Rights Reserved.
 
 #include "Channels/MovieSceneIntegerChannel.h"
+#include "Channels/MovieSceneFloatChannel.h"
+#include "Channels/MovieSceneDoubleChannel.h"
+#include "Math/Range.h"
+
 
 /**
  * 

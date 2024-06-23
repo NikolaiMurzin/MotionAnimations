@@ -47,6 +47,8 @@
 #include "UObject/Object.h"
 #include "Units/RigUnitContext.h"
 #include "Accelerator.h"
+#include "Math/Range.h"
+
 
 #include <stdexcept>
 #include <string>

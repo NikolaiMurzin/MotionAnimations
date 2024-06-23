@@ -8,6 +8,8 @@
 #include "KeyValues.h"
 #include "Misc/Guid.h"
 #include "MotionHandlerMode.h"
+#include "Math/Range.h"
+
 
 #include "MotionHandlerData.generated.h"
 

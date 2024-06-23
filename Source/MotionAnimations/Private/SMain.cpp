@@ -58,6 +58,7 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Math/Range.h"
 
 #include "ISequencerModule.h"
 
@@ -301,7 +302,6 @@ TRange<FFrameNumber> SMain::GetCurrentRange() const
 			return currentMovieScene->GetPlaybackRange();
 		}
 	}
-	return TRange<FFrameNumber>();
 }
 FText SMain::GetCustomStartFromFrame() const
 {
